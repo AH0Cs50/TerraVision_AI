@@ -1,0 +1,34 @@
+{
+  "name": "farming_assistant",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "",
+    "url": "git+https://github.com/AH0Cs50/farming_assistant_collage.git"
+  },
+  "imports": {
+    "@src/": "./src/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AH0Cs50/farming_assistant_collage/issues"
+  },
+  "homepage": "https://github.com/AH0Cs50/farming_assistant_collage#readme",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.15.1",
+    "cros": "^1.1.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "nedb-promises": "^6.2.3",
+    "uuid": "^14.0.0",
+    "zod": "^4.4.2"
+  }
+}
