@@ -49,13 +49,14 @@ class UserRepository {
   }
 
   // ==========================
-  // Update Refresh Token
+  // Update Email Token
   // ==========================
-  async updateRefreshToken(internalId, token) {
+  async updateEmailToken (internalId, token) {
     return await this.updateByInternalId(internalId, {
-      refreshToken: token
+      emailToken: token
     });
   }
+
 
   // ==========================
   // Verify User

@@ -1,0 +1,4 @@
+node_modules
+models
+*.h5
+Ml-service/.idea

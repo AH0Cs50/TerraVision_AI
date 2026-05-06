@@ -89,6 +89,16 @@ class UserService {
     return await UserRepository.updateRefreshToken(internalId, token);
   }
 
+  // =============================
+  // Email token
+  // =============================
+
+  async setEmailToken (internalId) {
+    await this._ensureUserExists(internalId);
+    const token = ''; //generate email token here
+    return await UserRepository.updateEmailToken(internalId,token);
+  }
+
   // ==========================
   // Logout (clear token)
   // ==========================

@@ -1,5 +1,4 @@
 // controllers/authController.js
-
 //get the instance 
 import { authService } from "./../shared/container.js";
 import { UserDTO } from '../dto/user.dto.js';

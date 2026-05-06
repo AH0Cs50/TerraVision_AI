@@ -71,4 +71,3 @@ export const UserDTO = z.object({
 
   location: LocationDTO.optional(),
 });
-

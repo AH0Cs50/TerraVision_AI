@@ -1,5 +1,7 @@
 import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
+//import token class
+import { TokenPayload } from "./common/token.service.js";
 
 class AuthService {
   constructor(tokenService, userService, passwordHasher) {
@@ -31,16 +33,13 @@ class AuthService {
       location,
     });
 
-    const payload = {
-      internalId: user.internalId,
-      uuid: user.uuid,
-      email: user.email,
-    };
+    const payload = new TokenPayload(user.uuid,user.email,user.role);
 
     const accessToken = this.tokenService.generateAccessToken(payload);
     const refreshToken = this.tokenService.generateRefreshToken(payload);
 
     await this.userService.setRefreshToken(user.internalId, refreshToken);
+    //set email token here to user to verify thier email 
 
     return {
       user: {

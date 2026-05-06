@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from app.model import predict
-from app.utils import preprocess_image
+from app.util import preprocess_image
 
 app = FastAPI(title="Plant Disease Detection API")
 

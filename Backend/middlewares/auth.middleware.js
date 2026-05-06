@@ -1,6 +1,7 @@
-import {tokenService} from '../shared/container.js';
+import { tokenService } from '../shared/container.js';
 
 export const authenticate = (req, res, next) => {
+
     const authHeader = req.headers.authorization;
   
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -16,4 +17,5 @@ export const authenticate = (req, res, next) => {
   
     req.user = decoded;
     next();
-  };
+
+};

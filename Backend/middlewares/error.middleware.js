@@ -1,6 +1,6 @@
-import { RouteError } from "@src/shared/util/routeErorr";
-import HttpStatusCodes from "@src/shared/util/httpStatusCode";
-import HttpResponse from '@src/shared/util/HttpResponse';
+import { RouteError } from "../shared/util/RouteError";
+import HttpStatusCodes from "../shared/util/HttpStatusCodes";
+import HttpResponse from '../shared/util/HttpResponse'
 
 
 export function errorHandler(err, req, res, next) {

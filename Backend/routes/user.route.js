@@ -4,7 +4,7 @@ import { authenticate } from './../middlewares/auth.middleware.js';
 const router = Router();
 
 //get user data by id
-router.get('/:id',(req,res,next)=>{})
+router.get('/:id',(req,res,next)=>{});
 //update user id
 router.put('/:id',(req,res,next)=>{});
 //delete user by id

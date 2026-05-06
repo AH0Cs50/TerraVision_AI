@@ -6,6 +6,14 @@ import {
   REFRESH_TOKEN_EXPIRES_IN
 } from './../config/config.js';
 
+export class TokenPayload {
+ constructor (uuid,email,role) {
+  this.uuid = uuid;
+  this.email = email;
+  this.role = role;
+ }
+}
+
 class TokenService {
   constructor() {
     this.accessSecret = ACCESS_TOKEN_SECRET;
