@@ -5,7 +5,8 @@ import PasswordHasher from '../service/common/passHash.service.js';
 //domain 
 import UserService from '../service/user.service.js'
 import AuthService from '../service/auth.service.js';
-import WeatherService from '../service/weather.service.js'
+import WeatherService from '../service/weather.service.js';
+
 
 //ensure dependency injection
 //infrastructure
