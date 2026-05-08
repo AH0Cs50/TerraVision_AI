@@ -8,22 +8,37 @@ const __dirname = path.dirname(__filename);
 config({ path: path.join(__dirname, 'config.env') });
 
 const { PORT, ACCESS_TOKEN_SECRET, ACCESS_TOKEN_EXPIRES_IN, 
-    REFRESH_TOKEN_SECRET, REFRESH_TOKEN_EXPIRES_IN
+    REFRESH_TOKEN_SECRET, REFRESH_TOKEN_EXPIRES_IN,
+    WEATHER_API_KEY
 } = process.env;
 
-//db config vars
-const {DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT} = process.env;
 
-export const dbConfig = {
-    DB_HOST,
-    DB_USER,
-    DB_PASSWORD,
-    DB_NAME,
-    DB_PORT
-}
+// //db config vars
+// const {DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT} = process.env;
+
 
 export { PORT,
     ACCESS_TOKEN_SECRET, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SECRET,
     REFRESH_TOKEN_EXPIRES_IN,
     WEATHER_API_KEY,
  };
+
+ // config/s3.config.js
+
+export const s3Config = {
+    region: process.env.S3_REGION,
+  
+    bucketName: process.env.S3_BUCKET_NAME,
+  
+    endpoint: process.env.S3_ENDPOINT || undefined,
+  
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY,
+  
+      secretAccessKey:
+        process.env.S3_SECRET_KEY
+    },
+
+    forcePathStyle:
+      process.env.S3_FORCE_PATH_STYLE === "true"
+};
