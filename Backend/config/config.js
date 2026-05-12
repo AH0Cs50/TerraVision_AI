@@ -26,6 +26,7 @@ export { PORT,
  // config/s3.config.js
 
 export const s3Config = {
+
     region: process.env.S3_REGION,
   
     bucketName: process.env.S3_BUCKET_NAME,
@@ -40,5 +41,23 @@ export const s3Config = {
     },
 
     forcePathStyle:
-      process.env.S3_FORCE_PATH_STYLE === "true"
+      process.env.S3_FORCE_PATH_STYLE === "true",
+
+    signedUrlExpiresIn:
+      process.env.SignedUrlExpiresIn || 300,
 };
+
+export const emailConfig = {
+  
+  host: process.env.EMAIL_HOST,
+  port: Number(process.env.EMAIL_PORT),
+
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+
+  from: `TerraVision AI <${process.env.EMAIL_USER}>`,
+};
+
+export default emailConfig;
