@@ -4,7 +4,7 @@ import {
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRES_IN
-} from './../config/config.js';
+} from '../../config/config.js';
 
 export class TokenPayload {
  constructor (uuid,email,role) {
