@@ -5,23 +5,14 @@ from pathlib import Path
 MODEL_PATH = Path(__file__).resolve().parent.parent / 'models' / 'plant.keras'
 
 
-# =========================
-# FIX 1: custom function fix
-# =========================
+
 def weighted_sum(inputs):
     # fallback implementation (safe version)
     # NOTE: real logic may differ depending on training
     return tf.add_n(inputs)
 
-
-# =========================
-# FIX 2: allow unsafe deserialization
-# =========================
 tf.keras.config.enable_unsafe_deserialization()
 
-# =========================
-# FIX 3: load model with custom_objects
-# =========================
 model = tf.keras.models.load_model(
     str(MODEL_PATH),
     compile=False,
@@ -29,7 +20,6 @@ model = tf.keras.models.load_model(
         "weighted_sum": weighted_sum
     }
 )
-
 
 # used classes for the plant model 1.04 GB
 CLASS_NAMES = [
