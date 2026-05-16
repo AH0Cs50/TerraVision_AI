@@ -1,10 +1,5 @@
 import jwt from 'jsonwebtoken';
-import {
-  ACCESS_TOKEN_SECRET,
-  ACCESS_TOKEN_EXPIRES_IN,
-  REFRESH_TOKEN_SECRET,
-  REFRESH_TOKEN_EXPIRES_IN
-} from '../../config/config.js';
+import { jwtConfig } from '../../config/config.js';
 
 export class TokenPayload {
  constructor (uuid,email,role) {
@@ -15,11 +10,12 @@ export class TokenPayload {
 }
 
 class TokenService {
+  
   constructor() {
-    this.accessSecret = ACCESS_TOKEN_SECRET;
-    this.refreshSecret = REFRESH_TOKEN_SECRET;
-    this.accessExpiresIn = ACCESS_TOKEN_EXPIRES_IN;
-    this.refreshExpiresIn = REFRESH_TOKEN_EXPIRES_IN;
+    this.accessSecret = jwtConfig.ACCESS_TOKEN_SECRET;
+    this.refreshSecret = jwtConfig.REFRESH_TOKEN_SECRET;
+    this.accessExpiresIn = jwtConfig.ACCESS_TOKEN_EXPIRES_IN;
+    this.refreshExpiresIn = jwtConfig.REFRESH_TOKEN_EXPIRES_IN;
   }
 
   // Generate Access Token (short-lived)

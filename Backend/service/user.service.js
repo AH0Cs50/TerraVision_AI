@@ -1,20 +1,19 @@
-import UserRepository from "../repositories/user.repository.js";
-import { RouteError } from "../shared/uitl/routeError.js";
+import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 
 class UserService {
-  
+  constructor(Repository = null) {
+    this.UserRepository = Repository;
+  }
+
   // ==========================
   // Get user by UUID
   // ==========================
   async findByUUID(uuid) {
-    const user = await UserRepository.findByUUID(uuid);
+    const user = await this.UserRepository.findByUUID(uuid);
 
     if (!user) {
-      throw new RouteError(
-        HttpStatusCodes.NOT_FOUND,
-        "User not found"
-      );
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
     }
 
     return user;
@@ -24,13 +23,10 @@ class UserService {
   // Get user by internal ID
   // ==========================
   async findByInternalId(internalId) {
-    const user = await UserRepository.findByInternalId(internalId);
+    const user = await this.UserRepository.findByInternalId(internalId);
 
     if (!user) {
-      throw new RouteError(
-        HttpStatusCodes.NOT_FOUND,
-        "User not found"
-      );
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
     }
 
     return user;
@@ -42,13 +38,10 @@ class UserService {
   async findByEmail(email) {
     const normalizedEmail = email.toLowerCase().trim();
 
-    const user = await UserRepository.findByEmail(normalizedEmail);
+    const user = await this.UserRepository.findByEmail(normalizedEmail);
 
     if (!user) {
-      throw new RouteError(
-        HttpStatusCodes.NOT_FOUND,
-        "User not found"
-      );
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
     }
 
     return user;
@@ -62,20 +55,17 @@ class UserService {
     if (!data?.email || !data?.password) {
       throw new RouteError(
         HttpStatusCodes.BAD_REQUEST,
-        "Email and password are required"
+        "Email and password are required",
       );
     }
 
-    const existingUser = await UserRepository.findByEmail(data.email);
+    const existingUser = await this.UserRepository.findByEmail(data.email);
 
     if (existingUser) {
-      throw new RouteError(
-        HttpStatusCodes.CONFLICT,
-        "Email already in use"
-      );
+      throw new RouteError(HttpStatusCodes.CONFLICT, "Email already in use");
     }
 
-    return await UserRepository.createUser({
+    return await this.UserRepository.createUser({
       ...data,
       email: data.email.toLowerCase().trim(),
     });
@@ -86,17 +76,17 @@ class UserService {
   // ==========================
   async setRefreshToken(internalId, token) {
     await this._ensureUserExists(internalId);
-    return await UserRepository.updateRefreshToken(internalId, token);
+    return await this.UserRepository.updateRefreshToken(internalId, token);
   }
 
   // =============================
   // Email token
   // =============================
 
-  async setEmailToken (internalId) {
+  async setEmailToken(internalId) {
     await this._ensureUserExists(internalId);
-    const token = ''; //generate email token here
-    return await UserRepository.updateEmailToken(internalId,token);
+    const token = ""; //generate email token here
+    return await this.UserRepository.updateEmailToken(internalId, token);
   }
 
   // ==========================
@@ -104,7 +94,7 @@ class UserService {
   // ==========================
   async clearRefreshToken(internalId) {
     await this._ensureUserExists(internalId);
-    return await UserRepository.updateRefreshToken(internalId, null);
+    return await this.UserRepository.updateRefreshToken(internalId, null);
   }
 
   // ==========================
@@ -112,7 +102,7 @@ class UserService {
   // ==========================
   async verifyUser(internalId) {
     await this._ensureUserExists(internalId);
-    return await UserRepository.verifyUser(internalId);
+    return await this.UserRepository.verifyUser(internalId);
   }
 
   // ==========================
@@ -120,20 +110,17 @@ class UserService {
   // ==========================
   async deleteUser(internalId) {
     await this._ensureUserExists(internalId);
-    return await UserRepository.deleteByInternalId(internalId);
+    return await this.UserRepository.deleteByInternalId(internalId);
   }
 
   // ==========================
   // Private helper
   // ==========================
   async _ensureUserExists(internalId) {
-    const user = await UserRepository.findByInternalId(internalId);
+    const user = await this.UserRepository.findByInternalId(internalId);
 
     if (!user) {
-      throw new RouteError(
-        HttpStatusCodes.NOT_FOUND,
-        "User not found"
-      );
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
     }
 
     return user;

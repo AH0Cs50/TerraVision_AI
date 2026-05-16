@@ -4,7 +4,7 @@ import HttpResponse from '../shared/util/HttpResponse'
 
 
 export function errorHandler(err, req, res, next) {
-  console.error(err); // log the erorr 
+  console.error(err); // log the error 
 
   // Handle known operational errors
   if (err instanceof RouteError) {

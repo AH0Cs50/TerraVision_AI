@@ -1,18 +1,14 @@
 // repository/plant.repository.js
 
 import { plantsDB } from "../shared/db/index.js";
-
-import { createPlantModel } from "../models/plant.model.js";
+import { createPlantModel, DiseaseSchema } from "../models/plant.model.js";
 
 class PlantRepository {
-
   /**
    * Create plant
    */
   async create(data) {
-
-    const plant =
-      createPlantModel(data);
+    const plant = createPlantModel(data);
 
     return await plantsDB.insert(plant);
   }
@@ -21,46 +17,34 @@ class PlantRepository {
    * Find by uuid
    */
   async findByUUID(uuid) {
-
     return await plantsDB.findOne({
-      uuidz
+      uuid,
     });
   }
 
   /**
    * Find by internal id
    */
-  async findByInternalId(
-    internalId
-  ) {
-
+  async findByInternalId(internalId) {
     return await plantsDB.findOne({
-      internalId
+      internalId,
     });
   }
 
   /**
    * Get all plants for user
    */
-  async findByUserInternalId(
-    userInternalId
-  ) {
-
+  async findByUserInternalId(userInternalId) {
     return await plantsDB.find({
-      userInternalId
+      userInternalId,
     });
   }
 
   /**
    * Update plant by uuid
    */
-  async updateByUUID(
-    uuid,
-    updateData
-  ) {
-
-    const currentPlant =
-      await this.findByUUID(uuid);
+  async updateByUUID(uuid, updateData) {
+    const currentPlant = await this.findByUUID(uuid);
 
     if (!currentPlant) {
       return null;
@@ -69,19 +53,14 @@ class PlantRepository {
     /**
      * Recalculate derived values
      */
-    const hasDisease =
-      updateData.disease
-        ? updateData.disease.name !==
-          "healthy"
-        : currentPlant.hasDisease;
+    const hasDisease = updateData.disease
+      ? updateData.disease.name !== "healthy"
+      : currentPlant.hasDisease;
 
-    const plantedAt =
-      updateData.plantedAt ||
-      currentPlant.plantedAt;
+    const plantedAt = updateData.plantedAt || currentPlant.plantedAt;
 
     const ageInDays = Math.floor(
-      (new Date() - new Date(plantedAt)) /
-      (1000 * 60 * 60 * 24)
+      (new Date() - new Date(plantedAt)) / (1000 * 60 * 60 * 24),
     );
 
     await plantsDB.update(
@@ -94,9 +73,9 @@ class PlantRepository {
 
           ageInDays,
 
-          updatedAt: new Date()
-        }
-      }
+          updatedAt: new Date(),
+        },
+      },
     );
 
     return await this.findByUUID(uuid);
@@ -106,31 +85,21 @@ class PlantRepository {
    * Delete plant
    */
   async deleteByUUID(uuid) {
-
-    return await plantsDB.remove(
-      { uuid },
-      {}
-    );
+    return await plantsDB.remove({ uuid }, {});
   }
 
   /**
    * Get all plants
    */
   async findAll() {
-
     return await plantsDB.find({});
   }
 
   /**
    * Pagination
    */
-  async paginate({
-    page = 1,
-    limit = 20
-  } = {}) {
-
-    const skip =
-      (page - 1) * limit;
+  async paginate({ page = 1, limit = 20 } = {}) {
+    const skip = (page - 1) * limit;
 
     return await plantsDB
       .cfind({})
@@ -143,20 +112,14 @@ class PlantRepository {
   /**
    * Add image to plant
    */
-  async addImage(
-    uuid,
-    imageName
-  ) {
-
-    const plant =
-      await this.findByUUID(uuid);
+  async addImage(uuid, imageName) {
+    const plant = await this.findByUUID(uuid);
 
     if (!plant) {
       return null;
     }
 
-    const currentImages =
-      plant.cdn?.images || [];
+    const currentImages = plant.cdn?.images || [];
 
     currentImages.push(imageName);
 
@@ -164,12 +127,11 @@ class PlantRepository {
       { uuid },
       {
         $set: {
-          "cdn.images":
-            currentImages,
+          "cdn.images": currentImages,
 
-          updatedAt: new Date()
-        }
-      }
+          updatedAt: new Date(),
+        },
+      },
     );
 
     return await this.findByUUID(uuid);
@@ -178,37 +140,53 @@ class PlantRepository {
   /**
    * Remove image from plant
    */
-  async removeImage(
-    uuid,
-    imageName
-  ) {
-
-    const plant =
-      await this.findByUUID(uuid);
+  async removeImage(uuid, imageName) {
+    const plant = await this.findByUUID(uuid);
 
     if (!plant) {
       return null;
     }
 
-    const filteredImages =
-      (plant.cdn?.images || [])
-        .filter(
-          (img) => img !== imageName
-        );
+    const filteredImages = (plant.cdn?.images || []).filter(
+      (img) => img !== imageName,
+    );
 
     await plantsDB.update(
       { uuid },
       {
         $set: {
-          "cdn.images":
-            filteredImages,
+          "cdn.images": filteredImages,
 
-          updatedAt: new Date()
-        }
-      }
+          updatedAt: new Date(),
+        },
+      },
     );
 
     return await this.findByUUID(uuid);
+  }
+
+  /**
+   * Store ML disease detection result
+   */
+  async saveDiseaseDetectionResult({ plantUUID, prediction }) {
+    const plant = await this.findByUUID(plantUUID);
+    if (!plant) {
+      return null;
+    }
+
+    const detectionRecord = DiseaseSchema.parse({
+      class: prediction.class,
+      confidence: prediction.confidence,
+      detectedAt: new Date(),
+    });
+
+    const existingHistory = plant.diseaseHistory || [];
+    existingHistory.push(detectionRecord);
+
+    await this.updateByUUID(plantUUID, {
+      disease: detectionRecord,
+      diseaseHistory: existingHistory,
+    });
   }
 }
 

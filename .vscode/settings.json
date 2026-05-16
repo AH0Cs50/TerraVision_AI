@@ -1,0 +1,11 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "javascript.validate.enable": true,
+    "eslint.validate": ["javascript"],
+    "eslint.workingDirectories": [
+        {
+            "directory": "Backend",
+            "changeProcessCWD": true
+        }
+    ]
+}

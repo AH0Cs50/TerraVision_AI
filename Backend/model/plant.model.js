@@ -6,7 +6,7 @@ const DiseaseSchema = z.object({
 
   confidence: z.number().min(0).max(1).default(1),
 
-  detectedAt: z.date().optional()
+  detectedAt: z.date().optional(),
 });
 
 /**
@@ -19,18 +19,15 @@ const PlantSchema = z.object({
 
   varietyName: z.string().min(2).max(100),
 
-  plantType: z.enum([
-    "crop",
-    "tree"
-  ]),
+  plantFamily: z.string(),
+
+  plantType: z.enum(["crop", "tree"]),
 
   soilType: z.string().optional(),
 
-  disease: DiseaseSchema.default(() => ({
-    name: "healthy",
-    confidence: 1
-  })),
+  disease: DiseaseSchema,
 
+  diseaseHistory: z.array(DiseaseSchema).default([]),
   /**
    * Farming date
    * From this date we can:
@@ -44,15 +41,16 @@ const PlantSchema = z.object({
 
   lastWatered: z.date().optional(),
 
-  cdn: z.object({
-    basePath: z.string(), // the base path in bucket 
+  cdn: z
+    .object({
+      basePath: z.string(), // the base path in bucket
 
-    images: z.array(z.string()).optional() // image file name
-  }).optional()
+      images: z.array(z.string()).optional(), // image file name
+    })
+    .optional(),
 });
 
 export const createPlantModel = (data) => {
-
   const parsed = PlantSchema.parse(data);
 
   const now = new Date();
@@ -61,8 +59,7 @@ export const createPlantModel = (data) => {
    * Calculate age in days dynamically
    */
   const ageInDays = Math.floor(
-    (now - parsed.plantedAt) /
-    (1000 * 60 * 60 * 24)
+    (now - parsed.plantedAt) / (1000 * 60 * 60 * 24),
   );
 
   return {
@@ -77,11 +74,10 @@ export const createPlantModel = (data) => {
      */
     ageInDays,
 
-    hasDisease:
-      parsed.disease.name !== "healthy",
+    hasDisease: parsed.disease.name !== "healthy",
 
     createdAt: now,
 
-    updatedAt: now
+    updatedAt: now,
   };
 };

@@ -24,6 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",
     "axios": "^1.15.1",
+    "bcrypt": "^6.0.0",
     "cros": "^1.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -32,5 +33,11 @@
     "nodemailer": "^8.0.7",
     "uuid": "^14.0.0",
     "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "eslint-plugin-node": "^11.1.0",
+    "globals": "^17.6.0"
   }
 }
