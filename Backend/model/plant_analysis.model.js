@@ -95,6 +95,26 @@ const PlantActionLogSchema = z.object({
 
 /**
  * =========================================
+ * ENGINE SCORES (raw numeric output)
+ * =========================================
+ */
+
+const AppliedRuleSchema = z.object({
+  id: z.string(),
+  layer: z.string(),
+  explainKey: z.string(),
+});
+
+export const EngineScoresSchema = z.object({
+  waterScore: z.number().min(0.5).max(2.0),
+  fertilizerScore: z.number().min(0.5).max(2.0),
+  pestRiskScore: z.number().min(0.5).max(2.0),
+  lightScore: z.number().min(0.5).max(2.0),
+  appliedRules: z.array(AppliedRuleSchema).default([]),
+});
+
+/**
+ * =========================================
  * AI INSIGHTS
  * =========================================
  */
@@ -115,6 +135,8 @@ const PlantAIInsightsSchema = z.object({
 
 export const PlantCareStateSchema = z.object({
   status: PlantStatusSchema,
+
+  engineScores: EngineScoresSchema.optional(),
 
   activeTasks: z.array(PlantTaskSchema).default([]),
 
@@ -150,6 +172,67 @@ export function createPlantTaskModel(data) {
     dueDate: parsed.dueDate,
 
     completedAt: parsed.completedAt,
+  };
+}
+
+/**
+ * =========================================
+ * SCORE MAPPING
+ * =========================================
+ * Maps numeric engine scores (0.5–2.0) to categorical status enums.
+ */
+
+function mapWaterStatus(score) {
+  if (score >= 1.7) return "overwatered";
+  if (score >= 1.3) return "satisfied";
+  if (score >= 0.8) return "low";
+  return "thirsty";
+}
+
+function mapNutrientStatus(score) {
+  if (score >= 1.7) return "excess";
+  if (score >= 1.3) return "optimal";
+  if (score >= 0.8) return "low";
+  return "needs_feed";
+}
+
+function mapHealthStatus(score) {
+  if (score >= 1.7) return "critical";
+  if (score >= 1.3) return "diseased";
+  if (score >= 0.8) return "warning";
+  return "healthy";
+}
+
+function mapLightStatus(score) {
+  if (score >= 1.7) return "burn_risk";
+  if (score >= 1.3) return "high";
+  if (score >= 0.8) return "optimal";
+  return "low";
+}
+
+/**
+ * Convert engine evaluation result to plant care state status.
+ */
+export function engineScoresToStatus(scores) {
+  return {
+    water: mapWaterStatus(scores.waterScore),
+    nutrients: mapNutrientStatus(scores.fertilizerScore),
+    health: mapHealthStatus(scores.pestRiskScore),
+    light: mapLightStatus(scores.lightScore),
+  };
+}
+
+/**
+ * Build raw engine scores object from engine output.
+ * Renames _appliedRules → appliedRules for the model.
+ */
+export function buildEngineScores(engineResult) {
+  return {
+    waterScore: engineResult.waterScore,
+    fertilizerScore: engineResult.fertilizerScore,
+    pestRiskScore: engineResult.pestRiskScore,
+    lightScore: engineResult.lightScore,
+    appliedRules: engineResult._appliedRules || [],
   };
 }
 

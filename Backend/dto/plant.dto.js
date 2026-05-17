@@ -1,59 +1,78 @@
 import { z } from "zod";
 
+const PlantFamilyEnum = z.enum([
+  "leafy_greens",
+  "fruiting_nightshade",
+  "succulent",
+  "root_crops",
+  "brassicas",
+  "legumes",
+  "herbs",
+  "tropical",
+  "citrus",
+  "vines",
+  "grasses",
+  "flowering_ornamentals",
+]);
+
+const GrowthStageEnum = z.enum([
+  "germination",
+  "seedling",
+  "vegetative",
+  "flowering",
+  "fruiting",
+  "mature",
+]);
+
+const SoilTypeEnum = z.enum([
+  "sandy",
+  "alfisols",
+  "aridisols",
+  "entisols",
+  "inceptisols",
+  "vertisols",
+]);
+
+const StressDiseaseTypeEnum = z.enum(["bacterial", "fungal", "none"]);
+const StressSeverityEnum = z.enum(["high", "medium", "none"]);
+
+function parseDate(value) {
+  if (value instanceof Date) return value;
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed;
+  }
+  return value;
+}
+
 export const PlantDTO = z.object({
-
-  userInternalId: z.number(),
-
   name: z.string().min(2).max(100),
 
-  soilType: z.enum([
-    "clay",
-    "sandy",
-    "loamy",
-    "silty",
-    "peaty",
-    "chalky",
-    "saline"
-  ]).optional(),
+  varietyName: z.string().min(2).max(100),
 
-  age: z.number().positive().optional(),
+  plantType: z.enum(["crop", "tree"]),
 
-  ageType: z.enum(["days", "years"]).optional(),
+  family: PlantFamilyEnum,
 
-  lastWatered: z.preprocess(
-    (value) => {
-      if (typeof value === "string" || typeof value === "number") {
-        return new Date(value);
-      }
-  
-      return value;
-    },
-    z.date().max(new Date()).optional()
-  ),
-  
-})
-.superRefine((data, ctx) => {
-  
-  // Rule 1: age must have type
-  if (data.age && !data.ageType) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "ageType is required when age is provided"
-    });
-  }
+  growthStage: GrowthStageEnum,
 
-  // Rule 2: crop vs tree logic
-  if (data.ageType === "days" && data.age > 365) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Crop age in days cannot exceed 365"
-    });
-  }
+  plantedAt: z.preprocess(parseDate, z.date()),
 
-  if (data.ageType === "years" && data.age < 1) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Tree age in years must be >= 1"
-    });
-  }
+  soil: z.object({
+    type: SoilTypeEnum,
+    moisture: z.number().min(0).max(100),
+  }),
+
+  watering: z
+    .object({
+      hoursSinceLastWatering: z.number().min(0),
+    })
+    .optional(),
+
+  stress: z
+    .object({
+      diseaseType: StressDiseaseTypeEnum,
+      severity: StressSeverityEnum,
+    })
+    .optional(),
 });

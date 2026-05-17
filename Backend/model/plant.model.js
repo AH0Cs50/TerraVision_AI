@@ -1,17 +1,57 @@
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
-const DiseaseSchema = z.object({
+function parseDate(value) {
+  if (value instanceof Date) return value;
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed;
+  }
+  return value;
+}
+
+const PlantFamilyEnum = z.enum([
+  "leafy_greens",
+  "fruiting_nightshade",
+  "succulent",
+  "root_crops",
+  "brassicas",
+  "legumes",
+  "herbs",
+  "tropical",
+  "citrus",
+  "vines",
+  "grasses",
+  "flowering_ornamentals",
+]);
+
+const GrowthStageEnum = z.enum([
+  "germination",
+  "seedling",
+  "vegetative",
+  "flowering",
+  "fruiting",
+  "mature",
+]);
+
+const SoilTypeEnum = z.enum([
+  "sandy",
+  "alfisols",
+  "aridisols",
+  "entisols",
+  "inceptisols",
+  "vertisols",
+]);
+
+const StressDiseaseTypeEnum = z.enum(["bacterial", "fungal", "none"]);
+const StressSeverityEnum = z.enum(["high", "medium", "none"]);
+
+export const DiseaseSchema = z.object({
   name: z.string().default("healthy"),
-
   confidence: z.number().min(0).max(1).default(1),
-
   detectedAt: z.date().optional(),
 });
 
-/**
- * Simple DB schema (light validation)
- */
 const PlantSchema = z.object({
   userInternalId: z.number(),
 
@@ -19,65 +59,58 @@ const PlantSchema = z.object({
 
   varietyName: z.string().min(2).max(100),
 
-  plantFamily: z.string(),
-
   plantType: z.enum(["crop", "tree"]),
 
-  soilType: z.string().optional(),
+  family: PlantFamilyEnum,
 
-  disease: DiseaseSchema,
+  growthStage: GrowthStageEnum,
+
+  plantedAt: z.preprocess(parseDate, z.date()),
+
+  soil: z.object({
+    type: SoilTypeEnum,
+    moisture: z.number().min(0).max(100),
+  }),
+
+  watering: z
+    .object({
+      hoursSinceLastWatering: z.number().min(0),
+    })
+    .optional(),
+
+  stress: z
+    .object({
+      diseaseType: StressDiseaseTypeEnum,
+      severity: StressSeverityEnum,
+    })
+    .optional(),
+
+  disease: DiseaseSchema.default({ name: "healthy", confidence: 1 }),
 
   diseaseHistory: z.array(DiseaseSchema).default([]),
-  /**
-   * Farming date
-   * From this date we can:
-   * - calculate plant age
-   * - estimate harvest time
-   * - track growth progress
-   */
-  plantedAt: z.date(),
-
-  expectedHarvestAt: z.date().optional(),
-
-  lastWatered: z.date().optional(),
 
   cdn: z
     .object({
-      basePath: z.string(), // the base path in bucket
-
-      images: z.array(z.string()).optional(), // image file name
+      basePath: z.string(),
+      images: z.array(z.string()).optional(),
     })
     .optional(),
 });
 
 export const createPlantModel = (data) => {
   const parsed = PlantSchema.parse(data);
-
   const now = new Date();
-
-  /**
-   * Calculate age in days dynamically
-   */
-  const ageInDays = Math.floor(
+  const ageDays = Math.floor(
     (now - parsed.plantedAt) / (1000 * 60 * 60 * 24),
   );
 
   return {
     internalId: Date.now(),
-
     uuid: uuidv4(),
-
     ...parsed,
-
-    /**
-     * Derived fields
-     */
-    ageInDays,
-
+    ageDays,
     hasDisease: parsed.disease.name !== "healthy",
-
     createdAt: now,
-
     updatedAt: now,
   };
 };
