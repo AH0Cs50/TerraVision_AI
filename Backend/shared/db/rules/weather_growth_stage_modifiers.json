@@ -1,0 +1,251 @@
+{
+  "factor": "weather",
+  "layer": "growth_stage_modifiers",
+  "rules": [
+    {
+      "id": "stage_germination_leafy_greens",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "germination" },
+        "plant.family": { "eq": "leafy_greens" }
+      },
+      "effects": {
+        "waterMultiplier": 1.3,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Leafy green germination requires constant moisture; high humidity increases damping-off risk"
+    },
+    {
+      "id": "stage_germination_succulent",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "germination" },
+        "plant.family": { "eq": "succulent" }
+      },
+      "effects": {
+        "waterMultiplier": 0.6,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Succulent germination needs minimal moisture; excess water causes rot"
+    },
+    {
+      "id": "stage_germination_legumes",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "germination" },
+        "plant.family": { "eq": "legumes" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2
+      },
+      "weight": 0.4,
+      "explanation": "Legume seeds need consistent moisture for imbibition and radicle emergence"
+    },
+    {
+      "id": "stage_seedling_general_vulnerability",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "seedling" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2,
+        "fertilizerScore": 0.2,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Seedlings have shallow roots and tender tissue, increasing water/nutrient needs and pest vulnerability"
+    },
+    {
+      "id": "stage_seedling_succulent_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "seedling" },
+        "plant.family": { "eq": "succulent" }
+      },
+      "effects": {
+        "waterMultiplier": 0.6,
+        "fertilizerScore": -0.1
+      },
+      "weight": 0.4,
+      "explanation": "Succulent seedlings require careful water management to prevent rot"
+    },
+    {
+      "id": "stage_vegetative_water_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "vegetative" }
+      },
+      "effects": {
+        "waterMultiplier": 1.1,
+        "fertilizerScore": 0.3
+      },
+      "weight": 0.4,
+      "explanation": "Vegetative growth drives leaf expansion and biomass accumulation, increasing water and nutrient demand"
+    },
+    {
+      "id": "stage_vegetative_brassicas_leafy",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "vegetative" },
+        "plant.family": { "eq": "brassicas" }
+      },
+      "effects": {
+        "waterMultiplier": 1.3,
+        "fertilizerScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Brassicas in vegetative stage rapidly produce leaf biomass with high water and nitrogen demand"
+    },
+    {
+      "id": "stage_vegetative_leafy_greens",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "vegetative" },
+        "plant.family": { "eq": "leafy_greens" }
+      },
+      "effects": {
+        "waterMultiplier": 1.4,
+        "fertilizerScore": 0.3
+      },
+      "weight": 0.6,
+      "explanation": "Leafy greens in vegetative stage have maximum leaf area and transpiration rate"
+    },
+    {
+      "id": "stage_flowering_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "flowering" }
+      },
+      "effects": {
+        "waterMultiplier": 1.1,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Flowering requires consistent moisture for flower development and pollination"
+    },
+    {
+      "id": "stage_flowering_nightshade_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "flowering" },
+        "plant.family": { "eq": "fruiting_nightshade" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2,
+        "fertilizerScore": 0.2,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Nightshade flowering is sensitive to water stress; flowers attract thrips and other pests"
+    },
+    {
+      "id": "stage_fruiting_water_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "fruiting" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2,
+        "fertilizerScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Fruit development requires consistent water supply for cell expansion and nutrient translocation"
+    },
+    {
+      "id": "stage_fruiting_nightshade_heavy",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "fruiting" },
+        "plant.family": { "eq": "fruiting_nightshade" }
+      },
+      "effects": {
+        "waterMultiplier": 1.3,
+        "fertilizerScore": 0.3,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.6,
+      "explanation": "Nightshade fruiting has peak water and nutrient demand; ripe fruit attracts pests"
+    },
+    {
+      "id": "stage_fruiting_tropical_citrus",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "fruiting" },
+        "plant.family": { "eq": "tropical" }
+      },
+      "effects": {
+        "waterMultiplier": 1.3,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Tropical fruit development has very high water demand"
+    },
+    {
+      "id": "stage_mature_reduced_activity",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "mature" }
+      },
+      "effects": {
+        "waterMultiplier": 0.8,
+        "fertilizerScore": -0.2
+      },
+      "weight": 0.4,
+      "explanation": "Mature plants have reduced growth rate, lower water and nutrient demand"
+    },
+    {
+      "id": "stage_mature_senescence_pest_risk",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "mature" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Senescing tissue attracts secondary pests and opportunistic pathogens"
+    },
+    {
+      "id": "stage_germination_root_crops",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "germination" },
+        "plant.family": { "eq": "root_crops" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2
+      },
+      "weight": 0.4,
+      "explanation": "Root crop germination needs consistent moisture for uniform emergence"
+    },
+    {
+      "id": "stage_vegetative_legumes_nitrogen",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "vegetative" },
+        "plant.family": { "eq": "legumes" }
+      },
+      "effects": {
+        "fertilizerScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Legume vegetative stage utilizes nitrogen fixation, reducing external fertilizer need"
+    },
+    {
+      "id": "stage_flowering_herbs_aromatic",
+      "factor": "weather",
+      "condition": {
+        "plant.growthStage": { "eq": "flowering" },
+        "plant.family": { "eq": "herbs" }
+      },
+      "effects": {
+        "waterMultiplier": 0.9,
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Herbs often require drier conditions during flowering for essential oil concentration"
+    }
+  ]
+}

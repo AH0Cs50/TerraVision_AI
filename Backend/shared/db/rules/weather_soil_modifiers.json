@@ -1,0 +1,217 @@
+{
+  "factor": "weather",
+  "layer": "soil_modifiers",
+  "rules": [
+    {
+      "id": "soil_sandy_water_leaching",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "sandy" }
+      },
+      "effects": {
+        "waterScore": 0.3,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Sandy soil has low water retention and nutrient leaching, increasing irrigation and fertilizer needs"
+    },
+    {
+      "id": "soil_sandy_pest_suppression",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "sandy" }
+      },
+      "effects": {
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.2,
+      "explanation": "Sandy soil provides poor habitat for soil-borne pests and pathogens"
+    },
+    {
+      "id": "soil_aridisols_desert_water_stress",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "aridisols" }
+      },
+      "effects": {
+        "waterScore": 0.5,
+        "fertilizerScore": 0.3
+      },
+      "weight": 0.6,
+      "explanation": "Aridisols are rocky desert soils with extremely low organic matter, very poor water holding capacity, and minimal nutrient availability"
+    },
+    {
+      "id": "soil_aridisols_salinity_risk",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "aridisols" },
+        "soil.moisture": { "gte": 30 }
+      },
+      "effects": {
+        "fertilizerScore": 0.2,
+        "pestRiskScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Irrigation on aridisols mobilizes salts, requiring additional leaching fraction and increasing osmotic stress on roots"
+    },
+    {
+      "id": "soil_entisols_river_basin_fertility",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "entisols" }
+      },
+      "effects": {
+        "waterScore": -0.1,
+        "fertilizerScore": -0.2
+      },
+      "weight": 0.4,
+      "explanation": "Entisols are river basin soils with alluvial deposits, naturally fertile with good moisture retention from periodic flooding"
+    },
+    {
+      "id": "soil_entisols_flood_risk",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "entisols" },
+        "weather.condition": { "eq": "rainy" }
+      },
+      "effects": {
+        "waterScore": -0.3,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Entisols near river basins are prone to flooding during rain, causing water saturation and waterborne disease risk"
+    },
+    {
+      "id": "soil_inceptisols_red_soil_characteristics",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "inceptisols" }
+      },
+      "effects": {
+        "waterScore": 0.1,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Inceptisols (red soils) have moderate water retention but are prone to nutrient leaching, especially phosphorus fixation"
+    },
+    {
+      "id": "soil_inceptisols_erosion_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "inceptisols" },
+        "weather.condition": { "eq": "storm" }
+      },
+      "effects": {
+        "waterScore": 0.2,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Red soils are erosion-prone during heavy storm events, losing topsoil and nutrients rapidly"
+    },
+    {
+      "id": "soil_alfisols_heavy_clay_drainage",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "alfisols" }
+      },
+      "effects": {
+        "waterScore": -0.2,
+        "fertilizerScore": -0.1
+      },
+      "weight": 0.4,
+      "explanation": "Alfisols are heavy clays with slow drainage and good nutrient retention, reducing irrigation frequency but requiring careful moisture management"
+    },
+    {
+      "id": "soil_alfisols_waterlogging_pest_risk",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "alfisols" },
+        "weather.condition": { "eq": "rainy" }
+      },
+      "effects": {
+        "waterScore": 0.2,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Alfisols become easily waterlogged in rain due to clay texture, creating anaerobic conditions and root disease pressure"
+    },
+    {
+      "id": "soil_vertisols_cracking_clay_swelling",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "vertisols" }
+      },
+      "effects": {
+        "waterScore": 0.3,
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.5,
+      "explanation": "Vertisols are cracking clays that swell when wet and crack when dry, requiring more water to wet deeply and losing nutrients through deep cracks"
+    },
+    {
+      "id": "soil_vertisols_dry_cracking_stress",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "vertisols" },
+        "weather.temperature": { "gte": 32 }
+      },
+      "effects": {
+        "waterScore": 0.4,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Vertisols under heat develop deep cracks that tear roots and increase evaporation, raising water demand and pest entry points"
+    },
+    {
+      "id": "soil_vertisols_waterlogged_risk",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "vertisols" },
+        "weather.condition": { "eq": "storm" }
+      },
+      "effects": {
+        "pestRiskScore": 0.4
+      },
+      "weight": 0.4,
+      "explanation": "Vertisols pond water on the surface during storms due to slow infiltration, severely increasing fungal and root rot risk"
+    },
+    {
+      "id": "soil_low_moisture_drought_stress",
+      "factor": "weather",
+      "condition": {
+        "soil.moisture": { "lt": 20 }
+      },
+      "effects": {
+        "waterScore": 0.3,
+        "pestRiskScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Low soil moisture below 20% indicates drought stress, increasing irrigation need and plant vulnerability"
+    },
+    {
+      "id": "soil_high_moisture_saturation",
+      "factor": "weather",
+      "condition": {
+        "soil.moisture": { "gte": 80 }
+      },
+      "effects": {
+        "waterScore": -0.3,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Soil moisture above 80% indicates saturation, reducing irrigation need but increasing root disease risk"
+    },
+    {
+      "id": "soil_optimal_moisture",
+      "factor": "weather",
+      "condition": {
+        "soil.moisture": { "gte": 40, "lt": 70 }
+      },
+      "effects": {
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.2,
+      "explanation": "Optimal soil moisture 40-70% supports healthy root function and reduces stress-related pest issues"
+    }
+  ]
+}

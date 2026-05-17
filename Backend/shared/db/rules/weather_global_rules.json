@@ -1,0 +1,192 @@
+{
+  "factor": "weather",
+  "layer": "global",
+  "rules": [
+    {
+      "id": "global_extreme_heat_water_demand",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 35 }
+      },
+      "effects": {
+        "waterScore": 0.5
+      },
+      "weight": 0.7,
+      "explanation": "Extreme heat above 35°C sharply increases evapotranspiration"
+    },
+    {
+      "id": "global_high_heat_water_demand",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 30, "lt": 35 }
+      },
+      "effects": {
+        "waterScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "High temperature 30-35°C moderately increases evapotranspiration"
+    },
+    {
+      "id": "global_optimal_temp_baseline",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 20, "lt": 30 }
+      },
+      "effects": {
+        "waterScore": 0.0,
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.2,
+      "explanation": "Optimal 20-30°C range supports baseline metabolism with slight nutrient activity"
+    },
+    {
+      "id": "global_cool_temp_reduced_water",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 10, "lt": 20 }
+      },
+      "effects": {
+        "waterScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Cool temperatures 10-20°C reduce transpiration rate"
+    },
+    {
+      "id": "global_cold_temp_low_activity",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "lt": 10 }
+      },
+      "effects": {
+        "waterScore": -0.2,
+        "fertilizerScore": -0.2
+      },
+      "weight": 0.5,
+      "explanation": "Cold below 10°C slows metabolic processes reducing water and nutrient demand"
+    },
+    {
+      "id": "global_frost_condition",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "lt": 5 }
+      },
+      "effects": {
+        "waterScore": -0.3,
+        "fertilizerScore": -0.3
+      },
+      "weight": 0.6,
+      "explanation": "Near-freezing below 5°C halts most uptake activity"
+    },
+    {
+      "id": "global_high_humidity_reduced_transpiration",
+      "factor": "weather",
+      "condition": {
+        "weather.humidity": { "gte": 80 }
+      },
+      "effects": {
+        "waterScore": -0.3
+      },
+      "weight": 0.5,
+      "explanation": "Humidity above 80% reduces vapor pressure deficit, lowering transpiration"
+    },
+    {
+      "id": "global_low_humidity_increased_transpiration",
+      "factor": "weather",
+      "condition": {
+        "weather.humidity": { "lt": 40 }
+      },
+      "effects": {
+        "waterScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Low humidity below 40% increases vapor pressure deficit, accelerating transpiration"
+    },
+    {
+      "id": "global_dry_heat_combined",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 32 },
+        "weather.humidity": { "lt": 30 }
+      },
+      "effects": {
+        "waterScore": 0.4
+      },
+      "weight": 0.6,
+      "explanation": "Dry heat combination intensifies evapotranspiration beyond individual effects"
+    },
+    {
+      "id": "global_rainy_condition_irrigation_reduction",
+      "factor": "weather",
+      "condition": {
+        "weather.condition": { "eq": "rainy" }
+      },
+      "effects": {
+        "waterScore": -0.5
+      },
+      "weight": 0.7,
+      "explanation": "Rainfall provides natural irrigation, substantially reducing water demand"
+    },
+    {
+      "id": "global_storm_condition_waterlogging_risk",
+      "factor": "weather",
+      "condition": {
+        "weather.condition": { "eq": "storm" }
+      },
+      "effects": {
+        "waterScore": -0.4,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.6,
+      "explanation": "Storm causes waterlogging reducing irrigation need but increasing fungal and root disease risk"
+    },
+    {
+      "id": "global_sunny_condition_evaporation",
+      "factor": "weather",
+      "condition": {
+        "weather.condition": { "eq": "sunny" }
+      },
+      "effects": {
+        "waterScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Full sun increases radiative load and evaporation from soil surface"
+    },
+    {
+      "id": "global_high_humidity_fungal_risk",
+      "factor": "weather",
+      "condition": {
+        "weather.humidity": { "gte": 85 }
+      },
+      "effects": {
+        "pestRiskScore": 0.4
+      },
+      "weight": 0.6,
+      "explanation": "Humidity above 85% promotes fungal spore germination and foliar disease development"
+    },
+    {
+      "id": "global_heat_humidity_pest_acceleration",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 28 },
+        "weather.humidity": { "gte": 70 }
+      },
+      "effects": {
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Combined heat and humidity accelerates pest reproductive cycles"
+    },
+    {
+      "id": "global_extreme_heat_pest_suppression",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 40 }
+      },
+      "effects": {
+        "pestRiskScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Extreme heat above 40°C suppresses some pest populations"
+    }
+  ]
+}

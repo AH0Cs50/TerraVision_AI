@@ -1,0 +1,294 @@
+{
+  "factor": "weather",
+  "layer": "plant_family_modifiers",
+  "rules": [
+    {
+      "id": "family_leafy_greens_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "leafy_greens" }
+      },
+      "effects": {
+        "waterMultiplier": 1.3
+      },
+      "weight": 0.5,
+      "explanation": "Leafy greens have shallow roots and high leaf surface area, increasing water sensitivity"
+    },
+    {
+      "id": "family_leafy_greens_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "leafy_greens" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Leafy greens are highly susceptible to foliar pests and diseases"
+    },
+    {
+      "id": "family_fruiting_nightshade_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "fruiting_nightshade" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2
+      },
+      "weight": 0.4,
+      "explanation": "Fruiting nightshades require consistent moisture for fruit development"
+    },
+    {
+      "id": "family_fruiting_nightshade_nutrient_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "fruiting_nightshade" }
+      },
+      "effects": {
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Fruiting nightshades are heavy feeders with high nutrient demand"
+    },
+    {
+      "id": "family_succulent_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "succulent" }
+      },
+      "effects": {
+        "waterMultiplier": 0.5
+      },
+      "weight": 0.6,
+      "explanation": "Succulents store water in tissues and have very low water sensitivity"
+    },
+    {
+      "id": "family_succulent_pest_resistance",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "succulent" }
+      },
+      "effects": {
+        "pestRiskScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Succulents naturally resist many pests due to thick cuticles and drought adaptation"
+    },
+    {
+      "id": "family_root_crops_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "root_crops" }
+      },
+      "effects": {
+        "waterMultiplier": 1.1
+      },
+      "weight": 0.3,
+      "explanation": "Root crops need steady moisture for uniform root development"
+    },
+    {
+      "id": "family_root_crops_nutrient_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "root_crops" }
+      },
+      "effects": {
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.3,
+      "explanation": "Root crops have moderate nutrient demand focused on potassium and phosphorus"
+    },
+    {
+      "id": "family_brassicas_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "brassicas" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2
+      },
+      "weight": 0.4,
+      "explanation": "Brassicas have high water demand for leafy head formation"
+    },
+    {
+      "id": "family_brassicas_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "brassicas" }
+      },
+      "effects": {
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Brassicas are highly susceptible to caterpillars, aphids, and clubroot"
+    },
+    {
+      "id": "family_legumes_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "legumes" }
+      },
+      "effects": {
+        "waterMultiplier": 0.8
+      },
+      "weight": 0.3,
+      "explanation": "Legumes have moderate drought tolerance and nitrogen-fixing capability reduces water stress"
+    },
+    {
+      "id": "family_legumes_nutrient_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "legumes" }
+      },
+      "effects": {
+        "fertilizerScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Legumes fix atmospheric nitrogen, reducing external fertilizer demand"
+    },
+    {
+      "id": "family_herbs_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "herbs" }
+      },
+      "effects": {
+        "waterMultiplier": 0.7
+      },
+      "weight": 0.4,
+      "explanation": "Most herbs are drought-tolerant with low water sensitivity"
+    },
+    {
+      "id": "family_herbs_pest_resistance",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "herbs" }
+      },
+      "effects": {
+        "pestRiskScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Aromatic herbs naturally repel many pests through essential oils"
+    },
+    {
+      "id": "family_tropical_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "tropical" }
+      },
+      "effects": {
+        "waterMultiplier": 1.4
+      },
+      "weight": 0.6,
+      "explanation": "Tropical plants evolved in high-rainfall environments with very high water sensitivity"
+    },
+    {
+      "id": "family_tropical_humidity_requirement",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "tropical" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Tropical plants stress easily in low humidity, increasing secondary pest vulnerability"
+    },
+    {
+      "id": "family_citrus_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "citrus" }
+      },
+      "effects": {
+        "waterMultiplier": 1.1
+      },
+      "weight": 0.3,
+      "explanation": "Citrus requires consistent moisture but has moderate drought tolerance"
+    },
+    {
+      "id": "family_citrus_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "citrus" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Citrus is susceptible to scale, leafminer, and citrus greening vector"
+    },
+    {
+      "id": "family_vines_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "vines" }
+      },
+      "effects": {
+        "waterMultiplier": 1.0
+      },
+      "weight": 0.2,
+      "explanation": "Vines have moderate water sensitivity depending on rootstock depth"
+    },
+    {
+      "id": "family_vines_humidity_fungal_risk",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "vines" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Vines in humid conditions are highly prone to powdery mildew and botrytis"
+    },
+    {
+      "id": "family_grasses_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "grasses" }
+      },
+      "effects": {
+        "waterMultiplier": 0.8
+      },
+      "weight": 0.3,
+      "explanation": "Grasses have fibrous root systems with efficient water uptake and moderate drought tolerance"
+    },
+    {
+      "id": "family_grasses_nutrient_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "grasses" }
+      },
+      "effects": {
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Grasses have high nitrogen demand for vegetative growth"
+    },
+    {
+      "id": "family_flowering_ornamentals_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "flowering_ornamentals" }
+      },
+      "effects": {
+        "waterMultiplier": 1.0
+      },
+      "weight": 0.2,
+      "explanation": "Flowering ornamentals have variable water sensitivity depending on species"
+    },
+    {
+      "id": "family_flowering_ornamentals_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "flowering_ornamentals" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Flowering ornamentals are often susceptible to aphids, thrips, and mites"
+    }
+  ]
+}

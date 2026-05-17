@@ -1,0 +1,83 @@
+{
+  "factor": "weather",
+  "layer": "watering_history_modifiers",
+  "rules": [
+    {
+      "id": "watering_drought_stress_high",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 72 }
+      },
+      "effects": {
+        "waterScore": 0.5,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.6,
+      "explanation": "More than 72 hours without water causes significant drought stress, raising irrigation demand and pest vulnerability"
+    },
+    {
+      "id": "watering_drought_stress_moderate",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 48, "lt": 72 }
+      },
+      "effects": {
+        "waterScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "48-72 hours without water indicates developing drought stress"
+    },
+    {
+      "id": "watering_mild_drought",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 24, "lt": 48 }
+      },
+      "effects": {
+        "waterScore": 0.1
+      },
+      "weight": 0.3,
+      "explanation": "24-48 hours without water is mild stress in most conditions"
+    },
+    {
+      "id": "watering_recently_watered",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "lt": 12 }
+      },
+      "effects": {
+        "waterScore": -0.2,
+        "pestRiskScore": 0.1
+      },
+      "weight": 0.3,
+      "explanation": "Recently watered within 12 hours reduces irrigation need; slight increase in surface moisture pest risk"
+    },
+    {
+      "id": "watering_drought_recovery_imbalance",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 96 }
+      },
+      "effects": {
+        "waterScore": 0.7,
+        "fertilizerScore": 0.2,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.7,
+      "explanation": "Extreme drought beyond 96 hours causes severe stress, requiring careful rehydration and raising pest risk"
+    },
+    {
+      "id": "watering_heat_drought_compound",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 48 },
+        "weather.temperature": { "gte": 32 }
+      },
+      "effects": {
+        "waterScore": 0.4
+      },
+      "weight": 0.6,
+      "explanation": "Combined heat and prolonged dryness accelerates soil moisture depletion"
+    }
+  ]
+}

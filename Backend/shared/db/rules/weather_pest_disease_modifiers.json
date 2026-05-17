@@ -1,0 +1,126 @@
+{
+  "factor": "weather",
+  "layer": "pest_disease_modifiers",
+  "rules": [
+    {
+      "id": "pest_fungal_humidity_high",
+      "factor": "weather",
+      "condition": {
+        "stress.diseaseType": { "eq": "fungal" },
+        "weather.humidity": { "gte": 80 }
+      },
+      "effects": {
+        "pestRiskScore": 0.5
+      },
+      "weight": 0.7,
+      "explanation": "Fungal disease combined with high humidity creates explosive disease progression"
+    },
+    {
+      "id": "pest_fungal_moderate_humidity",
+      "factor": "weather",
+      "condition": {
+        "stress.diseaseType": { "eq": "fungal" },
+        "weather.humidity": { "gte": 60, "lt": 80 }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Moderate humidity supports fungal disease but at reduced progression rate"
+    },
+    {
+      "id": "pest_bacterial_heat_moisture",
+      "factor": "weather",
+      "condition": {
+        "stress.diseaseType": { "eq": "bacterial" },
+        "weather.temperature": { "gte": 25 },
+        "weather.humidity": { "gte": 70 }
+      },
+      "effects": {
+        "pestRiskScore": 0.4
+      },
+      "weight": 0.5,
+      "explanation": "Bacterial diseases thrive in warm, moist conditions with leaf wetness"
+    },
+    {
+      "id": "pest_high_severity_amplification",
+      "factor": "weather",
+      "condition": {
+        "stress.severity": { "eq": "high" }
+      },
+      "effects": {
+        "pestRiskScore": 0.5,
+        "waterScore": 0.2
+      },
+      "weight": 0.6,
+      "explanation": "High disease severity amplifies all risk scores and increases water demand due to compromised tissue"
+    },
+    {
+      "id": "pest_medium_severity_moderate",
+      "factor": "weather",
+      "condition": {
+        "stress.severity": { "eq": "medium" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2,
+        "waterScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Medium disease severity has moderate amplification effects"
+    },
+    {
+      "id": "pest_heat_reproduction_acceleration",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 30 },
+        "stress.diseaseType": { "eq": "none" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "High temperature accelerates pest insect reproduction and metabolic rates even without active disease"
+    },
+    {
+      "id": "pest_stress_vulnerability",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 72 },
+        "weather.temperature": { "gte": 30 }
+      },
+      "effects": {
+        "pestRiskScore": 0.3,
+        "waterScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Drought-stressed plants in heat are more vulnerable to pest attacks due to compromised defenses"
+    },
+    {
+      "id": "pest_soil_borne_moisture_risk",
+      "factor": "weather",
+      "condition": {
+        "soil.moisture": { "gte": 80 },
+        "soil.type": { "eq": "alfisols" }
+      },
+      "effects": {
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.4,
+      "explanation": "Waterlogged alfisols create anaerobic conditions favoring soil-borne pathogens like pythium and phytophthora"
+    },
+    {
+      "id": "pest_optimal_growth_suppression",
+      "factor": "weather",
+      "condition": {
+        "weather.temperature": { "gte": 18, "lt": 26 },
+        "weather.humidity": { "gte": 50, "lt": 70 },
+        "stress.severity": { "eq": "none" }
+      },
+      "effects": {
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.2,
+      "explanation": "Optimal growing conditions support plant immune function, slightly reducing pest risk"
+    }
+  ]
+}

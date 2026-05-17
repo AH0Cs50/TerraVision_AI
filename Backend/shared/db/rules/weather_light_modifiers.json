@@ -1,0 +1,270 @@
+{
+  "factor": "weather",
+  "layer": "light_modifiers",
+  "rules": [
+    {
+      "id": "light_general_shade",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "shade" }
+      },
+      "effects": {
+        "lightScore": -0.3,
+        "lightMultiplier": 0.7
+      },
+      "weight": 0.6,
+      "explanation": "Deep shade drastically reduces photosynthetically active radiation, lowering light demand satisfaction"
+    },
+    {
+      "id": "light_general_indirect",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "indirect" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Indirect light provides moderate illumination suitable for understory plants"
+    },
+    {
+      "id": "light_general_partial",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "partial" }
+      },
+      "effects": {
+        "lightScore": 0.1
+      },
+      "weight": 0.2,
+      "explanation": "Partial sun provides balanced light levels for most plant types"
+    },
+    {
+      "id": "light_general_full_sun",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" }
+      },
+      "effects": {
+        "lightScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Full sun exposure maximizes photosynthetic potential for sun-adapted plants"
+    },
+    {
+      "id": "light_general_intense",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "intense" }
+      },
+      "effects": {
+        "lightScore": 0.4,
+        "lightMultiplier": 1.3
+      },
+      "weight": 0.5,
+      "explanation": "Intense direct sunlight can cause photoinhibition and heat stress in sensitive plants"
+    },
+    {
+      "id": "light_succulent_intense_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "intense" },
+        "plant.family": { "eq": "succulent" }
+      },
+      "effects": {
+        "lightScore": -0.3,
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.5,
+      "explanation": "Succulents thrive in intense light; thick cuticles prevent photodamage and pest pressure"
+    },
+    {
+      "id": "light_succulent_shade_stress",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "shade" },
+        "plant.family": { "eq": "succulent" }
+      },
+      "effects": {
+        "lightScore": 0.4,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Succulents etiolate and weaken in shade, increasing light demand and pest vulnerability"
+    },
+    {
+      "id": "light_leafy_greens_intense_burn",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "intense" },
+        "plant.family": { "eq": "leafy_greens" }
+      },
+      "effects": {
+        "lightMultiplier": 1.5,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.6,
+      "explanation": "Leafy greens have tender leaves prone to sunscald and photobleaching under intense light"
+    },
+    {
+      "id": "light_leafy_greens_indirect_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "indirect" },
+        "plant.family": { "eq": "leafy_greens" }
+      },
+      "effects": {
+        "lightScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Leafy greens prefer indirect light; too much direct light causes bitter flavor and stress"
+    },
+    {
+      "id": "light_tropical_intense_stress",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "intense" },
+        "plant.family": { "eq": "tropical" }
+      },
+      "effects": {
+        "lightMultiplier": 1.4,
+        "pestRiskScore": 0.3,
+        "waterScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Tropical understory plants suffer photoinhibition under intense light, increasing water and pest stress"
+    },
+    {
+      "id": "light_tropical_indirect_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "indirect" },
+        "plant.family": { "eq": "tropical" }
+      },
+      "effects": {
+        "lightScore": -0.2
+      },
+      "weight": 0.4,
+      "explanation": "Tropical plants evolved under canopy shade and thrive in indirect light conditions"
+    },
+    {
+      "id": "light_nightshade_full_sun_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.family": { "eq": "fruiting_nightshade" }
+      },
+      "effects": {
+        "lightScore": -0.1,
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Fruiting nightshades require full sun for optimal fruit set; adequate light improves nutrient utilization"
+    },
+    {
+      "id": "light_brassicas_full_sun_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.family": { "eq": "brassicas" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Brassicas benefit from full sun for dense head formation and disease resistance"
+    },
+    {
+      "id": "light_herbs_full_sun_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.family": { "eq": "herbs" }
+      },
+      "effects": {
+        "lightScore": -0.1,
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Full sun concentrates essential oils in herbs and reduces foliar disease pressure"
+    },
+    {
+      "id": "light_legumes_full_sun_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.family": { "eq": "legumes" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Legumes require full sun for optimal photosynthesis to support nitrogen fixation"
+    },
+    {
+      "id": "light_grasses_intense_tolerance",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "intense" },
+        "plant.family": { "eq": "grasses" }
+      },
+      "effects": {
+        "lightScore": -0.2
+      },
+      "weight": 0.3,
+      "explanation": "Grasses have C4 photosynthesis adapted to high light intensity with good tolerance"
+    },
+    {
+      "id": "light_citrus_full_sun_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.family": { "eq": "citrus" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Citrus requires full sun for fruit ripening and sugar development"
+    },
+    {
+      "id": "light_vines_partial_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "partial" },
+        "plant.family": { "eq": "vines" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Many vines are adapted to partial shade at the understory canopy level"
+    },
+    {
+      "id": "light_root_crops_full_sun",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.family": { "eq": "root_crops" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Root crops need full sun for carbohydrate production to fuel root development"
+    },
+    {
+      "id": "light_flowering_ornamentals_partial",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "partial" },
+        "plant.family": { "eq": "flowering_ornamentals" }
+      },
+      "effects": {
+        "lightScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Most flowering ornamentals prefer partial sun to extend bloom period and prevent scorch"
+    }
+  ]
+}
