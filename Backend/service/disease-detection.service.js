@@ -1,6 +1,6 @@
 import axios from "axios";
 import RouteError from "../shared/util/RouteError.js";
-import HttpStatusCode from "../shared/util/HttpStatusCode.js";
+import HttpStatusCode from "../shared/util/HttpStatusCodes.js";
 
 import { DISEASE_DETECTION_URL } from "../config/config.js";
 

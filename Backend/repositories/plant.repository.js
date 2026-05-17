@@ -1,7 +1,6 @@
 // repository/plant.repository.js
-
 import { plantsDB } from "../shared/db/index.js";
-import { createPlantModel, DiseaseSchema } from "../models/plant.model.js";
+import { createPlantModel, DiseaseSchema } from "../model/plant.model.js";
 
 class PlantRepository {
   /**
@@ -175,7 +174,7 @@ class PlantRepository {
     }
 
     const detectionRecord = DiseaseSchema.parse({
-      class: prediction.class,
+      name: prediction.class || prediction.disease || "healthy",
       confidence: prediction.confidence,
       detectedAt: new Date(),
     });

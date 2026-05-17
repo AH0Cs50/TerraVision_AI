@@ -2,10 +2,10 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
-  ListObjectsV2Command
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 
-import s3Client from "s3Client.cloud.js";
+import s3Client from "../shared/s3Client.cloud.js";
 
 import { s3Config } from "../config/config.js";
 

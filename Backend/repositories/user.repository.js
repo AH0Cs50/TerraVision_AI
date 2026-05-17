@@ -1,8 +1,7 @@
-import db from "@src/shared/db/index.js";
+import db from "../shared/db/index.js";
 import { createUserModel } from "../model/user.model.js";
 
 class UserRepository {
-
   // ==========================
   // Create User
   // ==========================
@@ -30,7 +29,7 @@ class UserRepository {
   // ==========================
   async findByEmail(email) {
     return await db.users.findOne({
-      email: email.toLowerCase()
+      email: email.toLowerCase(),
     });
   }
 
@@ -40,10 +39,7 @@ class UserRepository {
   async updateByInternalId(internalId, data) {
     data.updatedAt = new Date();
 
-    await db.users.update(
-      { internalId },
-      { $set: data }
-    );
+    await db.users.update({ internalId }, { $set: data });
 
     return this.findByInternalId(internalId);
   }
@@ -51,19 +47,18 @@ class UserRepository {
   // ==========================
   // Update Email Token
   // ==========================
-  async updateEmailToken (internalId, token) {
+  async updateEmailToken(internalId, token) {
     return await this.updateByInternalId(internalId, {
-      emailToken: token
+      emailToken: token,
     });
   }
-
 
   // ==========================
   // Verify User
   // ==========================
   async verifyUser(internalId) {
     return await this.updateByInternalId(internalId, {
-      isVerified: true
+      isVerified: true,
     });
   }
 
@@ -75,4 +70,4 @@ class UserRepository {
   }
 }
 
-export default new UserRepository();
+export default UserRepository;
