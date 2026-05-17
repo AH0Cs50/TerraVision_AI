@@ -19,11 +19,18 @@ def run_tests():
 
             try:
                 image = preprocess_image(path)
-                result = predict(image)
-                
+                result = predict(image, top_k=5)
+
                 print(f"{filename}")
                 print(f"Prediction: {result['class']}")
                 print(f"Confidence: {result['confidence']:.4f}\n")
+
+                print("Top-5:")
+                for i, tk in enumerate(result.get('top_k', []), 1):
+                    cls = tk['class']
+                    conf = tk['confidence']
+                    print(f" {i}. {cls} - {conf:.4f}")
+                print()
 
             except Exception as e:
                 print(f" Error processing {filename}: {e}\n")

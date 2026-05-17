@@ -26,7 +26,7 @@ async def predict_disease(data: PredictRequest):
         image = preprocess_image(image)
 
         # model prediction
-        result = predict(image)
+        result = predict(image,top_k=5)
 
         return {
             "success": True,

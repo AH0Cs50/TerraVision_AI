@@ -114,25 +114,46 @@ CLASS_NAMES = [
 
 
 def format_label(label):
-    plant, disease = label.split("__")
+    # split only once in case the label contains extra underscores
+    parts = label.split("__", 1)
+    plant = parts[0]
+    disease = parts[1] if len(parts) > 1 else ""
+
+    # normalize underscores to spaces and trim
+    plant = plant.replace("_", " ").strip()
+    disease = disease.replace("_", " ").strip()
+
     return {
-        "plant": plant.replace("_", " "),
-        "disease": disease.replace("_", " ")
+        "plant": plant,
+        "disease": disease
     }
 
 
-def predict(image_array):
-    logits = model.predict(image_array, verbose=0)
+def predict(image_array, top_k=5):
+    raw = model.predict(image_array, verbose=0)
 
-    print("Predictions shape:", logits.shape)
+    print("Predictions shape:", raw.shape)
 
-    # convert logits -> probabilities
-    predictions = tf.nn.softmax(logits[0]).numpy()
+    # Model is a 3-member ensemble. Each branch ends with softmax.
+    # weighted_sum adds them → range [0, 3]. Divide by 3 → probabilities.
+    predictions = (raw[0] / 3.0).numpy()
 
-    predicted_class = int(np.argmax(predictions))
+    # determine top-k indices and build a readable list
+    k = max(1, int(top_k))
+    top_indices = np.argsort(predictions)[-k:][::-1]
+    top_list = []
+    for idx in top_indices:
+        label = CLASS_NAMES[int(idx)]
+        top_list.append({
+            "class": format_label(label),
+            "confidence": float(predictions[int(idx)])
+        })
+
+    predicted_class = int(top_indices[0])
     raw_label = CLASS_NAMES[predicted_class]
 
     return {
         "class": format_label(raw_label),
-        "confidence": float(predictions[predicted_class])
+        "confidence": float(predictions[predicted_class]),
+        "top_k": top_list
     }

@@ -1,11 +1,17 @@
 from PIL import Image
 import numpy as np
 import io
+from pathlib import Path
 
 IMG_SIZE = (224, 224)  # must match training size
 
 def preprocess_image(image):
-    
+    if isinstance(image, (str, Path)):
+        image = Image.open(image)
+    elif isinstance(image, bytes):
+        image = load_image_from_bytes(image)
+
+    image = image.convert("RGB")  # ensure 3 channels
     image = image.resize(IMG_SIZE)
 
     image = np.array(image) / 255.0  # normalize
