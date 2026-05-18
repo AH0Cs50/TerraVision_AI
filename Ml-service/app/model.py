@@ -113,6 +113,32 @@ CLASS_NAMES = [
  'Wheat__yellow_rust']
 
 
+# Keywords that can appear in disease names — used to infer disease type from the class label
+_FUNGAL_KW = ["rust", "mildew", "blight", "rot", "spot", "scab", "mold", "anthracnose",
+              "septoria", "measles", "scorch", "smut", "blast", "cercospora", "isariopsis", "algal"]
+_BACTERIAL_KW = ["bacterial"]
+_VIRAL_KW = ["virus", "mosaic", "streak"]
+_PEST_KW = ["whitefly", "mite", "caterpillar", "hispa", "diabrotica"]
+_PHYSIO_KW = ["curl", "yellowish", "mottle"]
+
+def classify_disease_type(disease_name):
+    name = disease_name.lower().strip()
+    if name == "healthy":
+        return "healthy"
+    if any(kw in name for kw in _BACTERIAL_KW):
+        return "bacterial"
+    if any(kw in name for kw in _VIRAL_KW):
+        return "viral"
+    if any(kw in name for kw in _PEST_KW):
+        return "pest"
+    if any(kw in name for kw in _FUNGAL_KW):
+        return "fungal"
+    if any(kw in name for kw in _PHYSIO_KW):
+        return "physiological"
+    if name == "diseased":
+        return "unknown"
+    return "unknown"
+
 def format_label(label):
     # split only once in case the label contains extra underscores
     parts = label.split("__", 1)
@@ -125,18 +151,18 @@ def format_label(label):
 
     return {
         "plant": plant,
-        "disease": disease
+        "disease": disease,
+        "disease_type": classify_disease_type(disease)
     }
 
 
 def predict(image_array, top_k=5):
     raw = model.predict(image_array, verbose=0)
 
-    print("Predictions shape:", raw.shape)
-
-    # Model is a 3-member ensemble. Each branch ends with softmax.
-    # weighted_sum adds them → range [0, 3]. Divide by 3 → probabilities.
-    predictions = (raw[0] / 3.0).numpy()
+    # 3-member ensemble: each branch ends with softmax, weighted_sum adds them → range [0, 3].
+    # Divide by 3 for probabilities, convert to numpy (handles tf.Tensor/np.ndarray), clip to [0, 1]
+    predictions = np.asarray(raw[0] / 3.0)
+    predictions = np.clip(predictions, 0, 1)
 
     # determine top-k indices and build a readable list
     k = max(1, int(top_k))
