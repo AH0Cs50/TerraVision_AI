@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 
+const locationSchema = z
+  .object({
+    city: z.string().optional(),
+    coordinates: z
+      .object({
+        lat: z.number(),
+        lon: z.number(),
+      })
+      .optional(),
+    // future fields can be added here without breaking existing data
+  })
+  .optional();
+
 //schema (validate)
 export const UserSchema = z.object({
   name: z.string().min(2).max(100),
@@ -17,12 +30,10 @@ export const UserSchema = z.object({
 
   emailToken: z.string().nullable().optional(),
 
-  location:  z.object({}).passthrough() // allow any keys (city / coordinates / future)
-  .optional()
+  location: locationSchema,
 });
 
 export const createUserModel = (data) => {
-
   const parsed = UserSchema.parse(data);
 
   return {
@@ -39,6 +50,6 @@ export const createUserModel = (data) => {
     emailToken: parsed.refreshToken ?? null,
 
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 };

@@ -67,10 +67,14 @@ const PlantSchema = z.object({
 
   plantedAt: z.preprocess(parseDate, z.date()),
 
-  soil: z.object({
-    type: SoilTypeEnum,
-    moisture: z.number().min(0).max(100),
-  }),
+  expectedHarvestDate: z.preprocess(parseDate, z.date()).optional(),
+
+  soil: z
+    .object({
+      type: SoilTypeEnum,
+      moisture: z.number().min(0).max(100).optional(),
+    })
+    .optional(),
 
   watering: z
     .object({
@@ -78,14 +82,18 @@ const PlantSchema = z.object({
     })
     .optional(),
 
+  disease: DiseaseSchema.default({
+    name: "healthy",
+    confidence: 1,
+    detectedAt: new Date(),
+  }),
+
   stress: z
     .object({
       diseaseType: StressDiseaseTypeEnum,
-      severity: StressSeverityEnum,
+      severity: StressSeverityEnum.optional(),
     })
     .optional(),
-
-  disease: DiseaseSchema.default({ name: "healthy", confidence: 1 }),
 
   diseaseHistory: z.array(DiseaseSchema).default([]),
 
@@ -100,9 +108,7 @@ const PlantSchema = z.object({
 export const createPlantModel = (data) => {
   const parsed = PlantSchema.parse(data);
   const now = new Date();
-  const ageDays = Math.floor(
-    (now - parsed.plantedAt) / (1000 * 60 * 60 * 24),
-  );
+  const ageDays = Math.floor((now - parsed.plantedAt) / (1000 * 60 * 60 * 24));
 
   return {
     internalId: Date.now(),

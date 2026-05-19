@@ -113,6 +113,11 @@ class UserService {
     return await this.UserRepository.deleteByInternalId(internalId);
   }
 
+  async getUserLocation(userUUID) {
+    const User = await this.findByUUID(userUUID);
+    return User.location;
+  }
+
   // ==========================
   // Private helper
   // ==========================

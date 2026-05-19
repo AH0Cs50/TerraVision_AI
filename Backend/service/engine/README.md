@@ -148,32 +148,54 @@ Final scores are clamped between **0.5** and **2.0**.
 
 ## Input Object Structure
 
-```js
+Only `weather` and `plant` are required. All other objects and their sub-fields are **optional** — omitting them simply skips the related rules, producing a coarser but still valid score.
+
+```ts
 {
+  // ── Required ──────────────────────────────────────────────
   weather: {
-    temperature: 32,          // numeric
-    humidity: 35,             // numeric
-    condition: "sunny",       // "sunny" | "cloudy" | "rainy" | "storm"
-    light: "partial"          // "shade" | "indirect" | "partial" | "full_sun" | "intense"
+    temperature: number,      // °C
+    humidity: number,         // 0–100
+    condition: string,        // "sunny" | "cloudy" | "rainy" | "storm"
+    light: string             // "shade" | "indirect" | "partial" | "full_sun" | "intense"
   },
-  soil: {
-    type: "sandy",            // see Soil Types table
-    moisture: 15              // 0-100
-  },
+
   plant: {
-    family: "leafy_greens",   // see Plant Families table
-    ageDays: 30,              // numeric
-    growthStage: "vegetative" // "germination" | "seedling" | "vegetative" | "flowering" | "fruiting" | "mature"
+    family: string,           // see Plant Families table
+    ageDays: number,          // days since planted
+    growthStage: string       // "germination" | "seedling" | "vegetative"
+                              // | "flowering" | "fruiting" | "mature"
   },
-  watering: {
-    hoursSinceLastWatering: 48 // numeric
+
+  // ── Optional — improves accuracy when provided ────────────
+  soil?: {                    // omit → all soil & moisture rules skip
+    type: string,             // see Soil Types table
+    moisture?: number         // 0–100; omit → only type-based rules fire
   },
-  stress: {
-    diseaseType: "none",      // "none" | "fungal" | "bacterial"
-    severity: "low"           // "low" | "medium" | "high"
+
+  watering?: {                // omit → all watering history rules skip
+    hoursSinceLastWatering: number  // hours
+  },
+
+  stress?: {                  // omit → all disease & severity rules skip
+    diseaseType: string,      // "none" | "fungal" | "bacterial"
+    severity?: string         // "none" | "medium" | "high"; omit → disease-type rules fire, severity rules skip
   }
 }
 ```
+
+### Optional Fields Behaviour
+
+| Scenario | What fires | Accuracy |
+|---|---|---|
+| `soil` omitted entirely | No soil-layer rules | Baseline |
+| `soil: { type }` only | Only type-based rules (e.g. `soil_sandy_water_leaching`) | Partial |
+| `soil: { type, moisture }` | Type rules + moisture rules (e.g. `soil_low_moisture_drought_stress`) | Full |
+| `stress` omitted entirely | No pest-layer disease/severity rules | Baseline |
+| `stress: { diseaseType }` only | Only disease-type rules (e.g. `pest_fungal_humidity_high`) | Partial |
+| `stress: { diseaseType, severity }` | Disease-type + severity rules (e.g. `pest_high_severity_amplification`) | Full |
+
+Each sub-field independently unlocks its own set of rules. Providing partial data gives **more accuracy than omitting the whole object**, but less than providing all sub-fields.
 
 ---
 
@@ -316,24 +338,31 @@ Each rule file contains a `rules` array. A single rule:
 ```js
 import { evaluate, evaluateByLayer, getRuleCount } from "./engine/index.js";
 
-const input = {
+// Full input — all optional fields provided
+const full = {
   weather: { temperature: 32, humidity: 35, condition: "sunny", light: "full_sun" },
   soil: { type: "sandy", moisture: 15 },
   plant: { family: "leafy_greens", ageDays: 30, growthStage: "vegetative" },
   watering: { hoursSinceLastWatering: 48 },
-  stress: { diseaseType: "none", severity: "low" },
+  stress: { diseaseType: "none", severity: "none" },
 };
+console.log(evaluate(full));
+// { waterScore: 2.0, fertilizerScore: 1.8, pestRiskScore: 1.4, ... }
 
-const result = evaluate(input);
-console.log(result);
-// { waterScore: 2.0, fertilizerScore: 1.8, pestRiskScore: 1.4, _appliedRules: [...] }
+// Minimal input — only required fields
+const minimal = {
+  weather: { temperature: 20, humidity: 50, condition: "cloudy", light: "indirect" },
+  plant: { family: "citrus", growthStage: "flowering", ageDays: 200 },
+};
+console.log(evaluate(minimal));
+// Still returns valid scores (fewer rules fire, less accurate)
 
-const layered = evaluateByLayer(input);
+const layered = evaluateByLayer(full);
 console.log(layered.layers.global);
 console.log(layered.final);
 
 console.log(getRuleCount());
-// { global: 15, soil: 16, plantFamily: 24, ... total: 88 }
+// { global: 15, soil: 16, plantFamily: 24, ... total: 108 }
 ```
 
 ---
