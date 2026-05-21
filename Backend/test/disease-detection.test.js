@@ -13,7 +13,7 @@ async function runTests() {
     name: "Disease Detector",
     email: `disease-user-${Date.now()}@example.com`,
     password: "DiseasePass123!",
-    location: "Gaza",
+    location: { city: "Gaza" },
   };
 
   let testUser = null;
@@ -26,11 +26,12 @@ async function runTests() {
 
     testPlant = await plantService.createPlant({
       name: "Test Plant",
-      type: "tomato",
+      varietyName: "Cherry Tomato",
+      plantType: "crop",
+      family: "leafy_greens",
+      growthStage: "vegetative",
       plantedAt: new Date(),
       userInternalId: testUserInternalId,
-      location: "Gaza",
-      status: "healthy",
     });
 
     console.log("✅ Setup: Test user and plant created");
@@ -107,10 +108,15 @@ async function runTests() {
   // Test 4: Update Disease History
   // =========================
   try {
-    // Mock ML response structure
+    // Mock ML response structure (matches real Ml-service/app/main.py response)
     const mockMLResponse = {
+      success: true,
       prediction: {
-        disease: "early_blight",
+        class: {
+          plant: "Tomato",
+          disease: "early blight",
+          disease_type: "fungal",
+        },
         confidence: 0.95,
       },
     };
@@ -137,8 +143,13 @@ async function runTests() {
   // =========================
   try {
     const mockMLResponse = {
+      success: true,
       prediction: {
-        disease: "healthy",
+        class: {
+          plant: "Tomato",
+          disease: "healthy",
+          disease_type: "healthy",
+        },
         confidence: 1,
       },
     };
@@ -155,26 +166,30 @@ async function runTests() {
   }
 
   // =========================
-  // Test 6: Detect Disease with Non-existent Plant
+  // Test 6: Detect Disease with Non-existent Plant (returns null)
   // =========================
   try {
     const mockMLResponse = {
+      success: true,
       prediction: {
-        disease: "rust",
+        class: {
+          plant: "Apple",
+          disease: "rust",
+          disease_type: "fungal",
+        },
         confidence: 0.87,
       },
     };
 
-    await diseaseDetectionService.updateDiseaseHistory(
+    const result = await diseaseDetectionService.updateDiseaseHistory(
       "non-existent-plant-uuid",
       mockMLResponse,
     );
 
-    console.log(
-      "❌ Test 6 failed: Should have thrown error for non-existent plant",
-    );
+    assert(result === null, "Result should be null for non-existent plant");
+    console.log("✅ Test 6 passed: Non-existent plant returns null");
   } catch (error) {
-    console.log("✅ Test 6 passed: Non-existent plant correctly rejected");
+    console.log("❌ Test 6 failed: Should return null, not throw");
   }
 
   // =========================

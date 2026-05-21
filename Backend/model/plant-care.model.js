@@ -7,13 +7,21 @@ import { v4 as uuidv4 } from "uuid";
  * =========================================
  */
 
-const WaterStatusEnum = z.enum(["thirsty", "low", "satisfied", "overwatered"]);
+export const WATER_STATUSES = ["thirsty", "low", "satisfied", "overwatered"];
 
-const NutrientStatusEnum = z.enum(["needs_feed", "low", "optimal", "excess"]);
+export const NUTRIENT_STATUSES = ["needs_feed", "low", "optimal", "excess"];
 
-const HealthStatusEnum = z.enum(["healthy", "warning", "diseased", "critical"]);
+export const HEALTH_STATUSES = ["healthy", "warning", "diseased", "critical"];
 
-const LightStatusEnum = z.enum(["low", "optimal", "high", "burn_risk"]);
+export const LIGHT_STATUSES = ["low", "optimal", "high", "burn_risk"];
+
+const WaterStatusEnum = z.enum(WATER_STATUSES);
+
+const NutrientStatusEnum = z.enum(NUTRIENT_STATUSES);
+
+const HealthStatusEnum = z.enum(HEALTH_STATUSES);
+
+const LightStatusEnum = z.enum(LIGHT_STATUSES);
 
 /**
  * =========================================
@@ -29,68 +37,6 @@ const PlantStatusSchema = z.object({
   health: HealthStatusEnum,
 
   light: LightStatusEnum,
-});
-
-/**
- * =========================================
- * TASK
- * =========================================
- */
-
-const PlantTaskSchema = z.object({
-  taskId: z.string().default(uuidv4),
-
-  type: z.enum([
-    "watering",
-    "fertilizing",
-    "pruning",
-    "disease_treatment",
-    "move_light",
-    "harvest",
-  ]),
-
-  title: z.string(),
-
-  description: z.string().optional(),
-
-  priority: z.enum(["low", "medium", "high"]).default("medium"),
-
-  status: z
-    .enum(["pending", "in_progress", "completed", "cancelled"])
-    .default("pending"),
-
-  generatedBy: z.enum(["ai", "system", "user"]).default("ai"),
-
-  createdAt: z.date(),
-
-  dueDate: z.date().optional(),
-
-  completedAt: z.date().optional(),
-});
-
-/**
- * =========================================
- * ACTION LOG
- * =========================================
- */
-
-const PlantActionLogSchema = z.object({
-  logId: z.string().default(uuidv4),
-
-  actionType: z.enum([
-    "watered",
-    "fertilized",
-    "disease_scan",
-    "task_completed",
-    "light_changed",
-    "harvested",
-  ]),
-
-  description: z.string(),
-
-  metadata: z.object({}).passthrough().optional(),
-
-  createdAt: z.date(),
 });
 
 /**
@@ -115,6 +61,84 @@ export const EngineScoresSchema = z.object({
 
 /**
  * =========================================
+ * TASK
+ * =========================================
+ */
+
+export const TASK_TYPES = [
+  "watering",
+  "fertilizing",
+  "pruning",
+  "disease_treatment",
+  "move_light",
+  "harvest",
+];
+
+export const TASK_PRIORITIES = ["low", "medium", "high"];
+
+export const TASK_STATUSES = [
+  "pending",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
+
+export const TASK_GENERATED_BY = ["ai", "system", "user"];
+
+const PlantTaskSchema = z.object({
+  taskId: z.string().default(uuidv4),
+
+  type: z.enum(TASK_TYPES),
+
+  title: z.string(),
+
+  description: z.string().optional(),
+
+  priority: z.enum(TASK_PRIORITIES).default("medium"),
+
+  status: z.enum(TASK_STATUSES).default("pending"),
+
+  generatedBy: z.enum(TASK_GENERATED_BY).default("ai"),
+
+  createdAt: z.date(),
+
+  dueDate: z.date().optional(),
+
+  completedAt: z.date().optional(),
+});
+
+/**
+ * =========================================
+ * ACTION LOG
+ * =========================================
+ */
+
+export const ACTION_TYPES = [
+  "watered",
+  "fertilized",
+  "disease_scan",
+  "task_completed",
+  "task_added",
+  "task_updated",
+  "task_cancelled",
+  "light_changed",
+  "harvested",
+];
+
+const PlantActionLogSchema = z.object({
+  logId: z.string().default(uuidv4),
+
+  actionType: z.enum(ACTION_TYPES),
+
+  description: z.string(),
+
+  metadata: z.object({}).passthrough().optional(),
+
+  createdAt: z.date(),
+});
+
+/**
+ * =========================================
  * AI INSIGHTS
  * =========================================
  */
@@ -134,15 +158,19 @@ const PlantAIInsightsSchema = z.object({
  */
 
 export const PlantCareStateSchema = z.object({
+  plantUUID: z.string(),
+
   status: PlantStatusSchema,
 
   engineScores: EngineScoresSchema.optional(),
 
   activeTasks: z.array(PlantTaskSchema).default([]),
 
+  completedTasks: z.array(PlantTaskSchema).default([]),
+
   actionLogs: z.array(PlantActionLogSchema).default([]),
 
-  aiInsights: PlantAIInsightsSchema,
+  aiInsights: PlantAIInsightsSchema.optional(),
 
   updatedAt: z.date(),
 });
@@ -210,9 +238,6 @@ function mapLightStatus(score) {
   return "low";
 }
 
-/**
- * Convert engine evaluation result to plant care state status.
- */
 export function engineScoresToStatus(scores) {
   return {
     water: mapWaterStatus(scores.waterScore),
@@ -222,10 +247,6 @@ export function engineScoresToStatus(scores) {
   };
 }
 
-/**
- * Build raw engine scores object from engine output.
- * Renames _appliedRules → appliedRules for the model.
- */
 export function buildEngineScores(engineResult) {
   return {
     waterScore: engineResult.waterScore,
@@ -249,6 +270,16 @@ export function createPlantCareStateModel(data) {
     createdAt: task.createdAt || now,
   }));
 
+  const completedTasks = parsed.completedTasks.map((task) => ({
+    taskId: task.taskId || uuidv4(),
+
+    ...task,
+
+    createdAt: task.createdAt || now,
+
+    completedAt: task.completedAt || now,
+  }));
+
   const actionLogs = parsed.actionLogs.map((log) => ({
     logId: log.logId || uuidv4(),
 
@@ -262,19 +293,27 @@ export function createPlantCareStateModel(data) {
 
     uuid: uuidv4(),
 
+    plantUUID: parsed.plantUUID,
+
     status: parsed.status,
+
+    engineScores: parsed.engineScores,
 
     activeTasks,
 
+    completedTasks,
+
     actionLogs,
 
-    aiInsights: {
-      ...parsed.aiInsights,
+    aiInsights: parsed.aiInsights
+      ? {
+          ...parsed.aiInsights,
 
-      recommendations: parsed.aiInsights.recommendations || [],
+          recommendations: parsed.aiInsights.recommendations || [],
 
-      generatedAt: parsed.aiInsights.generatedAt || now,
-    },
+          generatedAt: parsed.aiInsights.generatedAt || now,
+        }
+      : undefined,
 
     createdAt: now,
 

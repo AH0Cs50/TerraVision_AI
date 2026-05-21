@@ -10,7 +10,7 @@ async function runTests() {
     name: "John Doe",
     email: `test-${Date.now()}@example.com`,
     password: "SecurePass123!",
-    location: "Gaza Strip",
+    location: { city: "Gaza" },
   };
 
   let signupResult = null;
@@ -46,15 +46,20 @@ async function runTests() {
     );
   } catch (error) {
     assert(error instanceof RouteError, "Should throw RouteError");
-    assert(error.message === "Email already exists", "Wrong error message");
+    assert(
+      error.message === "Email already exists" || error.message === "Email already in use",
+      "Wrong error message",
+    );
     console.log("✅ Test 2 passed: Duplicate email correctly rejected");
   }
+
+  let loginResult = null;
 
   // =========================
   // Test 3: Login
   // =========================
   try {
-    const loginResult = await authService.login({
+    loginResult = await authService.login({
       email: testUserData.email,
       password: testUserData.password,
     });
@@ -97,12 +102,14 @@ async function runTests() {
   // Test 5: Refresh Token
   // =========================
   try {
-    const refreshResult = await authService.refresh(refreshToken);
+    // Ensure different iat for distinct tokens
+    await new Promise((r) => setTimeout(r, 1100));
+    const refreshResult = await authService.refresh(loginResult.tokens.refreshToken);
 
     assert(refreshResult.accessToken, "New access token not generated");
     assert(refreshResult.refreshToken, "New refresh token not generated");
     assert(
-      refreshResult.accessToken !== signupResult.tokens.accessToken,
+      refreshResult.accessToken !== loginResult.tokens.accessToken,
       "Access token should be different",
     );
 

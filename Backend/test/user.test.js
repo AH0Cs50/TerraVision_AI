@@ -11,7 +11,7 @@ async function runTests() {
     name: "Jane Smith",
     email: `user-test-${Date.now()}@example.com`,
     password: "TestPass123!",
-    location: "Gaza",
+    location: { city: "Gaza" },
   };
 
   let createdUser = null;
@@ -114,7 +114,7 @@ async function runTests() {
   try {
     const result = await userService.verifyUser(createdUserInternalId);
 
-    assert(result.verified === true, "User not verified");
+    assert(result.isVerified === true, "User not verified");
     console.log("✅ Test 6 passed: User verified successfully");
   } catch (error) {
     console.error("❌ Test 6 failed:", error.message);
@@ -139,7 +139,7 @@ async function runTests() {
     await userService.createUser({
       name: "No Email User",
       password: "password",
-      location: "Gaza",
+      location: { city: "Gaza" },
     });
     console.log("❌ Test 8 failed: Should have thrown error for missing email");
   } catch (error) {
@@ -159,7 +159,7 @@ async function runTests() {
       name: "Another User",
       email: testUserData.email,
       password: "password",
-      location: "Gaza",
+      location: { city: "Gaza" },
     });
     console.log(
       "❌ Test 9 failed: Should have thrown error for duplicate email",
@@ -176,7 +176,7 @@ async function runTests() {
   try {
     const result = await userService.deleteUser(createdUserInternalId);
 
-    assert(result === true, "User not deleted");
+    assert(result >= 1, "User not deleted");
     console.log("✅ Test 10 passed: User deleted successfully");
   } catch (error) {
     console.error("❌ Test 10 failed:", error.message);

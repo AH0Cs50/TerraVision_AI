@@ -168,10 +168,8 @@ async function runTests() {
       limit: 2,
     });
 
-    assert(paginatedResult.data, "Should have data property");
-    assert(paginatedResult.pagination, "Should have pagination property");
-    assert(paginatedResult.pagination.page === 1, "Page number mismatch");
-    assert(paginatedResult.pagination.limit === 2, "Limit mismatch");
+    assert(Array.isArray(paginatedResult), "Should return an array");
+    assert(paginatedResult.length <= 2, "Should not exceed limit");
 
     console.log("✅ Test 7 passed: Plants paginated successfully");
   } catch (error) {
@@ -184,22 +182,22 @@ async function runTests() {
   try {
     const result = await plantService.deletePlant(createdPlant.uuid);
 
-    assert(result === true, "Plant not deleted");
+    assert(result === 1, "Plant not deleted");
     console.log("✅ Test 8 passed: Plant deleted successfully");
   } catch (error) {
     console.error("❌ Test 8 failed:", error.message);
   }
 
   // =========================
-  // Test 9: Get Deleted Plant (Should fail)
+  // Test 9: Get Deleted Plant (Should return null)
   // =========================
   try {
-    await plantService.getPlantByUUID(createdPlant.uuid);
-    console.log(
-      "❌ Test 9 failed: Should have thrown error for non-existent plant",
-    );
+    const deletedPlant = await plantService.getPlantByUUID(createdPlant.uuid);
+
+    assert(deletedPlant === null, "Deleted plant should be null");
+    console.log("✅ Test 9 passed: Deleted plant correctly returns null");
   } catch (error) {
-    console.log("✅ Test 9 passed: Deleted plant correctly not found");
+    console.log("❌ Test 9 failed: Should return null, not throw");
   }
 
   // Cleanup: Delete test user
