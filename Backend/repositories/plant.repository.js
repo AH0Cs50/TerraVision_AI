@@ -1,42 +1,43 @@
-// repository/plant.repository.js
-import { plantsDB } from "../shared/db/index.js";
-import { createPlantModel, DiseaseSchema } from "../model/plant.model.js";
+import { PlantModel } from "../model/plant.model.js";
+import { DiseaseDTO } from "../dto/plant.dto.js";
 
 class PlantRepository {
   /**
    * Create plant
    */
   async create(data) {
-    const plant = createPlantModel(data);
+    const now = new Date();
+    const ageDays = data.plantedAt
+      ? Math.floor((now - new Date(data.plantedAt)) / (1000 * 60 * 60 * 24))
+      : 0;
 
-    return await plantsDB.insert(plant);
+    const doc = await new PlantModel({
+      ...data,
+      ageDays,
+      hasDisease: data.disease ? data.disease.name !== "healthy" : false,
+    }).save();
+    return doc.toObject();
   }
 
   /**
    * Find by uuid
    */
   async findByUUID(uuid) {
-    return await plantsDB.findOne({
-      uuid,
-    });
+    return await PlantModel.findOne({ uuid }).lean();
   }
 
   /**
    * Find by internal id
    */
   async findByInternalId(internalId) {
-    return await plantsDB.findOne({
-      internalId,
-    });
+    return await PlantModel.findOne({ internalId }).lean();
   }
 
   /**
    * Get all plants for user
    */
   async findByUserInternalId(userInternalId) {
-    return await plantsDB.find({
-      userInternalId,
-    });
+    return await PlantModel.find({ userInternalId }).lean();
   }
 
   /**
@@ -58,11 +59,11 @@ class PlantRepository {
 
     const plantedAt = updateData.plantedAt || currentPlant.plantedAt;
 
-    const ageInDays = Math.floor(
+    const ageDays = Math.floor(
       (new Date() - new Date(plantedAt)) / (1000 * 60 * 60 * 24),
     );
 
-    await plantsDB.update(
+    return await PlantModel.findOneAndUpdate(
       { uuid },
       {
         $set: {
@@ -70,28 +71,28 @@ class PlantRepository {
 
           hasDisease,
 
-          ageInDays,
+          ageDays,
 
           updatedAt: new Date(),
         },
       },
-    );
-
-    return await this.findByUUID(uuid);
+      { returnDocument: "after" },
+    ).lean();
   }
 
   /**
    * Delete plant
    */
   async deleteByUUID(uuid) {
-    return await plantsDB.remove({ uuid }, {});
+    const result = await PlantModel.deleteOne({ uuid });
+    return result.deletedCount;
   }
 
   /**
    * Get all plants
    */
   async findAll() {
-    return await plantsDB.find({});
+    return await PlantModel.find({}).lean();
   }
 
   /**
@@ -100,12 +101,7 @@ class PlantRepository {
   async paginate({ page = 1, limit = 20 } = {}) {
     const skip = (page - 1) * limit;
 
-    return await plantsDB
-      .cfind({})
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+    return await PlantModel.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
   }
 
   /**
@@ -122,7 +118,7 @@ class PlantRepository {
 
     currentImages.push(imageName);
 
-    await plantsDB.update(
+    return await PlantModel.findOneAndUpdate(
       { uuid },
       {
         $set: {
@@ -131,9 +127,8 @@ class PlantRepository {
           updatedAt: new Date(),
         },
       },
-    );
-
-    return await this.findByUUID(uuid);
+      { returnDocument: "after" },
+    ).lean();
   }
 
   /**
@@ -150,7 +145,7 @@ class PlantRepository {
       (img) => img !== imageName,
     );
 
-    await plantsDB.update(
+    return await PlantModel.findOneAndUpdate(
       { uuid },
       {
         $set: {
@@ -159,9 +154,17 @@ class PlantRepository {
           updatedAt: new Date(),
         },
       },
-    );
+      { returnDocument: "after" },
+    ).lean();
+  }
 
-    return await this.findByUUID(uuid);
+  /**
+   * Set expected harvest date for a plant
+   */
+  async setExpectedHarvestDate(uuid, harvestDate) {
+    return await this.updateByUUID(uuid, {
+      expectedHarvestDate: new Date(harvestDate),
+    });
   }
 
   /**
@@ -173,16 +176,16 @@ class PlantRepository {
       return null;
     }
 
-    const detectionRecord = DiseaseSchema.parse({
-      name: prediction.class || prediction.disease || "healthy",
-      confidence: prediction.confidence,
-      detectedAt: new Date(),
+    const detectionRecord = DiseaseDTO.parse({
+      name: prediction.name || prediction.disease || "healthy",
+      confidence: prediction.confidence ?? 1,
+      detectedAt: prediction.detectedAt || new Date(),
     });
 
     const existingHistory = plant.diseaseHistory || [];
     existingHistory.push(detectionRecord);
 
-    await this.updateByUUID(plantUUID, {
+    return await this.updateByUUID(plantUUID, {
       disease: detectionRecord,
       diseaseHistory: existingHistory,
     });

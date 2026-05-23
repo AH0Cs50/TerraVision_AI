@@ -1,36 +1,35 @@
-import db from "../shared/db/index.js";
-import { createUserModel } from "../model/user.model.js";
+import { UserModel } from "../model/user.model.js";
 
 class UserRepository {
   // ==========================
   // Create User
   // ==========================
   async createUser(data) {
-    const user = createUserModel(data); // validate + build
-    return await db.users.insert(user); // persist
+    const doc = await new UserModel(data).save();
+    return doc.toObject();
   }
 
   // ==========================
   // Find by UUID
   // ==========================
   async findByUUID(uuid) {
-    return await db.users.findOne({ uuid });
+    return await UserModel.findOne({ uuid }).lean();
   }
 
   // ==========================
   // Find by internalId
   // ==========================
   async findByInternalId(internalId) {
-    return await db.users.findOne({ internalId });
+    return await UserModel.findOne({ internalId }).lean();
   }
 
   // ==========================
   // Find by Email
   // ==========================
   async findByEmail(email) {
-    return await db.users.findOne({
+    return await UserModel.findOne({
       email: email.toLowerCase(),
-    });
+    }).lean();
   }
 
   // ==========================
@@ -39,9 +38,20 @@ class UserRepository {
   async updateByInternalId(internalId, data) {
     data.updatedAt = new Date();
 
-    await db.users.update({ internalId }, { $set: data });
+    return await UserModel.findOneAndUpdate(
+      { internalId },
+      { $set: data },
+      { returnDocument: "after" },
+    ).lean();
+  }
 
-    return this.findByInternalId(internalId);
+  // ==========================
+  // Update Refresh Token
+  // ==========================
+  async updateRefreshToken(internalId, token) {
+    return await this.updateByInternalId(internalId, {
+      refreshToken: token,
+    });
   }
 
   // ==========================
@@ -63,10 +73,18 @@ class UserRepository {
   }
 
   // ==========================
+  // Find by Email Token
+  // ==========================
+  async findByEmailToken(token) {
+    return await UserModel.findOne({ emailToken: token }).lean();
+  }
+
+  // ==========================
   // Delete User
   // ==========================
   async deleteByInternalId(internalId) {
-    return await db.users.remove({ internalId });
+    const result = await UserModel.deleteOne({ internalId });
+    return result.deletedCount;
   }
 }
 

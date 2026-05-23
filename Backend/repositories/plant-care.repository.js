@@ -1,5 +1,4 @@
-import { plantCareStatesDB } from "../shared/db/index.js";
-import { createPlantCareStateModel } from "../model/plant-care.model.js";
+import { PlantCareModel } from "../model/plant-care.model.js";
 
 class PlantCareRepository {
   // ── HELPERS ────────────────────────────────────
@@ -24,20 +23,21 @@ class PlantCareRepository {
   // ── CRUD ───────────────────────────────────────
 
   async create(data) {
-    const doc = createPlantCareStateModel(data);
-    return await plantCareStatesDB.insert(doc);
+    const doc = new PlantCareModel(data);
+    const saved = await doc.save();
+    return saved.toObject();
   }
 
   async findByUUID(uuid) {
-    return await plantCareStatesDB.findOne({ uuid });
+    return await PlantCareModel.findOne({ uuid }).lean();
   }
 
   async findByInternalId(internalId) {
-    return await plantCareStatesDB.findOne({ internalId });
+    return await PlantCareModel.findOne({ internalId }).lean();
   }
 
   async findByPlantUUID(plantUUID) {
-    return await plantCareStatesDB.findOne({ plantUUID });
+    return await PlantCareModel.findOne({ plantUUID }).lean();
   }
 
   async updateByUUID(uuid, updateData) {
@@ -46,8 +46,11 @@ class PlantCareRepository {
 
     const field = { ...updateData, updatedAt: new Date() };
 
-    await plantCareStatesDB.update({ uuid }, { $set: field });
-    return await this.findByUUID(uuid);
+    return await PlantCareModel.findOneAndUpdate(
+      { uuid },
+      { $set: field },
+      { returnDocument: "after" },
+    ).lean();
   }
 
   async updateByPlantUUID(plantUUID, updateData) {
@@ -56,20 +59,25 @@ class PlantCareRepository {
 
     const field = { ...updateData, updatedAt: new Date() };
 
-    await plantCareStatesDB.update({ plantUUID }, { $set: field });
-    return await this.findByPlantUUID(plantUUID);
+    return await PlantCareModel.findOneAndUpdate(
+      { plantUUID },
+      { $set: field },
+      { returnDocument: "after" },
+    ).lean();
   }
 
   async deleteByUUID(uuid) {
-    return await plantCareStatesDB.remove({ uuid }, {});
+    const result = await PlantCareModel.deleteOne({ uuid });
+    return result.deletedCount;
   }
 
   async deleteByPlantUUID(plantUUID) {
-    return await plantCareStatesDB.remove({ plantUUID }, {});
+    const result = await PlantCareModel.deleteOne({ plantUUID });
+    return result.deletedCount;
   }
 
   async findAll() {
-    return await plantCareStatesDB.find({});
+    return await PlantCareModel.find({}).lean();
   }
 
   // ── TASK LOOKUP ────────────────────────────────
