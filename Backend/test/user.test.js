@@ -174,7 +174,7 @@ async function runTests() {
   // Test 10: Delete User
   // =========================
   try {
-    const result = await userService.deleteUser(createdUserInternalId);
+    const result = await userService.deleteUser(createdUser.uuid);
 
     assert(result >= 1, "User not deleted");
     console.log("✅ Test 10 passed: User deleted successfully");

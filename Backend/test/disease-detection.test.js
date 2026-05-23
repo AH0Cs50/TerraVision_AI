@@ -17,12 +17,10 @@ async function runTests() {
   };
 
   let testUser = null;
-  let testUserInternalId = null;
   let testPlant = null;
 
   try {
     testUser = await userService.createUser(testUserData);
-    testUserInternalId = testUser.internalId;
 
     testPlant = await plantService.createPlant({
       name: "Test Plant",
@@ -31,8 +29,7 @@ async function runTests() {
       family: "leafy_greens",
       growthStage: "vegetative",
       plantedAt: new Date(),
-      userInternalId: testUserInternalId,
-    });
+    }, testUser.uuid);
 
     console.log("✅ Setup: Test user and plant created");
   } catch (error) {
@@ -212,7 +209,7 @@ async function runTests() {
   // Cleanup: Delete test user and plant
   try {
     await plantService.deletePlant(testPlant.uuid);
-    await userService.deleteUser(testUserInternalId);
+    await userService.deleteUser(testUser.uuid);
     console.log("✅ Cleanup: Test user and plant deleted");
   } catch (error) {
     console.error("⚠️ Cleanup warning:", error.message);

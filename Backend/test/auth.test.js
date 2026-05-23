@@ -123,7 +123,7 @@ async function runTests() {
   // =========================
   try {
     const user = await userService.findByEmail(testUserData.email);
-    const logoutResult = await authService.logout(user.internalId);
+    const logoutResult = await authService.logout(user.uuid);
 
     assert(
       logoutResult.message === "Logged out successfully",

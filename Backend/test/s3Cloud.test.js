@@ -1,11 +1,23 @@
 import assert from "assert";
-import { s3CloudService } from "../shared/container.js";
+import { s3CloudService, userService } from "../shared/container.js";
 
 async function runTests() {
   console.log("Running S3CloudService Tests...\n");
 
-  // Test Data
-  const testUserId = "user-123";
+  // Setup: Create a test user for UUID resolution
+  let testUserId;
+  try {
+    const user = await userService.createUser({
+      name: "S3 Test User",
+      email: `s3-test-${Date.now()}@example.com`,
+      password: "S3TestPass123!",
+    });
+    testUserId = user.uuid;
+  } catch (error) {
+    console.error("❌ Setup failed:", error.message);
+    return;
+  }
+
   const testPlantId = "plant-456";
   const testFileName = "Plant Analysis Photo";
 
@@ -257,6 +269,14 @@ async function runTests() {
     } else {
       console.error("❌ Test 16 failed:", error.message);
     }
+  }
+
+  // Cleanup: Delete test user
+  try {
+    await userService.deleteUser(testUserId);
+    console.log("✅ Cleanup: Test user deleted");
+  } catch (error) {
+    console.error("⚠️ Cleanup warning:", error.message);
   }
 
   console.log("\n🎉 S3CloudService tests completed\n");

@@ -13,12 +13,10 @@ async function runTests() {
   };
 
   let testUser = null;
-  let testUserInternalId = null;
 
   // Setup: Create test user
   try {
     testUser = await userService.createUser(testUserData);
-    testUserInternalId = testUser.internalId;
     console.log("✅ Setup: Test user created");
   } catch (error) {
     console.error("❌ Setup failed:", error.message);
@@ -33,7 +31,6 @@ async function runTests() {
     family: "leafy_greens",
     growthStage: "vegetative",
     plantedAt: new Date(),
-    userInternalId: testUserInternalId,
     soil: { type: "sandy", moisture: 60 },
   };
 
@@ -43,13 +40,13 @@ async function runTests() {
   // Test 1: Create Plant
   // =========================
   try {
-    createdPlant = await plantService.createPlant(testPlantData);
+    createdPlant = await plantService.createPlant(testPlantData, testUser.uuid);
 
     assert(createdPlant.name === testPlantData.name, "Plant name mismatch");
     assert(createdPlant.plantType === testPlantData.plantType, "Plant type mismatch");
     assert(createdPlant.uuid, "Plant UUID not generated");
     assert(
-      createdPlant.userInternalId === testUserInternalId,
+      createdPlant.userInternalId === testUser.internalId,
       "User ID mismatch",
     );
 
@@ -78,7 +75,7 @@ async function runTests() {
   // Test 3: Get User Plants
   // =========================
   try {
-    const userPlants = await plantService.getUserPlants(testUserInternalId);
+    const userPlants = await plantService.getUserPlants(testUser.uuid);
 
     assert(Array.isArray(userPlants), "Should return an array");
     assert(userPlants.length > 0, "Should have at least one plant");
@@ -100,13 +97,13 @@ async function runTests() {
         ...testPlantData,
         name: "Lettuce Plant",
         family: "leafy_greens",
-      });
+      }, testUser.uuid);
 
       const plant3 = await plantService.createPlant({
         ...testPlantData,
         name: "Pepper Plant",
         family: "fruiting_nightshade",
-      });
+      }, testUser.uuid);
 
     console.log(
       "✅ Test 4 passed: Additional plants created for pagination tests",
@@ -202,7 +199,7 @@ async function runTests() {
 
   // Cleanup: Delete test user
   try {
-    await userService.deleteUser(testUserInternalId);
+    await userService.deleteUser(testUser.uuid);
     console.log("✅ Cleanup: Test user deleted");
   } catch (error) {
     console.error("⚠️ Cleanup warning:", error.message);
