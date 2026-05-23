@@ -1,6 +1,10 @@
 {
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "javascript.validate.enable": true,
+    "javascript.suggest.enabled": true,
+    "javascript.preferences.importModuleSpecifierEnding": "js",
+    "typescript.suggest.autoImports": true,
+    "typescript.preferences.includePackageJsonAutoImports": "on",
     "eslint.validate": ["javascript"],
     "eslint.workingDirectories": [
         {

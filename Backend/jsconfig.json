@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "checkJs": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["./*"]
+    }
+  },
+  "include": ["**/*.js"],
+  "exclude": ["node_modules"]
+}

@@ -115,18 +115,22 @@ class PlantRepository {
     }
 
     const currentImages = plant.cdn?.images || [];
+    const isFirstImage = currentImages.length === 0;
 
     currentImages.push(imageName);
 
+    const update = {
+      "cdn.images": currentImages,
+      updatedAt: new Date(),
+    };
+
+    if (isFirstImage) {
+      update["cdn.basePath"] = imageName.substring(0, imageName.lastIndexOf("/") + 1);
+    }
+
     return await PlantModel.findOneAndUpdate(
       { uuid },
-      {
-        $set: {
-          "cdn.images": currentImages,
-
-          updatedAt: new Date(),
-        },
-      },
+      { $set: update },
       { returnDocument: "after" },
     ).lean();
   }
