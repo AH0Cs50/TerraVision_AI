@@ -5,8 +5,14 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { s3Config } from "../config/config.js";
 
 class S3CloudService {
-  constructor(S3Repository) {
+  constructor(S3Repository, userService) {
     this.s3Repo = S3Repository;
+    this.userService = userService;
+  }
+
+  async #resolveUserInternalId(userUUID) {
+    const user = await this.userService.findByUUID(userUUID);
+    return user.internalId;
   }
 
   // =========================================
@@ -22,7 +28,7 @@ class S3CloudService {
   // Build Plant Image Path
   // =========================================
   buildPlantImagePath({ userId, plantId, fileName }) {
-    const safeName = fileName.replace(/\s+/g, "-").toLowerCase();
+    const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
 
     return `plant/user_${userId}_plant_${plantId}/images/${Date.now()}-${safeName}`;
   }
@@ -35,12 +41,31 @@ class S3CloudService {
       return false;
     }
 
-    /**
-     * Expected format:
-     * plant/user_<userId>_plant_<plantId>/images/<timestamp>-filename.ext
-     */
     const keyPattern =
       /^plant\/user_[a-zA-Z0-9_-]+_plant_[a-zA-Z0-9_-]+\/images\/\d+-[a-zA-Z0-9._-]+$/;
+
+    return keyPattern.test(key);
+  }
+
+  // =========================================
+  // Build General Image Path
+  //   general/images/<timestamp>-<filename>
+  // =========================================
+  buildGeneralImagePath({ fileName }) {
+    const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+    return `general/images/${Date.now()}-${safeName}`;
+  }
+
+  // =========================================
+  // Validate General Image Key
+  // =========================================
+  validateGeneralImageKey(key) {
+    if (!key || typeof key !== "string") {
+      return false;
+    }
+
+    const keyPattern =
+      /^general\/images\/\d+-[a-zA-Z0-9._-]+$/;
 
     return keyPattern.test(key);
   }
@@ -53,11 +78,41 @@ class S3CloudService {
       throw new Error("INVALID_FILE_TYPE");
     }
 
+    const internalId = await this.#resolveUserInternalId(userId);
+
     const key = this.buildPlantImagePath({
-      userId,
+      userId: internalId,
       plantId,
       fileName,
     });
+
+    const command = new PutObjectCommand({
+      Bucket: s3Config.bucketName,
+      Key: key,
+      ContentType: fileType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3Repo.s3Client, command, {
+      expiresIn: s3Config.signedUrlExpiresIn,
+    });
+
+    return {
+      uploadUrl,
+      key,
+      expiresIn: s3Config.signedUrlExpiresIn,
+    };
+  }
+
+  // =========================================
+  // Generate General Upload URL (no user context needed)
+  //   path: general/images/<timestamp>-<filename>
+  // =========================================
+  async generateGeneralUploadUrl({ fileName, fileType }) {
+    if (!this.validateImageMimeType(fileType)) {
+      throw new Error("INVALID_FILE_TYPE");
+    }
+
+    const key = this.buildGeneralImagePath({ fileName });
 
     const command = new PutObjectCommand({
       Bucket: s3Config.bucketName,

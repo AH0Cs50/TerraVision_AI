@@ -1,22 +1,22 @@
 // controllers/authController.js
-//get the instance 
+//get the instance
 import { authService } from "./../shared/container.js";
-import { UserDTO } from '../dto/user.dto.js';
+import { UserDTO } from "../dto/user.dto.js";
 
 // =========================
 // SIGNUP
 // =========================
 export async function signup(req, res, next) {
   try {
-    const validatedUser = UserDTO.parse(body); // add dto validation layer
-    
-    const { name, email, password, location } = validatedUser; 
+    const validatedUser = UserDTO.parse(req.body); // add dto validation layer
+
+    const { name, email, password, location } = validatedUser;
 
     const result = await authService.signup({
       name,
       email,
       password,
-      location
+      location,
     });
 
     return res.status(201).json(result);
@@ -48,9 +48,7 @@ export async function login(req, res, next) {
 // =========================
 export async function logout(req, res, next) {
   try {
-    const internalId = req.user.internalId;
-
-    const result = await authService.logout(internalId);
+    const result = await authService.logout(req.user.uuid);
 
     return res.status(200).json(result);
   } catch (error) {

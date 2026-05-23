@@ -1,17 +1,21 @@
-import { Router } from 'express';
-import { authenticate } from './../middlewares/auth.middleware.js';
+import { Router } from "express";
+import { authenticate } from "./../middlewares/auth.middleware.js";
+import {
+  getUser,
+  updateUser,
+  deleteUser,
+  sendVerificationEmail,
+  verifyEmail,
+  getEmailStatus,
+} from "../controller/user.controller.js";
 
 const router = Router();
 
-//get user data by id
-router.get('/:id',(req,res,next)=>{});
-//update user id
-router.put('/:id',(req,res,next)=>{});
-//delete user by id
-router.delete('/:id',(req,res,next)=>{});//specified for admin
-//send verify link to email
-router.post('/email',authenticate,(req,res,next)=>{}); 
-// make user active
-router.get('/email',authenticate,(req,res,next)=>{}); 
+router.get("/:id", authenticate, getUser);
+router.put("/:id", authenticate, updateUser);
+router.delete("/:id", authenticate, deleteUser);
+router.post("/email", authenticate, sendVerificationEmail);
+router.get("/email/verify", verifyEmail);
+router.get("/email", authenticate, getEmailStatus);
 
 export default router;
