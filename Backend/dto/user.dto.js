@@ -32,6 +32,7 @@ export const LocationDTO = z
     city: CityDTO.optional(),
     coordinates: CoordinatesDTO.optional(),
   })
+  // XOR logic - either city or coordinates must be provided, but not both
   .refine((data) => data.city || data.coordinates, {
     message: "Either city or coordinates must be provided",
     path: ["location"],
@@ -53,11 +54,7 @@ export const UserDTO = z.object({
     .max(100, "Name too long")
     .regex(/^[a-zA-Z\s]+$/, "Name must contain only letters and spaces"),
 
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email("Invalid email format"),
+  email: z.string().trim().toLowerCase().email("Invalid email format"),
 
   password: z
     .string()
@@ -69,5 +66,5 @@ export const UserDTO = z.object({
 
   role: z.enum(["user", "admin"]).default("user"),
 
-  location: LocationDTO.optional(),
+  location: LocationDTO,
 });

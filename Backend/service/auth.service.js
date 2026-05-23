@@ -1,7 +1,5 @@
 import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
-//import token class
-import { TokenPayload } from "./common/token.service.js";
 
 class AuthService {
   constructor(tokenService, userService, passwordHasher) {
@@ -14,16 +12,18 @@ class AuthService {
   // SIGNUP
   // =========================
   async signup({ name, email, password, location }) {
-    const existingUser = await this.userService.findByEmail(email);
+    let existingUser;
+    try {
+      existingUser = await this.userService.findByEmail(email);
+    } catch {
+      existingUser = null;
+    }
 
     if (existingUser) {
-      throw new RouteError(
-        HttpStatusCodes.CONFLICT,
-        "Email already exists"
-      );
+      throw new RouteError(HttpStatusCodes.CONFLICT, "Email already exists");
     }
-  
-    //security action 
+
+    //security action
     const hashedPassword = await this.passwordHasher.hash(password);
 
     const user = await this.userService.createUser({
@@ -33,13 +33,13 @@ class AuthService {
       location,
     });
 
-    const payload = new TokenPayload(user.uuid,user.email,user.role);
+    const payload = { uuid: user.uuid, email: user.email, role: user.role };
 
     const accessToken = this.tokenService.generateAccessToken(payload);
     const refreshToken = this.tokenService.generateRefreshToken(payload);
 
     await this.userService.setRefreshToken(user.internalId, refreshToken);
-    //set email token here to user to verify thier email 
+    //set email token here to user to verify their email
 
     return {
       user: {
@@ -61,16 +61,10 @@ class AuthService {
   async login({ email, password }) {
     const user = await this.userService.findByEmail(email);
 
-    const isValid = await this.passwordHasher.compare(
-      password,
-      user.password
-    );
+    const isValid = await this.passwordHasher.compare(password, user.password);
 
     if (!isValid) {
-      throw new RouteError(
-        HttpStatusCodes.UNAUTHORIZED,
-        "Invalid credentials"
-      );
+      throw new RouteError(HttpStatusCodes.UNAUTHORIZED, "Invalid credentials");
     }
 
     const payload = {
@@ -100,8 +94,9 @@ class AuthService {
   // =========================
   // LOGOUT
   // =========================
-  async logout(internalId) {
-    await this.userService.clearRefreshToken(internalId);
+  async logout(userUUID) {
+    const user = await this.userService.findByUUID(userUUID);
+    await this.userService.clearRefreshToken(user.internalId);
 
     return {
       message: "Logged out successfully",
@@ -117,7 +112,7 @@ class AuthService {
     if (!decoded) {
       throw new RouteError(
         HttpStatusCodes.UNAUTHORIZED,
-        "Invalid refresh token"
+        "Invalid refresh token",
       );
     }
 
@@ -126,7 +121,7 @@ class AuthService {
     if (!user || user.refreshToken !== refreshToken) {
       throw new RouteError(
         HttpStatusCodes.UNAUTHORIZED,
-        "Refresh token invalid"
+        "Refresh token invalid",
       );
     }
 
@@ -139,10 +134,7 @@ class AuthService {
     const newAccessToken = this.tokenService.generateAccessToken(payload);
     const newRefreshToken = this.tokenService.generateRefreshToken(payload);
 
-    await this.userService.setRefreshToken(
-      user.internalId,
-      newRefreshToken
-    );
+    await this.userService.setRefreshToken(user.internalId, newRefreshToken);
 
     return {
       accessToken: newAccessToken,

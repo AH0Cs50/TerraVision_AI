@@ -15,12 +15,22 @@ const {
   REFRESH_TOKEN_EXPIRES_IN,
   WEATHER_API_KEY,
   DISEASE_DETECTION_URL,
+  LLM_SERVICE_URL,
+  ApiKey,
+  MongoURI,
 } = process.env;
 
 // //db config vars
 // const {DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT} = process.env;
 
-export { PORT, WEATHER_API_KEY, DISEASE_DETECTION_URL };
+export {
+  PORT,
+  WEATHER_API_KEY,
+  DISEASE_DETECTION_URL,
+  LLM_SERVICE_URL,
+  ApiKey,
+  MongoURI,
+};
 
 export const jwtConfig = {
   ACCESS_TOKEN_SECRET,

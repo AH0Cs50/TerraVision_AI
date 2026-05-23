@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 
@@ -83,10 +84,11 @@ class UserService {
   // Email token
   // =============================
 
-  async setEmailToken(internalId) {
-    await this._ensureUserExists(internalId);
-    const token = ""; //generate email token here
-    return await this.UserRepository.updateEmailToken(internalId, token);
+  async setEmailToken(userUUID) {
+    const user = await this.findByUUID(userUUID);
+    const token = crypto.randomBytes(32).toString("hex");
+    await this.UserRepository.updateEmailToken(user.internalId, token);
+    return token;
   }
 
   // ==========================
@@ -106,11 +108,50 @@ class UserService {
   }
 
   // ==========================
+  // Update user
+  // ==========================
+  async updateUser(userUUID, data) {
+    const allowed = { ...data };
+    delete allowed.password;
+    delete allowed.role;
+    delete allowed.internalId;
+    delete allowed.uuid;
+
+    const updated = await this.UserRepository.updateByUUID(userUUID, allowed);
+    if (!updated) throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
+    return updated;
+  }
+
+  // ==========================
+  // Email verification
+  // ==========================
+  async verifyEmailByToken(token) {
+    const user = await this.UserRepository.findByEmailToken(token);
+    if (!user) {
+      throw new RouteError(
+        HttpStatusCodes.BAD_REQUEST,
+        "Invalid or expired verification token",
+      );
+    }
+
+    await this.UserRepository.verifyUser(user.internalId);
+    await this.UserRepository.updateEmailToken(user.internalId, null);
+
+    return { message: "Email verified successfully" };
+  }
+
+  async getEmailStatus(userUUID) {
+    const user = await this.findByUUID(userUUID);
+    return { email: user.email, isVerified: user.isVerified ?? false };
+  }
+
+  // ==========================
   // Delete user
   // ==========================
-  async deleteUser(internalId) {
-    await this._ensureUserExists(internalId);
-    return await this.UserRepository.deleteByInternalId(internalId);
+  async deleteUser(userUUID) {
+    const deletedCount = await this.UserRepository.deleteByUUID(userUUID);
+    if (deletedCount === 0) throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
+    return deletedCount;
   }
 
   async getUserLocation(userUUID) {

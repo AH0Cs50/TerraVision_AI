@@ -1,14 +1,40 @@
+import RouteError from "../shared/util/RouteError.js";
+import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
+
 class PlantService {
-  constructor(plantRepository, s3CloudRepository) {
+  constructor(plantRepository, s3CloudRepository, userService) {
     this.plantRepository = plantRepository;
     this.s3CloudRepository = s3CloudRepository;
+    this.userService = userService;
+  }
+
+  async #resolveUserInternalId(userUUID) {
+    const user = await this.userService.findByUUID(userUUID);
+    return user.internalId;
+  }
+
+  async verifyPlantAccess(plantUUID, userUUID, role) {
+    const plant = await this.getPlantByUUID(plantUUID);
+    if (!plant) {
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Plant not found");
+    }
+    if (role === "admin") return plant;
+    const userInternalId = await this.#resolveUserInternalId(userUUID);
+    if (plant.userInternalId !== userInternalId) {
+      throw new RouteError(HttpStatusCodes.FORBIDDEN, "Forbidden");
+    }
+    return plant;
   }
 
   // =========================================
   // Create Plant
   // =========================================
-  async createPlant(data) {
-    return await this.plantRepository.create(data);
+  async createPlant(data, userUUID) {
+    const userInternalId = await this.#resolveUserInternalId(userUUID);
+    return await this.plantRepository.create({
+      ...data,
+      userInternalId,
+    });
   }
 
   // =========================================
@@ -21,7 +47,8 @@ class PlantService {
   // =========================================
   // Get User Plants
   // =========================================
-  async getUserPlants(userInternalId) {
+  async getUserPlants(userUUID) {
+    const userInternalId = await this.#resolveUserInternalId(userUUID);
     return await this.plantRepository.findByUserInternalId(userInternalId);
   }
 

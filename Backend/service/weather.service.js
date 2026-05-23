@@ -40,10 +40,10 @@ export default class WeatherService {
   async fetchWeather(request) {
     switch (request.type) {
       case "city":
-        return this.fetchByCity(request.value);
+        return WeatherService.fetchByCity(request.value);
 
       case "coordinates":
-        return this.fetchByCoordinates(request.value);
+        return WeatherService.fetchByCoordinates(request.value);
 
       default:
         throw new Error("Invalid request type");
@@ -133,7 +133,59 @@ export default class WeatherService {
 }
 
 export class WeatherDescriber {
-  // this function take the transformed weather api response and change some unclear fields to clear text value based on API DOCS
+  // Takes already-transformed weather (output of WeatherService.getWeather())
+  // and adds human-readable category classifications.
+  weatherDescribe(transformed) {
+    const temp = transformed.temperature;
+    const humidity = transformed.humidity;
+    const visibility = transformed.visibility;
+    const wind = transformed.wind;
+    const icon = transformed.weather?.icon;
+
+    const tempCategory =
+      temp.current >= 35 ? "extreme_heat"
+        : temp.current >= 30 ? "hot"
+          : temp.current >= 20 ? "warm"
+            : temp.current >= 10 ? "cool"
+              : temp.current >= 5 ? "cold"
+                : "freezing";
+
+    const humidityCategory =
+      humidity >= 80 ? "very_humid"
+        : humidity >= 60 ? "humid"
+          : humidity >= 40 ? "moderate"
+            : "dry";
+
+    const visibilityCategory =
+      visibility >= 10000 ? "excellent"
+        : visibility >= 5000 ? "good"
+          : visibility >= 1000 ? "poor"
+            : "very_poor";
+
+    const windCategory =
+      wind.speed >= 10 ? "strong"
+        : wind.speed >= 5 ? "moderate"
+          : "light";
+
+    return {
+      location: transformed.location,
+      weather: {
+        main: transformed.weather.main,
+        description: transformed.weather.description,
+        icon,
+        isDay: icon?.endsWith("d"),
+      },
+      temperature: { ...temp, category: tempCategory },
+      humidity: { value: humidity, category: humidityCategory },
+      pressure: transformed.pressure,
+      visibility: { value: visibility, category: visibilityCategory },
+      wind: { ...wind, category: windCategory },
+      clouds: transformed.clouds,
+      timestamp: transformed.timestamp,
+    };
+  }
+
+  // this function take the raw weather api response and change some unclear fields to clear text value based on API DOCS
   async weatherApiDescribe(weatherResponse) {
     const normalized = WeatherService.transform(weatherResponse);
 

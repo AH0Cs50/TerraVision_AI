@@ -58,10 +58,12 @@ export const PlantDTO = z.object({
 
   plantedAt: z.preprocess(parseDate, z.date()),
 
-  soil: z.object({
-    type: SoilTypeEnum,
-    moisture: z.number().min(0).max(100),
-  }),
+  soil: z
+    .object({
+      type: SoilTypeEnum,
+      moisture: z.number().min(0).max(100),
+    })
+    .optional(),
 
   watering: z
     .object({
@@ -72,7 +74,13 @@ export const PlantDTO = z.object({
   stress: z
     .object({
       diseaseType: StressDiseaseTypeEnum,
-      severity: StressSeverityEnum,
+      severity: StressSeverityEnum.optional(),
     })
     .optional(),
+});
+
+export const DiseaseDTO = z.object({
+  name: z.string().default("healthy"),
+  confidence: z.number().min(0).max(1).default(1),
+  detectedAt: z.date().optional(),
 });

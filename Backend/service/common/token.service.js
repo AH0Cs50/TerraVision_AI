@@ -1,16 +1,15 @@
-import jwt from 'jsonwebtoken';
-import { jwtConfig } from '../../config/config.js';
+import jwt from "jsonwebtoken";
+import { jwtConfig } from "../../config/config.js";
 
 export class TokenPayload {
- constructor (uuid,email,role) {
-  this.uuid = uuid;
-  this.email = email;
-  this.role = role;
- }
+  constructor(uuid, email, role) {
+    this.uuid = uuid;
+    this.email = email;
+    this.role = role;
+  }
 }
 
 class TokenService {
-  
   constructor() {
     this.accessSecret = jwtConfig.ACCESS_TOKEN_SECRET;
     this.refreshSecret = jwtConfig.REFRESH_TOKEN_SECRET;
@@ -37,7 +36,7 @@ class TokenService {
     try {
       return jwt.verify(token, this.accessSecret);
     } catch (err) {
-      return null;
+      return err;
     }
   }
 
@@ -46,7 +45,7 @@ class TokenService {
     try {
       return jwt.verify(token, this.refreshSecret);
     } catch (err) {
-      return null;
+      return err;
     }
   }
 }
