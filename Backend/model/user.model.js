@@ -1,55 +1,25 @@
-import { z } from "zod";
+import mongoose from "../shared/db.js";
 import { v4 as uuidv4 } from "uuid";
 
-const locationSchema = z
-  .object({
-    city: z.string().optional(),
-    coordinates: z
-      .object({
-        lat: z.number(),
-        lon: z.number(),
-      })
-      .optional(),
-    // future fields can be added here without breaking existing data
-  })
-  .optional();
-
-//schema (validate)
-export const UserSchema = z.object({
-  name: z.string().min(2).max(100),
-
-  email: z.string().email(),
-
-  password: z.string().min(8),
-
-  role: z.enum(["user", "admin"]).default("user"),
-
-  isVerified: z.boolean().optional(),
-
-  refreshToken: z.string().nullable().optional(),
-
-  emailToken: z.string().nullable().optional(),
-
-  location: locationSchema,
+const userMongooseSchema = new mongoose.Schema({
+  internalId: { type: Number, unique: true, default: () => Date.now() },
+  uuid: { type: String, unique: true, default: () => uuidv4() },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ["user", "admin"], default: "user" },
+  isVerified: { type: Boolean, default: false },
+  refreshToken: { type: String, default: null },
+  emailToken: { type: String, default: null },
+  location: {
+    city: String,
+    coordinates: {
+      lat: Number,
+      lon: Number,
+    },
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
-export const createUserModel = (data) => {
-  const parsed = UserSchema.parse(data);
-
-  return {
-    internalId: Date.now(),
-
-    uuid: uuidv4(),
-
-    ...parsed,
-
-    isVerified: parsed.isVerified ?? false,
-
-    refreshToken: parsed.refreshToken ?? null,
-
-    emailToken: parsed.refreshToken ?? null,
-
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-};
+export const UserModel = mongoose.model("User", userMongooseSchema);

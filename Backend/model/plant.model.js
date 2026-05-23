@@ -1,16 +1,7 @@
-import { z } from "zod";
+import mongoose from "../shared/db.js";
 import { v4 as uuidv4 } from "uuid";
 
-function parseDate(value) {
-  if (value instanceof Date) return value;
-  if (typeof value === "string" || typeof value === "number") {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? value : parsed;
-  }
-  return value;
-}
-
-const PlantFamilyEnum = z.enum([
+const FAMILIES = [
   "leafy_greens",
   "fruiting_nightshade",
   "succulent",
@@ -23,100 +14,73 @@ const PlantFamilyEnum = z.enum([
   "vines",
   "grasses",
   "flowering_ornamentals",
-]);
+];
 
-const GrowthStageEnum = z.enum([
+const GROWTH_STAGES = [
   "germination",
   "seedling",
   "vegetative",
   "flowering",
   "fruiting",
   "mature",
-]);
+];
 
-const SoilTypeEnum = z.enum([
+const SOIL_TYPES = [
   "sandy",
   "alfisols",
   "aridisols",
   "entisols",
   "inceptisols",
   "vertisols",
-]);
+];
 
-const StressDiseaseTypeEnum = z.enum(["bacterial", "fungal", "none"]);
-const StressSeverityEnum = z.enum(["high", "medium", "none"]);
+const DISEASE_TYPES = ["bacterial", "fungal", "none"];
+const SEVERITIES = ["high", "medium", "none"];
 
-export const DiseaseSchema = z.object({
-  name: z.string().default("healthy"),
-  confidence: z.number().min(0).max(1).default(1),
-  detectedAt: z.date().optional(),
+const diseaseSubSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "healthy" },
+    confidence: { type: Number, default: 1 },
+    detectedAt: Date,
+  },
+  { _id: false },
+);
+
+const plantMongooseSchema = new mongoose.Schema({
+  internalId: { type: Number, unique: true, default: () => Date.now() },
+  uuid: { type: String, unique: true, default: () => uuidv4() },
+  userInternalId: { type: Number, required: true },
+  name: { type: String, required: true },
+  varietyName: { type: String, required: true },
+  plantType: { type: String, enum: ["crop", "tree"], required: true },
+  family: { type: String, enum: FAMILIES, required: true },
+  growthStage: { type: String, enum: GROWTH_STAGES, required: true },
+  plantedAt: { type: Date, required: true },
+  expectedHarvestDate: Date,
+  soil: {
+    type: { type: String, enum: SOIL_TYPES },
+    moisture: { type: Number, min: 0, max: 100 },
+  },
+  watering: {
+    hoursSinceLastWatering: { type: Number, min: 0 },
+  },
+  disease: {
+    type: diseaseSubSchema,
+    default: () => ({ name: "healthy", confidence: 1 }),
+  },
+  stress: {
+    diseaseType: { type: String, enum: DISEASE_TYPES },
+    severity: { type: String, enum: SEVERITIES },
+  },
+  diseaseHistory: { type: [diseaseSubSchema], default: [] },
+  cdn: {
+    basePath: String,
+    images: [String],
+  },
+  ageDays: Number,
+  hasDisease: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
-const PlantSchema = z.object({
-  userInternalId: z.number(),
-
-  name: z.string().min(2).max(100),
-
-  varietyName: z.string().min(2).max(100),
-
-  plantType: z.enum(["crop", "tree"]),
-
-  family: PlantFamilyEnum,
-
-  growthStage: GrowthStageEnum,
-
-  plantedAt: z.preprocess(parseDate, z.date()),
-
-  expectedHarvestDate: z.preprocess(parseDate, z.date()).optional(),
-
-  soil: z
-    .object({
-      type: SoilTypeEnum,
-      moisture: z.number().min(0).max(100).optional(),
-    })
-    .optional(),
-
-  watering: z
-    .object({
-      hoursSinceLastWatering: z.number().min(0),
-    })
-    .optional(),
-
-  disease: DiseaseSchema.default({
-    name: "healthy",
-    confidence: 1,
-    detectedAt: new Date(),
-  }),
-
-  stress: z
-    .object({
-      diseaseType: StressDiseaseTypeEnum,
-      severity: StressSeverityEnum.optional(),
-    })
-    .optional(),
-
-  diseaseHistory: z.array(DiseaseSchema).default([]),
-
-  cdn: z
-    .object({
-      basePath: z.string(),
-      images: z.array(z.string()).optional(),
-    })
-    .optional(),
-});
-
-export const createPlantModel = (data) => {
-  const parsed = PlantSchema.parse(data);
-  const now = new Date();
-  const ageDays = Math.floor((now - parsed.plantedAt) / (1000 * 60 * 60 * 24));
-
-  return {
-    internalId: Date.now(),
-    uuid: uuidv4(),
-    ...parsed,
-    ageDays,
-    hasDisease: parsed.disease.name !== "healthy",
-    createdAt: now,
-    updatedAt: now,
-  };
-};
+export const PlantModel = mongoose.model("Plant", plantMongooseSchema);

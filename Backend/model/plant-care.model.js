@@ -1,4 +1,4 @@
-import { z } from "zod";
+import mongoose from "../shared/db.js";
 import { v4 as uuidv4 } from "uuid";
 
 /**
@@ -15,53 +15,9 @@ export const HEALTH_STATUSES = ["healthy", "warning", "diseased", "critical"];
 
 export const LIGHT_STATUSES = ["low", "optimal", "high", "burn_risk"];
 
-const WaterStatusEnum = z.enum(WATER_STATUSES);
-
-const NutrientStatusEnum = z.enum(NUTRIENT_STATUSES);
-
-const HealthStatusEnum = z.enum(HEALTH_STATUSES);
-
-const LightStatusEnum = z.enum(LIGHT_STATUSES);
-
 /**
  * =========================================
- * PLANT STATUS
- * =========================================
- */
-
-const PlantStatusSchema = z.object({
-  water: WaterStatusEnum,
-
-  nutrients: NutrientStatusEnum,
-
-  health: HealthStatusEnum,
-
-  light: LightStatusEnum,
-});
-
-/**
- * =========================================
- * ENGINE SCORES (raw numeric output)
- * =========================================
- */
-
-const AppliedRuleSchema = z.object({
-  id: z.string(),
-  layer: z.string(),
-  explainKey: z.string(),
-});
-
-export const EngineScoresSchema = z.object({
-  waterScore: z.number().min(0.5).max(2.0),
-  fertilizerScore: z.number().min(0.5).max(2.0),
-  pestRiskScore: z.number().min(0.5).max(2.0),
-  lightScore: z.number().min(0.5).max(2.0),
-  appliedRules: z.array(AppliedRuleSchema).default([]),
-});
-
-/**
- * =========================================
- * TASK
+ * TASK ENUMS
  * =========================================
  */
 
@@ -85,31 +41,9 @@ export const TASK_STATUSES = [
 
 export const TASK_GENERATED_BY = ["ai", "system", "user"];
 
-const PlantTaskSchema = z.object({
-  taskId: z.string().default(uuidv4),
-
-  type: z.enum(TASK_TYPES),
-
-  title: z.string(),
-
-  description: z.string().optional(),
-
-  priority: z.enum(TASK_PRIORITIES).default("medium"),
-
-  status: z.enum(TASK_STATUSES).default("pending"),
-
-  generatedBy: z.enum(TASK_GENERATED_BY).default("ai"),
-
-  createdAt: z.date(),
-
-  dueDate: z.date().optional(),
-
-  completedAt: z.date().optional(),
-});
-
 /**
  * =========================================
- * ACTION LOG
+ * ACTION LOG ENUMS
  * =========================================
  */
 
@@ -125,81 +59,33 @@ export const ACTION_TYPES = [
   "harvested",
 ];
 
-const PlantActionLogSchema = z.object({
-  logId: z.string().default(uuidv4),
-
-  actionType: z.enum(ACTION_TYPES),
-
-  description: z.string(),
-
-  metadata: z.object({}).passthrough().optional(),
-
-  createdAt: z.date(),
-});
-
-/**
- * =========================================
- * AI INSIGHTS
- * =========================================
- */
-
-const PlantAIInsightsSchema = z.object({
-  summary: z.string(),
-
-  recommendations: z.array(z.string()).default([]),
-
-  generatedAt: z.date(),
-});
-
-/**
- * =========================================
- * MAIN MODEL
- * =========================================
- */
-
-export const PlantCareStateSchema = z.object({
-  plantUUID: z.string(),
-
-  status: PlantStatusSchema,
-
-  engineScores: EngineScoresSchema.optional(),
-
-  activeTasks: z.array(PlantTaskSchema).default([]),
-
-  completedTasks: z.array(PlantTaskSchema).default([]),
-
-  actionLogs: z.array(PlantActionLogSchema).default([]),
-
-  aiInsights: PlantAIInsightsSchema.optional(),
-
-  updatedAt: z.date(),
-});
-
 export function createPlantTaskModel(data) {
-  const parsed = PlantTaskSchema.parse(data);
+  if (!TASK_TYPES.includes(data.type)) {
+    throw new Error("Invalid task type: " + data.type);
+  }
 
   const now = new Date();
 
   return {
-    taskId: parsed.taskId || uuidv4(),
+    taskId: data.taskId || uuidv4(),
 
-    type: parsed.type,
+    type: data.type,
 
-    title: parsed.title,
+    title: data.title,
 
-    description: parsed.description,
+    description: data.description,
 
-    priority: parsed.priority || "medium",
+    priority: data.priority || "medium",
 
-    status: parsed.status || "pending",
+    status: data.status || "pending",
 
-    generatedBy: parsed.generatedBy || "ai",
+    generatedBy: data.generatedBy || "ai",
 
-    createdAt: parsed.createdAt || now,
+    createdAt: data.createdAt || now,
 
-    dueDate: parsed.dueDate,
+    dueDate: data.dueDate,
 
-    completedAt: parsed.completedAt,
+    completedAt: data.completedAt,
   };
 }
 
@@ -258,11 +144,9 @@ export function buildEngineScores(engineResult) {
 }
 
 export function createPlantCareStateModel(data) {
-  const parsed = PlantCareStateSchema.parse(data);
-
   const now = new Date();
 
-  const activeTasks = parsed.activeTasks.map((task) => ({
+  const activeTasks = (data.activeTasks || []).map((task) => ({
     taskId: task.taskId || uuidv4(),
 
     ...task,
@@ -270,7 +154,7 @@ export function createPlantCareStateModel(data) {
     createdAt: task.createdAt || now,
   }));
 
-  const completedTasks = parsed.completedTasks.map((task) => ({
+  const completedTasks = (data.completedTasks || []).map((task) => ({
     taskId: task.taskId || uuidv4(),
 
     ...task,
@@ -280,7 +164,7 @@ export function createPlantCareStateModel(data) {
     completedAt: task.completedAt || now,
   }));
 
-  const actionLogs = parsed.actionLogs.map((log) => ({
+  const actionLogs = (data.actionLogs || []).map((log) => ({
     logId: log.logId || uuidv4(),
 
     ...log,
@@ -293,11 +177,11 @@ export function createPlantCareStateModel(data) {
 
     uuid: uuidv4(),
 
-    plantUUID: parsed.plantUUID,
+    plantUUID: data.plantUUID,
 
-    status: parsed.status,
+    status: data.status,
 
-    engineScores: parsed.engineScores,
+    engineScores: data.engineScores,
 
     activeTasks,
 
@@ -305,13 +189,13 @@ export function createPlantCareStateModel(data) {
 
     actionLogs,
 
-    aiInsights: parsed.aiInsights
+    aiInsights: data.aiInsights
       ? {
-          ...parsed.aiInsights,
+          ...data.aiInsights,
 
-          recommendations: parsed.aiInsights.recommendations || [],
+          recommendations: data.aiInsights.recommendations || [],
 
-          generatedAt: parsed.aiInsights.generatedAt || now,
+          generatedAt: data.aiInsights.generatedAt || now,
         }
       : undefined,
 
@@ -320,3 +204,90 @@ export function createPlantCareStateModel(data) {
     updatedAt: now,
   };
 }
+
+// ── Mongoose Schemas ─────────────────────────────────────────────
+
+const statusSubSchema = new mongoose.Schema(
+  {
+    water: { type: String, enum: WATER_STATUSES, required: true },
+    nutrients: { type: String, enum: NUTRIENT_STATUSES, required: true },
+    health: { type: String, enum: HEALTH_STATUSES, required: true },
+    light: { type: String, enum: LIGHT_STATUSES, required: true },
+  },
+  { _id: false },
+);
+
+const appliedRuleSubSchema = new mongoose.Schema(
+  {
+    id: String,
+    layer: String,
+    explainKey: String,
+  },
+  { _id: false },
+);
+
+const engineScoresSubSchema = new mongoose.Schema(
+  {
+    waterScore: { type: Number },
+    fertilizerScore: { type: Number },
+    pestRiskScore: { type: Number },
+    lightScore: { type: Number },
+    appliedRules: { type: [appliedRuleSubSchema], default: [] },
+  },
+  { _id: false },
+);
+
+const plantTaskSubSchema = new mongoose.Schema(
+  {
+    taskId: { type: String, default: () => uuidv4() },
+    type: { type: String, enum: TASK_TYPES, required: true },
+    title: { type: String, required: true },
+    description: String,
+    priority: { type: String, enum: TASK_PRIORITIES, default: "medium" },
+    status: { type: String, enum: TASK_STATUSES, default: "pending" },
+    generatedBy: { type: String, enum: TASK_GENERATED_BY, default: "ai" },
+    createdAt: { type: Date, default: Date.now },
+    dueDate: Date,
+    completedAt: Date,
+  },
+  { _id: false },
+);
+
+const actionLogSubSchema = new mongoose.Schema(
+  {
+    logId: { type: String, default: () => uuidv4() },
+    actionType: { type: String, enum: ACTION_TYPES, required: true },
+    description: { type: String, required: true },
+    metadata: mongoose.Schema.Types.Mixed,
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
+const aiInsightsSubSchema = new mongoose.Schema(
+  {
+    summary: { type: String, required: true },
+    recommendations: { type: [String], default: [] },
+    generatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
+const plantCareMongooseSchema = new mongoose.Schema({
+  internalId: { type: Number, unique: true, default: () => Date.now() },
+  uuid: { type: String, unique: true, default: () => uuidv4() },
+  plantUUID: { type: String, required: true },
+  status: { type: statusSubSchema, required: true },
+  engineScores: engineScoresSubSchema,
+  activeTasks: { type: [plantTaskSubSchema], default: [] },
+  completedTasks: { type: [plantTaskSubSchema], default: [] },
+  actionLogs: { type: [actionLogSubSchema], default: [] },
+  aiInsights: aiInsightsSubSchema,
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+export const PlantCareModel = mongoose.model(
+  "PlantCare",
+  plantCareMongooseSchema,
+);
