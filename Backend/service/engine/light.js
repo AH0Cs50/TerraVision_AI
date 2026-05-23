@@ -3,7 +3,7 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
-const raw = require("../../shared/db/rules/weather_light_modifiers.json");
+const raw = require("../../shared/rules/weather_light_modifiers.json");
 
 function inferFactor(effects) {
   if (effects.lightScore !== undefined || effects.lightMultiplier !== undefined)

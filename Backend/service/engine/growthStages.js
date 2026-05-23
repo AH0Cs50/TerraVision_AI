@@ -3,7 +3,7 @@
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
-const raw = require("../../shared/db/rules/weather_growth_stage_modifiers.json");
+const raw = require("../../shared/rules/weather_growth_stage_modifiers.json");
 
 function inferFactor(effects) {
   if (effects.waterMultiplier !== undefined || effects.waterScore !== undefined)
