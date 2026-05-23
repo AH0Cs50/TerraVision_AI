@@ -1,30 +1,32 @@
-import { Router } from 'express';
+import { Router } from "express";
+import {
+  getUserPlants,
+  getPlant,
+  createPlant,
+  uploadPlantPhoto,
+  detectPlantDisease,
+  uploadGeneralImage,
+  detectGeneralDisease,
+  updatePlant,
+  deletePlant,
+  removePlantImage,
+} from "../controller/plant.controller.js";
 
-const router = Router(); //protected router so have user via middleware
+const router = Router();
 
-//get all planets for user 
-router.get('',(req,res,next)=>{});
-// planet by id 
-router.get('/:id',(req,res,next)=>{});
+router.get("", getUserPlants);
+router.get("/:id", getPlant);
 
-//create new planet
-router.post('',(req,res,next)=>{});
-//upload photo to detect
-router.post('/:id/detect',(req,res,next)=>{});
-//detect if plant have diagnosis
-router.post('/:id/diagnosis',(req,res,next)=>{});
-//analyze based on plant envioroment conditions (Weather, soil, plant_age)
-//and save history 
-router.post('/:id/analyze',(req,res,next)=>{});
+router.post("", createPlant);
+router.post("/:id/upload", uploadPlantPhoto);
+router.post("/:id/detect", detectPlantDisease);
+router.post("/upload", uploadGeneralImage);
+router.post("/detect", detectGeneralDisease);
 
-//use it as general feature 
-router.post('/detect',(req,res,next)=>{});
-router.post('/diagnosis',(req,res,next)=>{});
+router.put("/:id", updatePlant);
 
-//update some planet profile by id 
-router.put('/:id',(req,res,next)=>{});
+router.delete("/:id/images", removePlantImage);
 
-//delete planet by id
-router.delete('/:id',(req,res,next)=>{});
+router.delete("/:id", deletePlant);
 
 export default router;
