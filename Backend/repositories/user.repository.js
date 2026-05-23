@@ -80,10 +80,28 @@ class UserRepository {
   }
 
   // ==========================
+  // Update by UUID
+  // ==========================
+  async updateByUUID(uuid, data) {
+    data.updatedAt = new Date();
+
+    return await UserModel.findOneAndUpdate(
+      { uuid },
+      { $set: data },
+      { returnDocument: "after" },
+    ).lean();
+  }
+
+  // ==========================
   // Delete User
   // ==========================
   async deleteByInternalId(internalId) {
     const result = await UserModel.deleteOne({ internalId });
+    return result.deletedCount;
+  }
+
+  async deleteByUUID(uuid) {
+    const result = await UserModel.deleteOne({ uuid });
     return result.deletedCount;
   }
 }

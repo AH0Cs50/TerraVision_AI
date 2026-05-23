@@ -24,8 +24,11 @@ import UserService from "../service/user.service.js";
 import PlantService from "../service/plant.service.js";
 import DiseaseDetectionService from "../service/disease-detection.service.js";
 import S3CloudService from "../service/s3Cloud.service.js";
-import WeatherService from "../service/weather.service.js";
+import WeatherService, {
+  WeatherDescriber,
+} from "../service/weather.service.js";
 import LLMService from "../service/llm.service.js";
+import PlantAnalyserService from "../service/plant-analyser.service.js";
 import PlantCareStateService, {
   PlantTaskCareManager,
   PlantCareActionLogger,
@@ -34,9 +37,9 @@ import PlantCareStateService, {
 } from "../service/plant-care-state.service.js";
 
 export const userService = new UserService(userRepo);
-export const plantService = new PlantService(plantRepo, s3Repo);
-export const diseaseDetectionService = new DiseaseDetectionService(plantRepo);
-export const s3CloudService = new S3CloudService(s3Repo);
+export const plantService = new PlantService(plantRepo, s3Repo, userService);
+export const diseaseDetectionService = new DiseaseDetectionService(plantRepo, userService);
+export const s3CloudService = new S3CloudService(s3Repo, userService);
 export const authService = new AuthService(
   tokenService,
   userService,
@@ -44,6 +47,13 @@ export const authService = new AuthService(
 );
 
 export const weatherService = new WeatherService();
+export const weatherDescriber = new WeatherDescriber();
+export const plantAnalyserService = new PlantAnalyserService(
+  weatherService,
+  weatherDescriber,
+  plantService,
+  userService,
+);
 
 export const llmService = new LLMService();
 
