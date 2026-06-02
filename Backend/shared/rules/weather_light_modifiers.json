@@ -254,6 +254,34 @@
       "explanation": "Root crops need full sun for carbohydrate production to fuel root development"
     },
     {
+      "id": "light_category_flower_full_sun_optimal",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "full_sun" },
+        "plant.category": { "eq": "flower" }
+      },
+      "effects": {
+        "lightScore": -0.2,
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Flowering plants thrive in full sun, maximizing bloom production and nutrient uptake"
+    },
+    {
+      "id": "light_category_flower_shade_stress",
+      "factor": "weather",
+      "condition": {
+        "weather.light": { "eq": "shade" },
+        "plant.category": { "eq": "flower" }
+      },
+      "effects": {
+        "lightScore": 0.3,
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Shade stress reduces flowering and increases fungal disease pressure on ornamentals"
+    },
+    {
       "id": "light_flowering_ornamentals_partial",
       "factor": "weather",
       "condition": {

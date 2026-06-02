@@ -1,3 +1,5 @@
+import { fillPrompt } from "./llm.service.js";
+
 import {
   engineScoresToStatus,
   buildEngineScores,
@@ -406,41 +408,27 @@ export class PlantCareTaskGenerator {
 - generatedBy: must be "ai"
 `;
 
-    const systemInstruction = `You are a plant care assistant. Based on the plant's status and engine scores, generate a list of care tasks.
-
-Each task must be a JSON object matching this exact format:
-{
-  "type": "<task type>",
-  "title": "<short title>",
-  "description": "<optional description>",
-  "priority": "<priority>",
-  "dueDate": "<ISO date string or null>"
-}
-
-Constraints:
-${enumConstraints}
-
-Return the tasks as a JSON array. No markdown, no extra text, only valid JSON array.`;
-
-    const userPrompt = `Current plant status:
-- Water: ${status.water} (valid: ${JSON.stringify(WATER_STATUSES)})
-- Nutrients: ${status.nutrients} (valid: ${JSON.stringify(NUTRIENT_STATUSES)})
-- Health: ${status.health} (valid: ${JSON.stringify(HEALTH_STATUSES)})
-- Light: ${status.light} (valid: ${JSON.stringify(LIGHT_STATUSES)})
-
-Engine scores (0.5–2.0 scale):
-- Water score: ${engineScores?.waterScore}
-- Fertilizer score: ${engineScores?.fertilizerScore}
-- Pest risk score: ${engineScores?.pestRiskScore}
-- Light score: ${engineScores?.lightScore}
-
-Generate appropriate care tasks based on this status.`;
+    const text = fillPrompt("TASK_GENERATION", {
+      enumConstraints: enumConstraints.trimEnd(),
+      waterStatus: status.water,
+      waterStatuses: JSON.stringify(WATER_STATUSES),
+      nutrientStatus: status.nutrients,
+      nutrientStatuses: JSON.stringify(NUTRIENT_STATUSES),
+      healthStatus: status.health,
+      healthStatuses: JSON.stringify(HEALTH_STATUSES),
+      lightStatus: status.light,
+      lightStatuses: JSON.stringify(LIGHT_STATUSES),
+      waterScore: engineScores?.waterScore,
+      fertilizerScore: engineScores?.fertilizerScore,
+      pestRiskScore: engineScores?.pestRiskScore,
+      lightScore: engineScores?.lightScore,
+    });
 
     return {
       contents: [
         {
           role: "user",
-          parts: [{ text: systemInstruction + "\n\n" + userPrompt }],
+          parts: [{ text }],
         },
       ],
     };
@@ -522,32 +510,19 @@ export class PlantCareAiInsights {
       )
       .join("\n");
 
+    const text = fillPrompt("GENERATE_INSIGHT", {
+      water: s.water,
+      nutrients: s.nutrients,
+      health: s.health,
+      light: s.light,
+      logSummary: logSummary || "No recent actions recorded.",
+    });
+
     return {
       contents: [
         {
           role: "user",
-          parts: [
-            {
-              text: `You are a plant care analyst. Based on the plant status and care history, generate insights in this exact JSON format:
-{
-  "summary": "<2-3 sentence summary of plant health>",
-  "recommendations": ["<rec 1>", "<rec 2>", ...]
-}
-
-Return ONLY valid JSON, no markdown.
-
-Plant status:
-- Water: ${s.water}
-- Nutrients: ${s.nutrients}
-- Health: ${s.health}
-- Light: ${s.light}
-
-Recent care actions:
-${logSummary || "No recent actions recorded."}
-
-Generate insights and recommendations.`,
-            },
-          ],
+          parts: [{ text }],
         },
       ],
     };
@@ -562,28 +537,16 @@ Generate insights and recommendations.`,
       )
       .join("\n");
 
+    const text = fillPrompt("ANSWER_QUESTION", {
+      logSummary: logSummary || "No recent actions recorded.",
+      question,
+    });
+
     return {
       contents: [
         {
           role: "user",
-          parts: [
-            {
-              text: `You are a plant care analyst. Answer the user's question based on the plant's care history.
-
-Return your response in this JSON format:
-{
-  "summary": "<answer to the question>",
-  "recommendations": ["<rec 1>", "<rec 2>", ...]
-}
-
-Return ONLY valid JSON, no markdown.
-
-Care history:
-${logSummary || "No recent actions recorded."}
-
-User question: ${question}`,
-            },
-          ],
+          parts: [{ text }],
         },
       ],
     };

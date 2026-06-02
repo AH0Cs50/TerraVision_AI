@@ -279,6 +279,57 @@
       "explanation": "Flowering ornamentals have variable water sensitivity depending on species"
     },
     {
+      "id": "category_flower_light_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.category": { "eq": "flower" }
+      },
+      "effects": {
+        "lightScore": 0.2,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Flowering plants have high light and phosphorus demand for bloom development"
+    },
+    {
+      "id": "category_flower_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.category": { "eq": "flower" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Flowering ornamentals are attractive to aphids, thrips, and other floral pests"
+    },
+    {
+      "id": "category_tree_drought_tolerance",
+      "factor": "weather",
+      "condition": {
+        "plant.category": { "eq": "tree" }
+      },
+      "effects": {
+        "waterMultiplier": 0.7,
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.4,
+      "explanation": "Trees have deep root systems with greater drought tolerance and natural pest resilience"
+    },
+    {
+      "id": "category_crop_water_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.category": { "eq": "crop" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Crops have high water and nutrient demand for optimal yield production"
+    },
+    {
       "id": "family_flowering_ornamentals_pest_susceptibility",
       "factor": "weather",
       "condition": {
