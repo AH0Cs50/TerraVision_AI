@@ -29,8 +29,8 @@
 {
   "userInternalId": 1712345678901,
   "name": "Tomato",
-  "varietyName": "Cherry Roma",
-  "plantType": "crop",                     // "crop" | "tree"
+
+  "category": "crop",                      // "crop" | "tree" | "flower"
   "family": "fruiting_nightshade",         // "leafy_greens" | "fruiting_nightshade" | "succulent" | "root_crops" | "brassicas" | "legumes" | "herbs" | "tropical" | "citrus" | "vines" | "grasses" | "flowering_ornamentals"
   "growthStage": "flowering",              // "germination" | "seedling" | "vegetative" | "flowering" | "fruiting" | "mature"
   "plantedAt": "2026-03-15T00:00:00.000Z",

@@ -11,11 +11,12 @@ import {
 
 const router = Router();
 
-router.get("/:id", authenticate, getUser);
-router.put("/:id", authenticate, updateUser);
-router.delete("/:id", authenticate, deleteUser);
 router.post("/email", authenticate, sendVerificationEmail);
 router.get("/email/verify", verifyEmail);
 router.get("/email", authenticate, getEmailStatus);
+
+router.get("/:id", authenticate, getUser);
+router.put("/:id", authenticate, updateUser);
+router.delete("/:id", authenticate, deleteUser);
 
 export default router;

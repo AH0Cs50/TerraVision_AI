@@ -476,7 +476,7 @@ All enum‑constrained fields across the API. Values are case‑sensitive and mu
 
 | Field | Values |
 |-------|--------|
-| `plantType` | `crop`, `tree` |
+| `category` | `crop`, `tree`, `flower` |
 | `family` | `leafy_greens`, `fruiting_nightshade`, `succulent`, `root_crops`, `brassicas`, `legumes`, `herbs`, `tropical`, `citrus`, `vines`, `grasses`, `flowering_ornamentals` |
 | `growthStage` | `germination`, `seedling`, `vegetative`, `flowering`, `fruiting`, `mature` |
 | `soil.type` | `sandy`, `alfisols`, `aridisols`, `entisols`, `inceptisols`, `vertisols` |
@@ -600,8 +600,8 @@ Content-Type: application/json
 
 {
   "name": "Tomato Plant 1",
-  "varietyName": "Roma",
-  "plantType": "crop",
+
+  "category": "crop",
   "family": "fruiting_nightshade",
   "growthStage": "vegetative",
   "plantedAt": "2026-03-15T00:00:00Z",
@@ -618,7 +618,8 @@ Content-Type: application/json
   "data": {
     "uuid": "660e8400-e29b-41d4-a716-446655440001",
     "name": "Tomato Plant 1",
-    "family": "solanaceae",
+    "category": "crop",
+    "family": "fruiting_nightshade",
     "growthStage": "vegetative",
     "ageDays": 0
   }
@@ -794,6 +795,26 @@ Content-Type: application/json
 {
   "success": false,
   "message": "Invalid file type. Allowed: image/jpeg, image/png, image/webp"
+}
+```
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "success": false,
+  "message": "Validation failed",
+  "status": 400,
+  "details": [
+    {
+      "code": "invalid_type",
+      "expected": "number",
+      "received": "null",
+      "path": ["soil", "moisture"],
+      "message": "Expected number, received null"
+    }
+  ]
 }
 ```
 
@@ -1141,10 +1162,11 @@ jobs:
 ```javascript
 // Custom operational error class
 class RouteError extends Error {
-  constructor(statusCode, message) {
+  constructor(statusCode, message, details = null) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true; // Distinguishes expected errors from bugs
+    this.details = details;    // Optional validation error details
   }
 }
 
@@ -1156,21 +1178,24 @@ throw new RouteError(HttpStatusCodes.NOT_FOUND, "Plant not found");
 
 ```javascript
 function errorHandler(err, req, res, next) {
-  const statusCode = err.statusCode || 500;
-  const message = err.isOperational ? err.message : "Internal server error";
+  console.error(err);
 
-  if (!err.isOperational) {
-    console.error(`[${new Date().toISOString()}] UNEXPECTED ERROR:`, {
-      method: req.method,
-      path: req.path,
-      error: err.message,
-      stack: err.stack,
-    });
+  if (err instanceof RouteError) {
+    const response = {
+      success: false,
+      message: err.message,
+      status: err.statusCode,
+    };
+    if (err.details) {
+      response.details = err.details;
+    }
+    return res.status(err.statusCode).json(response);
   }
 
-  res.status(statusCode).json({
+  return res.status(500).json({
     success: false,
-    message,
+    message: "Internal Server Error",
+    status: 500,
   });
 }
 ```

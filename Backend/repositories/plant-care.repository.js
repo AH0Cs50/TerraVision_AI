@@ -80,6 +80,15 @@ class PlantCareRepository {
     return await PlantCareModel.find({}).lean();
   }
 
+  async paginate({ page = 1, limit = 20 } = {}) {
+    const skip = (page - 1) * limit;
+    return await PlantCareModel.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+  }
+
   // ── TASK LOOKUP ────────────────────────────────
 
   async findTaskInActive(plantUUID, taskId) {

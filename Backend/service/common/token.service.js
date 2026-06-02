@@ -33,20 +33,12 @@ class TokenService {
 
   // Verify Access Token
   verifyAccessToken(token) {
-    try {
-      return jwt.verify(token, this.accessSecret);
-    } catch (err) {
-      return err;
-    }
+    return jwt.verify(token, this.accessSecret);
   }
 
   // Verify Refresh Token
   verifyRefreshToken(token) {
-    try {
-      return jwt.verify(token, this.refreshSecret);
-    } catch (err) {
-      return err;
-    }
+    return jwt.verify(token, this.refreshSecret);
   }
 }
 

@@ -37,7 +37,8 @@ import PlantCareStateService, {
 } from "../service/plant-care-state.service.js";
 
 export const userService = new UserService(userRepo);
-export const plantService = new PlantService(plantRepo, s3Repo, userService);
+export const llmService = new LLMService();
+export const plantService = new PlantService(plantRepo, s3Repo, userService, llmService);
 export const diseaseDetectionService = new DiseaseDetectionService(plantRepo, userService);
 export const s3CloudService = new S3CloudService(s3Repo, userService);
 export const authService = new AuthService(
@@ -54,8 +55,6 @@ export const plantAnalyserService = new PlantAnalyserService(
   plantService,
   userService,
 );
-
-export const llmService = new LLMService();
 
 export const plantCareStateService = new PlantCareStateService(plantCareRepo);
 

@@ -1,5 +1,6 @@
 import { userService, emailService } from "../shared/container.js";
-import { HttpStatusCodes } from "../shared/util/HttpStatusCodes.js";
+import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
+import HttpResponse from "../shared/util/HttpResponse.js";
 
 // =========================
 // GET /:id  — get user by UUID
@@ -11,7 +12,7 @@ export async function getUser(req, res, next) {
     if (req.user.uuid !== id && req.user.role !== "admin") {
       return res
         .status(HttpStatusCodes.FORBIDDEN)
-        .json({ message: "Forbidden" });
+        .json(HttpResponse.error("Forbidden", HttpStatusCodes.FORBIDDEN));
     }
 
     const user = await userService.findByUUID(id);
@@ -19,15 +20,11 @@ export async function getUser(req, res, next) {
     if (!user) {
       return res
         .status(HttpStatusCodes.NOT_FOUND)
-        .json({ message: "User not found" });
+        .json(HttpResponse.error("User not found", HttpStatusCodes.NOT_FOUND));
     }
 
     const { uuid, name, email, role, isverified, location, createdAt } = user;
-    return res.status(HttpStatusCodes.OK).json({
-      success: true,
-      message: "User retrieved successfully",
-      data: { uuid, name, email, role, isverified, location, createdAt },
-    });
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("User retrieved successfully", { uuid, name, email, role, isverified, location, createdAt }));
   } catch (error) {
     next(error);
   }
@@ -43,17 +40,13 @@ export async function updateUser(req, res, next) {
     if (req.user.uuid !== id && req.user.role !== "admin") {
       return res
         .status(HttpStatusCodes.FORBIDDEN)
-        .json({ message: "Forbidden" });
+        .json(HttpResponse.error("Forbidden", HttpStatusCodes.FORBIDDEN));
     }
 
     const updated = await userService.updateUser(id, req.body);
     const { uuid, name, email, role, isverified, location, createdAt } =
       updated;
-    return res.status(HttpStatusCodes.OK).json({
-      success: true,
-      message: "User updated successfully",
-      data: { uuid, name, email, role, isverified, location, createdAt },
-    });
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("User updated successfully", { uuid, name, email, role, isverified, location, createdAt }));
   } catch (error) {
     next(error);
   }
@@ -66,17 +59,14 @@ export async function deleteUser(req, res, next) {
   try {
     const { id } = req.params;
 
-    if (req.user.role !== "admin") {
+    if (req.user.uuid !== id && req.user.role !== "admin") {
       return res
         .status(HttpStatusCodes.FORBIDDEN)
-        .json({ message: "Admin only" });
+        .json(HttpResponse.error("Forbidden", HttpStatusCodes.FORBIDDEN));
     }
 
     await userService.deleteUser(id);
-    return res.status(HttpStatusCodes.OK).json({
-      success: true,
-      message: "User deleted successfully",
-    });
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("User deleted successfully"));
   } catch (error) {
     next(error);
   }
@@ -90,11 +80,13 @@ export async function sendVerificationEmail(req, res, next) {
     const token = await userService.setEmailToken(req.user.uuid);
     const user = await userService.findByUUID(req.user.uuid);
 
-    await emailService.sendVerifyEmail(user.email, token);
-    return res.status(HttpStatusCodes.OK).json({
-      success: true,
-      message: "Verification email sent",
-    });
+    try {
+      await emailService.sendVerifyEmail(user.email, token);
+    } catch (_emailErr) {
+      // Email delivery failure is non-fatal
+    }
+
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Verification email sent"));
   } catch (error) {
     next(error);
   }
@@ -109,15 +101,11 @@ export async function verifyEmail(req, res, next) {
     if (!token) {
       return res
         .status(HttpStatusCodes.BAD_REQUEST)
-        .json({ message: "Token is required" });
+        .json(HttpResponse.error("Token is required", HttpStatusCodes.BAD_REQUEST));
     }
 
     const result = await userService.verifyEmailByToken(token);
-    return res.status(HttpStatusCodes.OK).json({
-      success: true,
-      message: "Email verified successfully",
-      data: result,
-    });
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Email verified successfully", result));
   } catch (error) {
     next(error);
   }
@@ -129,11 +117,7 @@ export async function verifyEmail(req, res, next) {
 export async function getEmailStatus(req, res, next) {
   try {
     const status = await userService.getEmailStatus(req.user.uuid);
-    return res.status(HttpStatusCodes.OK).json({
-      success: true,
-      message: "Email verification status retrieved successfully",
-      data: status,
-    });
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Email verification status retrieved successfully", status));
   } catch (error) {
     next(error);
   }

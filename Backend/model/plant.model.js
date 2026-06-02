@@ -1,7 +1,7 @@
 import mongoose from "../shared/db.js";
 import { v4 as uuidv4 } from "uuid";
 
-const FAMILIES = [
+export const FAMILIES = [
   "leafy_greens",
   "fruiting_nightshade",
   "succulent",
@@ -16,7 +16,7 @@ const FAMILIES = [
   "flowering_ornamentals",
 ];
 
-const GROWTH_STAGES = [
+export const GROWTH_STAGES = [
   "germination",
   "seedling",
   "vegetative",
@@ -25,7 +25,7 @@ const GROWTH_STAGES = [
   "mature",
 ];
 
-const SOIL_TYPES = [
+export const SOIL_TYPES = [
   "sandy",
   "alfisols",
   "aridisols",
@@ -51,8 +51,8 @@ const plantMongooseSchema = new mongoose.Schema({
   uuid: { type: String, unique: true, default: () => uuidv4() },
   userInternalId: { type: Number, required: true },
   name: { type: String, required: true },
-  varietyName: { type: String, required: true },
-  plantType: { type: String, enum: ["crop", "tree"], required: true },
+  commonName: { type: String },
+  category: { type: String, enum: ["crop", "tree", "flower"], required: true },
   family: { type: String, enum: FAMILIES, required: true },
   growthStage: { type: String, enum: GROWTH_STAGES, required: true },
   plantedAt: { type: Date, required: true },

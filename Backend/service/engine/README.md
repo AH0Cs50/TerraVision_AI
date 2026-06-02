@@ -161,6 +161,7 @@ Only `weather` and `plant` are required. All other objects and their sub-fields 
   },
 
   plant: {
+    category?: string,        // "crop" | "tree" | "flower" — triggers category-specific rules
     family: string,           // see Plant Families table
     ageDays: number,          // days since planted
     growthStage: string       // "germination" | "seedling" | "vegetative"
@@ -342,7 +343,7 @@ import { evaluate, evaluateByLayer, getRuleCount } from "./engine/index.js";
 const full = {
   weather: { temperature: 32, humidity: 35, condition: "sunny", light: "full_sun" },
   soil: { type: "sandy", moisture: 15 },
-  plant: { family: "leafy_greens", ageDays: 30, growthStage: "vegetative" },
+  plant: { category: "crop", family: "leafy_greens", ageDays: 30, growthStage: "vegetative" },
   watering: { hoursSinceLastWatering: 48 },
   stress: { diseaseType: "none", severity: "none" },
 };
@@ -352,7 +353,7 @@ console.log(evaluate(full));
 // Minimal input — only required fields
 const minimal = {
   weather: { temperature: 20, humidity: 50, condition: "cloudy", light: "indirect" },
-  plant: { family: "citrus", growthStage: "flowering", ageDays: 200 },
+  plant: { category: "tree", family: "citrus", growthStage: "flowering", ageDays: 200 },
 };
 console.log(evaluate(minimal));
 // Still returns valid scores (fewer rules fire, less accurate)

@@ -8,15 +8,14 @@ const __dirname = path.dirname(__filename);
 config({ path: path.join(__dirname, "config.env") });
 
 const {
-  PORT,
   ACCESS_TOKEN_SECRET,
   ACCESS_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRES_IN,
   WEATHER_API_KEY,
   DISEASE_DETECTION_URL,
-  LLM_SERVICE_URL,
-  ApiKey,
+  GEMINI_API_URL,
+  GEMINI_API_KEY,
   MongoURI,
 } = process.env;
 
@@ -24,11 +23,10 @@ const {
 // const {DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT} = process.env;
 
 export {
-  PORT,
   WEATHER_API_KEY,
   DISEASE_DETECTION_URL,
-  LLM_SERVICE_URL,
-  ApiKey,
+  GEMINI_API_URL,
+  GEMINI_API_KEY,
   MongoURI,
 };
 

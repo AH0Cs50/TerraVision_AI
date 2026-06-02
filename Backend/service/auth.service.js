@@ -67,11 +67,7 @@ class AuthService {
       throw new RouteError(HttpStatusCodes.UNAUTHORIZED, "Invalid credentials");
     }
 
-    const payload = {
-      internalId: user.internalId,
-      uuid: user.uuid,
-      role: user.role,
-    };
+    const payload = { uuid: user.uuid, email: user.email, role: user.role };
 
     const accessToken = this.tokenService.generateAccessToken(payload);
     const refreshToken = this.tokenService.generateRefreshToken(payload);
@@ -116,7 +112,7 @@ class AuthService {
       );
     }
 
-    const user = await this.userService.findByInternalId(decoded.internalId);
+    const user = await this.userService.findByUUID(decoded.uuid);
 
     if (!user || user.refreshToken !== refreshToken) {
       throw new RouteError(
@@ -126,7 +122,6 @@ class AuthService {
     }
 
     const payload = {
-      internalId: user.internalId,
       uuid: user.uuid,
       role: user.role,
     };

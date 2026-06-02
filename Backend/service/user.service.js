@@ -118,7 +118,8 @@ class UserService {
     delete allowed.uuid;
 
     const updated = await this.UserRepository.updateByUUID(userUUID, allowed);
-    if (!updated) throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
+    if (!updated)
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
     return updated;
   }
 
@@ -150,7 +151,8 @@ class UserService {
   // ==========================
   async deleteUser(userUUID) {
     const deletedCount = await this.UserRepository.deleteByUUID(userUUID);
-    if (deletedCount === 0) throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
+    if (deletedCount === 0)
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
     return deletedCount;
   }
 

@@ -1,40 +1,11 @@
 import { z } from "zod";
+import { FAMILIES, GROWTH_STAGES, SOIL_TYPES } from "../model/plant.model.js";
 
-const PlantFamilyEnum = z.enum([
-  "leafy_greens",
-  "fruiting_nightshade",
-  "succulent",
-  "root_crops",
-  "brassicas",
-  "legumes",
-  "herbs",
-  "tropical",
-  "citrus",
-  "vines",
-  "grasses",
-  "flowering_ornamentals",
-]);
+const PlantFamilyEnum = z.enum(FAMILIES);
 
-const GrowthStageEnum = z.enum([
-  "germination",
-  "seedling",
-  "vegetative",
-  "flowering",
-  "fruiting",
-  "mature",
-]);
+const GrowthStageEnum = z.enum(GROWTH_STAGES);
 
-const SoilTypeEnum = z.enum([
-  "sandy",
-  "alfisols",
-  "aridisols",
-  "entisols",
-  "inceptisols",
-  "vertisols",
-]);
-
-const StressDiseaseTypeEnum = z.enum(["bacterial", "fungal", "none"]);
-const StressSeverityEnum = z.enum(["high", "medium", "none"]);
+const SoilTypeEnum = z.enum(SOIL_TYPES);
 
 function parseDate(value) {
   if (value instanceof Date) return value;
@@ -48,39 +19,22 @@ function parseDate(value) {
 export const PlantDTO = z.object({
   name: z.string().min(2).max(100),
 
-  varietyName: z.string().min(2).max(100),
+  commonName: z.string().min(2).max(100).optional(),
 
-  plantType: z.enum(["crop", "tree"]),
+  category: z.enum(["crop", "tree", "flower"]),
 
   family: PlantFamilyEnum,
 
-  growthStage: GrowthStageEnum,
-
   plantedAt: z.preprocess(parseDate, z.date()),
 
-  soil: z
-    .object({
-      type: SoilTypeEnum,
-      moisture: z.number().min(0).max(100),
-    })
-    .optional(),
+  soil: z.object({
+    type: SoilTypeEnum,
+    moisture: z.number().min(0).max(100).nullable().optional(),
+  }),
 
   watering: z
     .object({
       hoursSinceLastWatering: z.number().min(0),
     })
     .optional(),
-
-  stress: z
-    .object({
-      diseaseType: StressDiseaseTypeEnum,
-      severity: StressSeverityEnum.optional(),
-    })
-    .optional(),
-});
-
-export const DiseaseDTO = z.object({
-  name: z.string().default("healthy"),
-  confidence: z.number().min(0).max(1).default(1),
-  detectedAt: z.date().optional(),
 });

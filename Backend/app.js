@@ -1,5 +1,4 @@
 import express from "express";
-import { PORT } from "./config/config.js";
 //routes
 import authRouter from "./routes/auth.route.js";
 import plantsRouter from "./routes/plant.route.js";
@@ -27,14 +26,13 @@ app.use("/api/v1/plants", authenticate, plantCareRouter);
 // error middleware
 app.use(errorHandler);
 
-const port = PORT || 3000;
+const port = process.env.PORT || 3000;
 
 function appStart() {
   try {
-    //some micoreserive test check before run server
-
-    app.listen(port, () => {
-      console.log(`server app runs at port ${port}`);
+    //some micro-service test check before run server
+    const server = app.listen(port, "0.0.0.0", () => {
+      console.log("SERVER STARTED ON PORT:", server.address().port);
     });
   } catch {
     console.log("failed to start app server");
