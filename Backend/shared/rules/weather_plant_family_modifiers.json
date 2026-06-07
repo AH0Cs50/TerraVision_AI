@@ -340,6 +340,94 @@
       },
       "weight": 0.3,
       "explanation": "Flowering ornamentals are often susceptible to aphids, thrips, and mites"
+    },
+    {
+      "id": "family_cucurbits_water_demand",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "cucurbits" }
+      },
+      "effects": {
+        "waterMultiplier": 1.3,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.5,
+      "explanation": "Cucurbits have high water demand for fruit development and are heavy feeders"
+    },
+    {
+      "id": "family_cucurbits_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "cucurbits" }
+      },
+      "effects": {
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Cucurbits are highly susceptible to powdery mildew, downy mildew, and squash vine borers"
+    },
+    {
+      "id": "family_alliums_water_efficiency",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "alliums" }
+      },
+      "effects": {
+        "waterMultiplier": 0.9,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Alliums have shallow roots but are efficient water users; moderate nutrient demand for bulb development"
+    },
+    {
+      "id": "family_alliums_pest_resistance",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "alliums" }
+      },
+      "effects": {
+        "pestRiskScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Alliums naturally repel many pests through sulfur compounds and are generally low-pest crops"
+    },
+    {
+      "id": "family_berries_water_sensitivity",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "berries" }
+      },
+      "effects": {
+        "waterMultiplier": 1.2,
+        "fertilizerScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Berries have shallow fibrous roots requiring consistent moisture, and benefit from acidic soil fertility"
+    },
+    {
+      "id": "family_berries_pest_susceptibility",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "berries" }
+      },
+      "effects": {
+        "pestRiskScore": 0.2
+      },
+      "weight": 0.4,
+      "explanation": "Berries are susceptible to fungal diseases, spotted wing drosophila, and root rot in wet conditions"
+    },
+    {
+      "id": "family_palm_drought_tolerance",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "palm" }
+      },
+      "effects": {
+        "waterMultiplier": 0.8,
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Palms have deep root systems and good drought tolerance once established; moderate nutrient demand"
     }
   ]
 }

@@ -78,6 +78,20 @@
       },
       "weight": 0.6,
       "explanation": "Combined heat and prolonged dryness accelerates soil moisture depletion"
+    },
+    {
+      "id": "watering_over_saturation_risk",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "lt": 12 },
+        "soil.moisture": { "gte": 75 }
+      },
+      "effects": {
+        "waterScore": -0.3,
+        "pestRiskScore": 0.3
+      },
+      "weight": 0.5,
+      "explanation": "Recently watered with already high soil moisture indicates over-saturation, reducing irrigation need but raising root rot risk"
     }
   ]
 }

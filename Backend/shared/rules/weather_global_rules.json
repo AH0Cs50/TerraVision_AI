@@ -146,7 +146,7 @@
         "weather.condition": { "eq": "sunny" }
       },
       "effects": {
-        "waterScore": 0.2
+        "waterScore": 0.3
       },
       "weight": 0.3,
       "explanation": "Full sun increases radiative load and evaporation from soil surface"
@@ -177,16 +177,41 @@
       "explanation": "Combined heat and humidity accelerates pest reproductive cycles"
     },
     {
-      "id": "global_extreme_heat_pest_suppression",
+      "id": "global_extreme_heat_pest_risk",
       "factor": "weather",
       "condition": {
         "weather.temperature": { "gte": 40 }
       },
       "effects": {
-        "pestRiskScore": -0.2
+        "pestRiskScore": 0.1
       },
       "weight": 0.3,
-      "explanation": "Extreme heat above 40°C suppresses some pest populations"
+      "explanation": "Extreme heat above 40°C damages plant tissue, creating entry points for opportunistic pathogens"
+    },
+    {
+      "id": "global_strong_wind_increased_et",
+      "factor": "weather",
+      "condition": {
+        "weather.windSpeed": { "gte": 5.5 }
+      },
+      "effects": {
+        "waterScore": 0.2
+      },
+      "weight": 0.3,
+      "explanation": "Wind above 5.5 m/s (~20 km/h) significantly increases evapotranspiration from soil and leaf surfaces"
+    },
+    {
+      "id": "global_extreme_wind_damage_risk",
+      "factor": "weather",
+      "condition": {
+        "weather.windSpeed": { "gte": 11 }
+      },
+      "effects": {
+        "waterScore": 0.3,
+        "pestRiskScore": 0.1
+      },
+      "weight": 0.4,
+      "explanation": "Wind above 11 m/s (~40 km/h) causes physical damage to foliage and stems, increasing water loss and pathogen entry"
     }
   ]
 }

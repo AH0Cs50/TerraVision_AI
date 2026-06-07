@@ -78,7 +78,7 @@
         "plant.growthStage": { "eq": "vegetative" }
       },
       "effects": {
-        "waterMultiplier": 1.1,
+        "waterMultiplier": 1.2,
         "fertilizerScore": 0.3
       },
       "weight": 0.4,

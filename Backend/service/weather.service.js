@@ -10,7 +10,7 @@ export default class WeatherService {
   async getWeather(location) {
     const request = this.resolveLocation(location);
     const rawData = await this.fetchWeather(request);
-    return this.transform(rawData);
+    return WeatherService.transform(rawData);
   }
 
   // =========================
@@ -86,6 +86,13 @@ export default class WeatherService {
     });
 
     return response.data;
+  }
+
+  // =========================
+  // Helpers
+  // =========================
+  static kelvinToCelsius(k) {
+    return k != null ? +(k - 273.15).toFixed(2) : null;
   }
 
   // =========================
@@ -345,6 +352,7 @@ export class WeatherDescriber {
       humidity: weatherDescription.humidity.value,
       condition,
       light,
+      windSpeed: weatherDescription.wind?.speed,
     };
   }
 }

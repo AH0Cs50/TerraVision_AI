@@ -46,7 +46,7 @@
         "weather.light": { "eq": "full_sun" }
       },
       "effects": {
-        "lightScore": 0.2
+        "lightScore": 0.3
       },
       "weight": 0.3,
       "explanation": "Full sun exposure maximizes photosynthetic potential for sun-adapted plants"

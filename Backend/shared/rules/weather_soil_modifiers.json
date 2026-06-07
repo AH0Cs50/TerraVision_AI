@@ -212,6 +212,45 @@
       },
       "weight": 0.2,
       "explanation": "Optimal soil moisture 40-70% supports healthy root function and reduces stress-related pest issues"
+    },
+    {
+      "id": "soil_loam_balanced",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "loam" }
+      },
+      "effects": {
+        "waterScore": 0.0,
+        "fertilizerScore": -0.1
+      },
+      "weight": 0.3,
+      "explanation": "Loam has ideal balance of sand, silt, and clay — excellent water holding capacity and natural fertility"
+    },
+    {
+      "id": "soil_clay_slow_drainage",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "clay" }
+      },
+      "effects": {
+        "waterScore": -0.2,
+        "fertilizerScore": -0.1
+      },
+      "weight": 0.4,
+      "explanation": "Clay soil has high water retention and slow drainage, reducing irrigation frequency but requiring careful moisture management"
+    },
+    {
+      "id": "soil_silt_moderate_retention",
+      "factor": "weather",
+      "condition": {
+        "soil.type": { "eq": "silt" }
+      },
+      "effects": {
+        "waterScore": 0.1,
+        "fertilizerScore": 0.1
+      },
+      "weight": 0.3,
+      "explanation": "Silt soil has moderate water retention and good natural fertility, slight risk of surface crusting"
     }
   ]
 }

@@ -42,7 +42,7 @@ Backend/service/engine/
 | --------------------- | ------------------------------------------------ |
 | `evaluate(input)`     | `{ waterScore, fertilizerScore, pestRiskScore, lightScore, _appliedRules }` |
 | `evaluateByLayer(input)` | `{ layers: { global, soil, ... }, final: { ... } }` |
-| `getRuleCount()`      | `{ global: N, soil: N, ..., total: N }`          |
+| `getRuleCount()`      | `{ global: 17, soil: 19, plantFamily: 35, growthStage: 18, watering: 7, pest: 9, light: 22, total: 127 }` |
 
 ### `engine.js` — Core Engine
 
@@ -157,7 +157,8 @@ Only `weather` and `plant` are required. All other objects and their sub-fields 
     temperature: number,      // °C
     humidity: number,         // 0–100
     condition: string,        // "sunny" | "cloudy" | "rainy" | "storm"
-    light: string             // "shade" | "indirect" | "partial" | "full_sun" | "intense"
+    light: string,            // "shade" | "indirect" | "partial" | "full_sun" | "intense"
+    windSpeed?: number        // m/s; omit → wind rules skip (optional)
   },
 
   plant: {
@@ -192,9 +193,14 @@ Only `weather` and `plant` are required. All other objects and their sub-fields 
 | `soil` omitted entirely | No soil-layer rules | Baseline |
 | `soil: { type }` only | Only type-based rules (e.g. `soil_sandy_water_leaching`) | Partial |
 | `soil: { type, moisture }` | Type rules + moisture rules (e.g. `soil_low_moisture_drought_stress`) | Full |
+| `watering` omitted entirely | No watering-layer rules | Baseline |
+| `watering: { hoursSinceLastWatering }` only | Watering history rules (e.g. `watering_mild_drought`) | Partial |
+| `watering + soil.moisture` | Over-saturation rules also fire (e.g. `watering_over_saturation_risk`) | Full |
 | `stress` omitted entirely | No pest-layer disease/severity rules | Baseline |
 | `stress: { diseaseType }` only | Only disease-type rules (e.g. `pest_fungal_humidity_high`) | Partial |
 | `stress: { diseaseType, severity }` | Disease-type + severity rules (e.g. `pest_high_severity_amplification`) | Full |
+| `weather.windSpeed` omitted | No wind rules fire | Baseline |
+| `weather.windSpeed` provided | Wind ET rules fire (≥5.5 m/s, ≥11 m/s) | Improved water accuracy |
 
 Each sub-field independently unlocks its own set of rules. Providing partial data gives **more accuracy than omitting the whole object**, but less than providing all sub-fields.
 
@@ -310,6 +316,10 @@ Each rule file contains a `rules` array. A single rule:
 | vines                 |       1.0×        |    baseline     |        +0.2         |
 | grasses               |       0.8×        |      +0.2       |      baseline       |
 | flowering_ornamentals |       1.0×        |    baseline     |        +0.2         |
+| **cucurbits**         |     **1.3×**      |    **+0.2**     |      **+0.3**       |
+| **alliums**           |     **0.9×**      |    **+0.2**     |      **-0.1**       |
+| **berries**           |     **1.2×**      |    **+0.2**     |      **+0.2**       |
+| **palm**              |     **0.8×**      |    **+0.1**     |      baseline       |
 
 ### Light Levels
 
@@ -331,6 +341,9 @@ Each rule file contains a `rules` array. A single rule:
 | inceptisols |     +0.1     |       +0.2        |      —      |
 | alfisols    |     -0.2     |       -0.1        |      —      |
 | vertisols   |     +0.3     |       +0.1        |      —      |
+| **loam**    |  **+0.0**    |     **-0.1**      |      —      |
+| **clay**    |  **-0.2**    |     **-0.1**      |      —      |
+| **silt**    |  **+0.1**    |     **+0.1**      |      —      |
 
 ---
 
@@ -341,7 +354,7 @@ import { evaluate, evaluateByLayer, getRuleCount } from "./engine/index.js";
 
 // Full input — all optional fields provided
 const full = {
-  weather: { temperature: 32, humidity: 35, condition: "sunny", light: "full_sun" },
+  weather: { temperature: 32, humidity: 35, condition: "sunny", light: "full_sun", windSpeed: 4.2 },
   soil: { type: "sandy", moisture: 15 },
   plant: { category: "crop", family: "leafy_greens", ageDays: 30, growthStage: "vegetative" },
   watering: { hoursSinceLastWatering: 48 },
@@ -363,7 +376,7 @@ console.log(layered.layers.global);
 console.log(layered.final);
 
 console.log(getRuleCount());
-// { global: 15, soil: 16, plantFamily: 24, ... total: 108 }
+// { global: 17, soil: 19, plantFamily: 35, growthStage: 18, watering: 7, pest: 9, light: 22, total: 127 }
 ```
 
 ---

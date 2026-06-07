@@ -23,7 +23,7 @@
         "weather.humidity": { "gte": 60, "lt": 80 }
       },
       "effects": {
-        "pestRiskScore": 0.2
+        "pestRiskScore": 0.3
       },
       "weight": 0.4,
       "explanation": "Moderate humidity supports fungal disease but at reduced progression rate"
@@ -85,7 +85,7 @@
       "id": "pest_stress_vulnerability",
       "factor": "weather",
       "condition": {
-        "watering.hoursSinceLastWatering": { "gte": 72 },
+        "watering.hoursSinceLastWatering": { "gte": 48 },
         "weather.temperature": { "gte": 30 }
       },
       "effects": {

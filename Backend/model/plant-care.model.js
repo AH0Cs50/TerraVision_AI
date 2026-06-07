@@ -97,10 +97,10 @@ export function createPlantTaskModel(data) {
  */
 
 function mapWaterStatus(score) {
-  if (score >= 1.7) return "overwatered";
-  if (score >= 1.3) return "satisfied";
-  if (score >= 0.8) return "low";
-  return "thirsty";
+  if (score >= 1.7) return "thirsty";
+  if (score >= 1.3) return "low";
+  if (score >= 0.8) return "satisfied";
+  return "overwatered";
 }
 
 function mapNutrientStatus(score) {
