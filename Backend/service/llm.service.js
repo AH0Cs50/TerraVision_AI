@@ -8,6 +8,14 @@ import HttpStatusCode from "../shared/util/HttpStatusCodes.js";
 
 const prompts = require("../shared/prompt.json");
 
+/**
+ * @description Retrieves a prompt template from `prompt.json` by key and
+ * replaces `{placeholder}` tokens with the provided params.
+ * @param {string} key - Key in prompt.json
+ * @param {Object} [params={}] - Values to interpolate into the template
+ * @returns {string} Filled prompt string
+ * @throws {Error} If the prompt key is not found
+ */
 export function fillPrompt(key, params = {}) {
   const template = prompts[key];
   if (!template) {
@@ -21,11 +29,24 @@ export function fillPrompt(key, params = {}) {
 
 const MODEL = "gemini-2.5-flash";
 
+/**
+ * @description Wraps the Google GenAI SDK to provide text-only and
+ * text-with-image generation via Gemini models. Handles prompt construction,
+ * response parsing (JSON / plain text), and error wrapping.
+ */
 export default class LLMService {
   constructor() {
     this.ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   }
 
+  /**
+   * @private
+   * @description Extracts text from a GenAI response and attempts to parse it
+   * as JSON if the text starts with `{` or `[`.
+   * @param {Object} response - Raw GenAI response object
+   * @returns {Object|string} Parsed JSON object/array, or plain text
+   * @throws {RouteError} If response text is empty
+   */
   #processResponse(response) {
     const text = response?.text;
     if (!text) {
@@ -46,6 +67,14 @@ export default class LLMService {
     return text;
   }
 
+  /**
+   * @description Sends a text-only prompt to the Gemini model and returns
+   * the parsed response.
+   * @param {string|{contents: Array}} prompt - Plain text or structured
+   * contents object for the model
+   * @returns {Promise<Object|string>} Parsed response
+   * @throws {RouteError} If the LLM call fails
+   */
   async generateResponse(prompt) {
     try {
       const contents =
@@ -70,6 +99,15 @@ export default class LLMService {
     }
   }
 
+  /**
+   * @description Sends a prompt paired with a base64-encoded image to the
+   * Gemini model. Useful for vision tasks like plant identification.
+   * @param {string} prompt - Text instruction for the model
+   * @param {string} imageBase64 - Base64-encoded image data
+   * @param {string} mimeType - MIME type of the image (e.g. image/jpeg)
+   * @returns {Promise<Object|string>} Parsed response
+   * @throws {RouteError} If the LLM call fails
+   */
   async generateResponseWithImage(prompt, imageBase64, mimeType) {
     try {
       const response = await this.ai.models.generateContent({

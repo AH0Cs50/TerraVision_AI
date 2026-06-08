@@ -1,87 +1,130 @@
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
 import { s3Config } from "../config/config.js";
+import RouteError from "../shared/util/RouteError.js";
+import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 
+/**
+ * @description Provides S3 operations for image upload, download, and
+ * deletion. Generates pre-signed URLs for direct PUT uploads, validates
+ * image keys and MIME types, and supports both plant-specific and
+ * general-purpose image paths.
+ */
 class S3CloudService {
   constructor(S3Repository, userService) {
     this.s3Repo = S3Repository;
     this.userService = userService;
   }
 
-  async #resolveUserInternalId(userUUID) {
-    const user = await this.userService.findByUUID(userUUID);
-    return user.internalId;
-  }
-
-  // =========================================
-  // Validate Image MIME Type
-  // =========================================
+  /**
+   * @description Checks that the provided MIME type is one of the allowed
+   * image types (jpeg, png, webp).
+   * @param {string} fileType - MIME type string
+   * @returns {boolean} True if the type is allowed
+   */
   validateImageMimeType(fileType) {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
     return allowedTypes.includes(fileType);
   }
 
-  // =========================================
-  // Build Plant Image Path
-  // =========================================
+  /**
+   * @description Constructs an S3 key for a plant image with the format
+   * `plants/{userId}/{plantId}/images/{timestamp}-{safeName}`.
+   * @param {Object} params
+   * @param {string} params.userId - User UUID
+   * @param {string} params.plantId - Plant UUID
+   * @param {string} params.fileName - Original file name (sanitised)
+   * @returns {string} S3 object key
+   */
   buildPlantImagePath({ userId, plantId, fileName }) {
-    const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+    const safeName = fileName
+      .replace(/[^a-zA-Z0-9.-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
 
-    return `plant/user_${userId}_plant_${plantId}/images/${Date.now()}-${safeName}`;
+    return `plants/${userId}/${plantId}/images/${Date.now()}-${safeName}`;
   }
 
-  // =========================================
-  // Validate Plant Image Key
-  // =========================================
+  /**
+   * @description Validates that a plant image key matches the expected
+   * pattern for plant-scoped images.
+   * @param {string} key - S3 object key to validate
+   * @returns {boolean} True if the key format is valid
+   */
   validatePlantImageKey(key) {
     if (!key || typeof key !== "string") {
       return false;
     }
 
     const keyPattern =
-      /^plant\/user_[a-zA-Z0-9_-]+_plant_[a-zA-Z0-9_-]+\/images\/\d+-[a-zA-Z0-9._-]+$/;
+      /^plants\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/images\/\d+-[a-zA-Z0-9._-]+$/;
 
     return keyPattern.test(key);
   }
 
-  // =========================================
-  // Build General Image Path
-  //   general/images/<timestamp>-<filename>
-  // =========================================
+  /**
+   * @description Constructs an S3 key for a general (non-plant) image with
+   * the format `general/images/{timestamp}-{safeName}`.
+   * @param {Object} params
+   * @param {string} params.fileName - Original file name (sanitised)
+   * @returns {string} S3 object key
+   */
   buildGeneralImagePath({ fileName }) {
-    const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase();
+    const safeName = fileName
+      .replace(/[^a-zA-Z0-9.-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
     return `general/images/${Date.now()}-${safeName}`;
   }
 
-  // =========================================
-  // Validate General Image Key
-  // =========================================
+  /**
+   * @description Validates that a general image key matches the expected
+   * pattern for non-plant-scoped images.
+   * @param {string} key - S3 object key to validate
+   * @returns {boolean} True if the key format is valid
+   */
   validateGeneralImageKey(key) {
     if (!key || typeof key !== "string") {
       return false;
     }
 
-    const keyPattern =
-      /^general\/images\/\d+-[a-zA-Z0-9._-]+$/;
+    const keyPattern = /^general\/images\/\d+-[a-zA-Z0-9._-]+$/;
 
     return keyPattern.test(key);
   }
 
-  // =========================================
-  // Generate Upload URL
-  // =========================================
-  async generateUploadUrl({ userId, plantId, fileName, fileType }) {
+  /**
+   * @private
+   * @description Throws a RouteError if the MIME type is not allowed.
+   * @param {string} fileType - MIME type to validate
+   * @throws {RouteError} BAD_REQUEST if type is invalid
+   */
+  #throwIfInvalidMime(fileType) {
     if (!this.validateImageMimeType(fileType)) {
-      throw new Error("INVALID_FILE_TYPE");
+      throw new RouteError(HttpStatusCodes.BAD_REQUEST, "INVALID_FILE_TYPE");
     }
+  }
 
-    const internalId = await this.#resolveUserInternalId(userId);
+  /**
+   * @description Generates a pre-signed PUT URL for uploading a plant image
+   * directly to S3. Validates the MIME type before generating the URL.
+   * @param {Object} params
+   * @param {string} params.userId - User UUID
+   * @param {string} params.plantId - Plant UUID
+   * @param {string} params.fileName - Original file name
+   * @param {string} params.fileType - MIME type of the file
+   * @returns {Promise<{uploadUrl: string, key: string, expiresIn: number}>}
+   * @throws {RouteError} BAD_REQUEST if MIME type is invalid
+   */
+  async generateUploadUrl({ userId, plantId, fileName, fileType }) {
+    this.#throwIfInvalidMime(fileType);
 
     const key = this.buildPlantImagePath({
-      userId: internalId,
+      userId,
       plantId,
       fileName,
     });
@@ -92,7 +135,7 @@ class S3CloudService {
       ContentType: fileType,
     });
 
-    const uploadUrl = await getSignedUrl(this.s3Repo.s3Client, command, {
+    const uploadUrl = await getSignedUrl(this.s3Repo.getS3Client(), command, {
       expiresIn: s3Config.signedUrlExpiresIn,
     });
 
@@ -103,14 +146,17 @@ class S3CloudService {
     };
   }
 
-  // =========================================
-  // Generate General Upload URL (no user context needed)
-  //   path: general/images/<timestamp>-<filename>
-  // =========================================
+  /**
+   * @description Generates a pre-signed PUT URL for uploading a general
+   * (non-plant) image directly to S3.
+   * @param {Object} params
+   * @param {string} params.fileName - Original file name
+   * @param {string} params.fileType - MIME type of the file
+   * @returns {Promise<{uploadUrl: string, key: string, expiresIn: number}>}
+   * @throws {RouteError} BAD_REQUEST if MIME type is invalid
+   */
   async generateGeneralUploadUrl({ fileName, fileType }) {
-    if (!this.validateImageMimeType(fileType)) {
-      throw new Error("INVALID_FILE_TYPE");
-    }
+    this.#throwIfInvalidMime(fileType);
 
     const key = this.buildGeneralImagePath({ fileName });
 
@@ -120,7 +166,7 @@ class S3CloudService {
       ContentType: fileType,
     });
 
-    const uploadUrl = await getSignedUrl(this.s3Repo.s3Client, command, {
+    const uploadUrl = await getSignedUrl(this.s3Repo.getS3Client(), command, {
       expiresIn: s3Config.signedUrlExpiresIn,
     });
 
@@ -131,25 +177,48 @@ class S3CloudService {
     };
   }
 
-  // =========================================
-  // Get Signed GET URL
-  // =========================================
+  /**
+   * @description Generates a pre-signed GET URL for reading an S3 object.
+   * @param {string} key - S3 object key
+   * @returns {Promise<string>} Pre-signed download URL
+   */
   async generateGetUrl(key) {
     const command = new GetObjectCommand({
       Bucket: s3Config.bucketName,
       Key: key,
     });
 
-    return await getSignedUrl(this.s3Repo.s3Client, command, {
+    return await getSignedUrl(this.s3Repo.getS3Client(), command, {
       expiresIn: s3Config.signedUrlExpiresIn,
     });
   }
 
-  // =========================================
-  // Delete File (via repository)
-  // =========================================
+  /**
+   * @description Retrieves an S3 object and returns its contents as a Buffer.
+   * @param {string} key - S3 object key
+   * @returns {Promise<Buffer>} Object content as a buffer
+   */
+  async getObjectBuffer(key) {
+    const { Body } = await this.s3Repo.get(key);
+    const chunks = [];
+    for await (const chunk of Body) {
+      chunks.push(chunk instanceof Buffer ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  /**
+   * @description Deletes an S3 object by key. Failures are logged but
+   * not thrown (non-fatal).
+   * @param {string} key - S3 object key to delete
+   * @returns {Promise<void>}
+   */
   async deleteFile(key) {
-    return await this.s3Repo.delete(key);
+    try {
+      return await this.s3Repo.delete(key);
+    } catch (error) {
+      console.error("S3 delete failed (non-fatal):", error.message);
+    }
   }
 }
 

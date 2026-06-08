@@ -5,6 +5,7 @@ import {
   createPlant,
   uploadPlantPhoto,
   detectPlantDisease,
+  extractPlantDataFromImage,
   uploadGeneralImage,
   detectGeneralDisease,
   updatePlant,
@@ -12,21 +13,25 @@ import {
   removePlantImage,
 } from "../controller/plant.controller.js";
 
+import { authenticate } from "../middlewares/auth.middleware.js";
+
 const router = Router();
 
-router.get("", getUserPlants);
-router.get("/:id", getPlant);
-
-router.post("", createPlant);
-router.post("/:id/upload", uploadPlantPhoto);
-router.post("/:id/detect", detectPlantDisease);
-router.post("/upload", uploadGeneralImage);
+// General routes (no auth) — must be BEFORE parameterized routes
+router.post("/image/upload", uploadGeneralImage);
 router.post("/detect", detectGeneralDisease);
 
-router.put("/:id", updatePlant);
+router.get("", authenticate, getUserPlants);
+router.get("/:id", authenticate, getPlant);
 
-router.delete("/:id/images", removePlantImage);
+router.post("", authenticate, createPlant);
+router.post("/:id/upload", authenticate, uploadPlantPhoto);
+router.post("/:id/image/upload", authenticate, uploadPlantPhoto);
+router.post("/:id/image/extract", authenticate, extractPlantDataFromImage);
+router.post("/:id/detect", authenticate, detectPlantDisease);
 
-router.delete("/:id", deletePlant);
+router.put("/:id", authenticate, updatePlant);
+router.delete("/:id/images", authenticate, removePlantImage);
+router.delete("/:id", authenticate, deletePlant);
 
 export default router;

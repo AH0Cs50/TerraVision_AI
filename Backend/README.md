@@ -580,15 +580,16 @@ Content-Type: application/json
 ### Plant Endpoints
 
 ```
-GET    /api/v1/plants           # List user's plants
-GET    /api/v1/plants/:id       # Get plant by UUID
-POST   /api/v1/plants           # Create plant
-POST   /api/v1/plants/:id/upload # Get signed S3 upload URL for plant image
-POST   /api/v1/plants/:id/detect # Detect disease on stored image
-POST   /api/v1/plants/upload    # Get signed S3 upload URL (general, no plant context)
-POST   /api/v1/plants/detect    # Detect disease on general image (no plant context)
-PUT    /api/v1/plants/:id       # Update plant
-DELETE /api/v1/plants/:id       # Delete plant
+GET    /api/v1/plants                # List user's plants
+GET    /api/v1/plants/:id            # Get plant by UUID
+POST   /api/v1/plants                # Create plant
+POST   /api/v1/plants/:id/upload     # Get signed S3 PUT URL for plant image
+POST   /api/v1/plants/:id/detect     # Detect disease on stored image
+POST   /api/v1/plants/:id/image/extract # Extract plant data from stored image (LLM)
+POST   /api/v1/plants/image/upload   # Get signed S3 PUT URL (general, no auth)
+POST   /api/v1/plants/detect         # Detect disease on general image (no auth)
+PUT    /api/v1/plants/:id            # Update plant
+DELETE /api/v1/plants/:id            # Delete plant
 ```
 
 #### Create Plant
@@ -628,8 +629,10 @@ Content-Type: application/json
 
 #### Upload Photo + Detect Disease
 
+The upload flow uses a **two-step process**: get a pre-signed PUT URL, then upload the image binary directly to S3. The upload never goes through the API server — eliminating file transfer bottlenecks.
+
 ```http
-# Step 1: Get signed upload URL
+# Step 1: Get signed S3 PUT URL
 POST /api/v1/plants/660e8400-e29b-41d4-a716-446655440001/upload
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 Content-Type: application/json
@@ -645,28 +648,30 @@ HTTP/1.1 200 OK
 {
   "success": true,
   "data": {
-    "uploadUrl": "https://gateway.storjshare.io/plant/plant/user_1_plant_2/images/1712345678-tomato_leaf.jpg?X-Amz-Algorithm=...",
-    "key": "plant/user_1_plant_2/images/1712345678-tomato_leaf.jpg",
+    "uploadUrl": "https://gateway.storjshare.io/plant/plants/user-uuid/plant-uuid/images/1712345678-tomato_leaf.jpg?X-Amz-Algorithm=...",
+    "key": "plants/user-uuid/plant-uuid/images/1712345678-tomato_leaf.jpg",
     "expiresIn": 3600
   }
 }
 ```
 
 ```http
-# Step 2: Upload file directly to S3 using the signed URL (PUT request)
+# Step 2: Upload binary image directly to S3 with a PUT request
 PUT <uploadUrl>
 Content-Type: image/jpeg
-<binary image data>
+<raw binary image data — no multipart, no JSON>
 ```
 
+The signed URL expires after `expiresIn` seconds. If it expires, repeat Step 1.
+
 ```http
-# Step 3: Detect disease on the uploaded image
+# Step 3: Detect disease on the uploaded image using its S3 key
 POST /api/v1/plants/660e8400-e29b-41d4-a716-446655440001/detect
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 Content-Type: application/json
 
 {
-  "key": "plant/user_1_plant_2/images/1712345678-tomato_leaf.jpg"
+  "key": "plants/user-uuid/plant-uuid/images/1712345678-tomato_leaf.jpg"
 }
 ```
 
@@ -675,26 +680,29 @@ HTTP/1.1 200 OK
 {
   "success": true,
   "data": {
-    "image_key": "plant/user_1_plant_2/images/1712345678-tomato_leaf.jpg",
+    "image_key": "plants/user-uuid/plant-uuid/images/1712345678-tomato_leaf.jpg",
     "prediction": {
-      "class": "Tomato___Early_blight",
+      "class": {
+        "plant": "Tomato",
+        "disease": "early blight",
+        "disease_type": "fungal"
+      },
       "confidence": 0.94,
       "top_k": [
-        { "class": "Tomato___Early_blight", "confidence": 0.94 },
-        { "class": "Tomato___Late_blight", "confidence": 0.03 },
-        { "class": "Tomato___healthy", "confidence": 0.02 }
+        { "class": { "plant": "Tomato", "disease": "early blight", "disease_type": "fungal" }, "confidence": 0.94 },
+        { "class": { "plant": "Tomato", "disease": "late blight", "disease_type": "fungal" }, "confidence": 0.03 },
+        { "class": { "plant": "Tomato", "disease": "healthy", "disease_type": "healthy" }, "confidence": 0.02 }
       ]
     }
   }
 }
 ```
 
-#### General Image Detection (No Plant Context)
+#### General Image Detection (No Auth, No Plant Context)
 
 ```http
-# Step 1: Get signed upload URL (general)
-POST /api/v1/plants/upload
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+# Step 1: Get signed S3 PUT URL (general — no auth required)
+POST /api/v1/plants/image/upload
 Content-Type: application/json
 
 {
@@ -716,9 +724,15 @@ HTTP/1.1 200 OK
 ```
 
 ```http
-# Step 2: Detect disease (no user/plant context)
+# Step 2: Upload binary image to S3 (same as above)
+PUT <uploadUrl>
+Content-Type: image/jpeg
+<raw binary image data>
+```
+
+```http
+# Step 3: Detect disease (no auth, no user/plant context)
 POST /api/v1/plants/detect
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 Content-Type: application/json
 
 {
@@ -730,10 +744,51 @@ Content-Type: application/json
 HTTP/1.1 200 OK
 {
   "success": true,
-  "prediction": {
-    "class": "Apple___Apple_scab",
-    "confidence": 0.87,
-    "top_k": [...]
+  "data": {
+    "image_key": "general/images/1712345679-unknown_leaf.jpg",
+    "prediction": {
+      "class": {
+        "plant": "Apple",
+        "disease": "scab",
+        "disease_type": "fungal"
+      },
+      "confidence": 0.87,
+      "top_k": [
+        { "class": { "plant": "Apple", "disease": "scab", "disease_type": "fungal" }, "confidence": 0.87 },
+        { "class": { "plant": "Apple", "disease": "rust", "disease_type": "fungal" }, "confidence": 0.05 },
+        { "class": { "plant": "Apple", "disease": "black rot", "disease_type": "fungal" }, "confidence": 0.03 }
+      ]
+    }
+  }
+}
+```
+
+#### Extract Plant Data from Stored Image (LLM Vision)
+
+This endpoint sends a stored plant image to **Google Gemini Vision** to extract structured plant data (family, growth stage, health, etc.).
+
+Flow: Upload photo (same as Step 1–2 above) → send the S3 key to extract.
+
+```http
+POST /api/v1/plants/660e8400-e29b-41d4-a716-446655440001/image/extract
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+Content-Type: application/json
+
+{
+  "key": "plants/user-uuid/plant-uuid/images/1712345678-tomato_leaf.jpg"
+}
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "category": "crop",
+    "family": "fruiting_nightshade",
+    "growthStage": "vegetative",
+    "health": "diseased",
+    "summary": "This appears to be a tomato plant in vegetative stage showing signs of early blight."
   }
 }
 ```
@@ -1001,11 +1056,11 @@ sequenceDiagram
 
     Client->>API: POST /plants/:id/detect { key }
     API->>API: Verify plant access
-    API->>ML: POST /predict { user_id, plant_id, key }
+    API->>ML: POST /predict { user_id, plant_id, key, expected_plant }
     ML->>S3: get_file_by_key(key)
     S3-->>ML: Image bytes
-    ML->>ML: Preprocess (224×224, normalize)
-    ML->>ML: CNN ensemble inference
+    ML->>ML: Preprocess (224×224, NEAREST resize, normalize)
+    ML->>ML: CNN ensemble inference (weighted avg [0.2, 0.3, 0.5])
     ML-->>API: { prediction, top_k, confidence }
     API->>API: Update plant disease history
     API-->>Client: { prediction, disease info }
@@ -1013,10 +1068,11 @@ sequenceDiagram
 
 ### CNN Model Details
 
-- **Architecture:** 3-member ensemble CNN
-- **Input size:** 224×224×3 (RGB, normalized to [0,1])
-- **Classes:** 86 (crops × diseases + healthy classes)
-- **Supported crops:** Apple, Cassava, Cherry, Chili, Coffee, Corn, Cucumber, Guava, Grape, Jamun, Lemon, Mango, Peach, Pepper, Pomegranate, Potato, Rice, Soybean, Strawberry, Sugarcane, Tea, Tomato, Wheat
+- **Architecture:** 3-member ensemble CNN (EfficientNetV2B0, ResNet101V2, MobileNetV2)
+- **Input size:** 224×224×3 (RGB, NEAREST interpolation, normalized to [0,1])
+- **Ensemble weights:** `[0.2, 0.3, 0.5]` matching training
+- **Classes:** 88 (crops × diseases + healthy classes)
+- **Supported crops:** Apple, Cassava, Cherry, Chili, Coffee, Corn, Cucumber, Guava, Grape, Jamun, Lemon, Mango, Peach, Pepper (bell), Pomegranate, Potato, Rice, Soybean, Strawberry, Sugarcane, Tea, Tomato, Wheat
 - **Disease classification:** Fungal, bacterial, viral, pest, physiological, healthy
 
 ---

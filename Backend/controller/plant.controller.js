@@ -1,8 +1,11 @@
 import {
   plantService,
+  plantVisionService,
   s3CloudService,
   diseaseDetectionService,
   plantCareStateService,
+  plantCareActionLogger,
+  actionLogRepo,
 } from "../shared/container.js";
 
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
@@ -50,6 +53,8 @@ export async function createPlant(req, res, next) {
     }
     const plant = await plantService.createPlant(parsed.data, req.user.uuid);
 
+    await plantCareActionLogger.logPlantCreated(plant.uuid, req.user, { plantName: plant.name });
+
     return res
       .status(HttpStatusCodes.CREATED)
       .json(
@@ -81,11 +86,7 @@ export async function uploadPlantPhoto(req, res, next) {
     }
 
     //check internally
-    const plant = await plantService.verifyPlantAccess(
-      id,
-      req.user.uuid,
-      req.user.role,
-    );
+    await plantService.verifyPlantAccess(id, req.user.uuid, req.user.role);
 
     const result = await s3CloudService.generateUploadUrl({
       userId: req.user.uuid,
@@ -95,11 +96,12 @@ export async function uploadPlantPhoto(req, res, next) {
     });
 
     await plantService.addImage(id, result.key);
-    await s3CloudService.fixContentType(result.key, fileType);
+
+    await plantCareActionLogger.logImageUploaded(id, req.user, { fileName, s3Key: result.key });
 
     return res
       .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Upload URL generated", result));
+      .json(HttpResponse.success("Upload form generated", result));
   } catch (error) {
     next(error);
   }
@@ -133,6 +135,7 @@ export async function detectPlantDisease(req, res, next) {
       key: fullKey,
       userId: req.user.uuid,
       plantId: id,
+      expectedPlant: plant.commonName || plant.name,
     });
 
     const updatedPlant = await diseaseDetectionService.updateDiseaseHistory(
@@ -140,9 +143,47 @@ export async function detectPlantDisease(req, res, next) {
       mlResponse,
     );
 
+    await plantCareActionLogger.logDiseaseDetected(id, req.user, {
+      disease: mlResponse.prediction?.disease || "unknown",
+      confidence: mlResponse.prediction?.confidence,
+    });
+
     return res
       .status(HttpStatusCodes.OK)
       .json(HttpResponse.success("Disease detection completed", updatedPlant));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function extractPlantDataFromImage(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { key } = req.body;
+
+    if (!key) {
+      return res
+        .status(HttpStatusCodes.BAD_REQUEST)
+        .json(
+          HttpResponse.error(
+            "Image key is required",
+            HttpStatusCodes.BAD_REQUEST,
+          ),
+        );
+    }
+
+    await plantService.verifyPlantAccess(id, req.user.uuid, req.user.role);
+
+    const extracted = await plantVisionService.extractPlantDataFromImage(
+      id,
+      key,
+    );
+
+    await plantCareActionLogger.logPlantDataExtracted(id, req.user, { s3Key: key });
+
+    return res
+      .status(HttpStatusCodes.OK)
+      .json(HttpResponse.success("Plant data extracted from image", extracted));
   } catch (error) {
     next(error);
   }
@@ -170,7 +211,7 @@ export async function uploadGeneralImage(req, res, next) {
 
     return res
       .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Upload URL generated", result));
+      .json(HttpResponse.success("Upload form generated", result));
   } catch (error) {
     next(error);
   }
@@ -227,6 +268,8 @@ export async function removePlantImage(req, res, next) {
     await s3CloudService.deleteFile(fullKey);
     await plantService.removeImage(id, fullKey);
 
+    await plantCareActionLogger.logImageRemoved(id, req.user, { key });
+
     return res
       .status(HttpStatusCodes.OK)
       .json(HttpResponse.success("Image removed successfully"));
@@ -241,7 +284,7 @@ export async function updatePlant(req, res, next) {
 
     await plantService.verifyPlantAccess(id, req.user.uuid, req.user.role);
 
-    const parsed = PlantDTO.partial(req.body);
+    const parsed = PlantDTO.partial().safeParse(req.body);
     if (!parsed.success) {
       throw new RouteError(
         HttpStatusCodes.BAD_REQUEST,
@@ -251,6 +294,9 @@ export async function updatePlant(req, res, next) {
     }
 
     const updated = await plantService.updatePlant(id, parsed.data);
+
+    await plantCareActionLogger.logPlantUpdated(id, req.user, { updateFields: Object.keys(parsed.data) });
+
     return res
       .status(HttpStatusCodes.OK)
       .json(HttpResponse.success("Plant updated successfully", updated));
@@ -270,13 +316,14 @@ export async function deletePlant(req, res, next) {
     const basePath = plant.cdn?.basePath || "";
     const images = plant.cdn?.images || [];
     await Promise.all(
-      images.map((fileName) =>
-        s3CloudService.deleteFile(basePath + fileName).catch(() => {}),
-      ),
+      images.map((fileName) => s3CloudService.deleteFile(basePath + fileName)),
     );
 
-    await plantCareStateService.deleteByPlantUUID(id);
+    const plantName = plant.name;
 
+    await plantCareActionLogger.logPlantDeleted(id, req.user, { plantName });
+    await actionLogRepo.deleteByPlantUUID(id);
+    await plantCareStateService.deleteByPlantUUID(id);
     await plantService.deletePlant(id);
 
     return res

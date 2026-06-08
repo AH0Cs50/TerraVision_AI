@@ -15,8 +15,11 @@ import {
   LIGHT_STATUSES,
 } from "../model/plant-care.model.js";
 
-// ── MAIN SERVICE ────────────────────────────────
-
+/**
+ * @description CRUD service for plant care state documents. Each plant has
+ * one care state containing current status (water, nutrients, health, light),
+ * engine scores, active/completed tasks, and action logs.
+ */
 class PlantCareStateService {
   constructor(plantCareStateRepository) {
     this.repo = plantCareStateRepository;
@@ -62,6 +65,13 @@ class PlantCareStateService {
    * Accepts raw engine output, maps numeric scores → categorical status,
    * then creates a new care state or updates the existing one for this plant.
    */
+  /**
+   * @description Accepts raw engine output, maps numeric scores to categorical
+   * status values, and creates or updates the care state for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} engineResult - Raw output from the analysis engine
+   * @returns {Promise<Object>} Created or updated care state document
+   */
   async saveEngineOutput(plantUUID, engineResult) {
     const scores = buildEngineScores(engineResult);
     const status = engineScoresToStatus(scores);
@@ -88,8 +98,11 @@ class PlantCareStateService {
 
 export default PlantCareStateService;
 
-// ── TASK MANAGEMENT ─────────────────────────────
-
+/**
+ * @description Manages the task lifecycle for a plant's care state: adding,
+ * completing, cancelling, and reopening tasks. Also supports overdue detection,
+ * prioritization, pagination, and AI-driven task generation from status.
+ */
 export class PlantTaskCareManager {
   constructor(plantCareStateRepo, taskGenerator, actionLogger) {
     this.repo = plantCareStateRepo;
@@ -97,12 +110,25 @@ export class PlantTaskCareManager {
     this.actionLogger = actionLogger;
   }
 
+  /**
+   * @description Adds a new task to the plant's active task list.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} taskData - Task properties (type, title, description, priority, etc.)
+   * @returns {Promise<Object>} Updated care state
+   */
   async addTaskToPlant(plantUUID, taskData) {
     const task = createPlantTaskModel({ ...taskData, createdAt: new Date() });
     return await this.repo.pushToActive(plantUUID, task);
   }
 
-  async completeTask(plantUUID, taskId) {
+  /**
+   * @description Moves a task from active to completed, records completion
+   * timestamp, and logs the event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {string} taskId - ID of the task to complete
+   * @returns {Promise<Object|null>} Updated care state, or null if task not found
+   */
+  async completeTask(plantUUID, taskId, user = null) {
     const found = await this.repo.findTaskInActive(plantUUID, taskId);
     if (!found) return null;
 
@@ -117,6 +143,7 @@ export class PlantTaskCareManager {
 
     await this.actionLogger.logTaskCompleted(
       plantUUID,
+      user,
       `Task "${completedTask.title}" completed`,
       { taskId, taskType: completedTask.type },
     );
@@ -124,7 +151,14 @@ export class PlantTaskCareManager {
     return await this.repo.findByPlantUUID(plantUUID);
   }
 
-  async cancelTask(plantUUID, taskId) {
+  /**
+   * @description Removes a task from active without marking it completed,
+   * and logs the cancellation.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {string} taskId - ID of the task to cancel
+   * @returns {Promise<Object|null>} Updated care state, or null if not found
+   */
+  async cancelTask(plantUUID, taskId, user = null) {
     const found = await this.repo.findTaskInActive(plantUUID, taskId);
     if (!found) return null;
 
@@ -132,6 +166,7 @@ export class PlantTaskCareManager {
 
     await this.actionLogger.logTaskCompleted(
       plantUUID,
+      user,
       `Task "${found.task.title}" cancelled`,
       { taskId, taskType: found.task.type, cancelled: true },
     );
@@ -139,7 +174,14 @@ export class PlantTaskCareManager {
     return await this.repo.findByPlantUUID(plantUUID);
   }
 
-  async reopenTask(plantUUID, taskId) {
+  /**
+   * @description Moves a previously completed task back to active with
+   * status "pending" and clears its completion timestamp.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {string} taskId - ID of the task to reopen
+   * @returns {Promise<Object|null>} Updated care state, or null if not found
+   */
+  async reopenTask(plantUUID, taskId, user = null) {
     const found = await this.repo.findTaskInCompleted(plantUUID, taskId);
     if (!found) return null;
 
@@ -155,6 +197,7 @@ export class PlantTaskCareManager {
 
     await this.actionLogger.logTaskCompleted(
       plantUUID,
+      user,
       `Task "${reopenedTask.title}" reopened`,
       { taskId, taskType: reopenedTask.type, reopened: true },
     );
@@ -166,7 +209,13 @@ export class PlantTaskCareManager {
    * Reads current status + engine scores from the care state,
    * calls the LLM task generator, and pushes each generated task to activeTasks.
    */
-  async generateTasksFromStatus(plantUUID) {
+  /**
+   * @description Reads the current care state, calls the LLM task generator,
+   * and pushes each generated task to the active task list.
+   * @param {string} plantUUID - UUID of the plant
+   * @returns {Promise<Object|null>} Updated care state, or null if no state exists
+   */
+  async generateTasksFromStatus(plantUUID, user = null) {
     const careState = await this.repo.findByPlantUUID(plantUUID);
     if (!careState) return null;
 
@@ -181,6 +230,7 @@ export class PlantTaskCareManager {
 
     await this.actionLogger.logTaskCompleted(
       plantUUID,
+      user,
       `${tasks.length} task(s) generated from status`,
       { count: tasks.length, generatedBy: "ai" },
     );
@@ -188,6 +238,11 @@ export class PlantTaskCareManager {
     return await this.repo.findByPlantUUID(plantUUID);
   }
 
+  /**
+   * @description Returns all active tasks whose due date has passed.
+   * @param {string} plantUUID - UUID of the plant
+   * @returns {Promise<Array>} Array of overdue task objects
+   */
   async getOverdueTasks(plantUUID) {
     const careState = await this.repo.findByPlantUUID(plantUUID);
     if (!careState) return [];
@@ -198,6 +253,11 @@ export class PlantTaskCareManager {
     );
   }
 
+  /**
+   * @description Returns all active tasks that are still pending or in progress.
+   * @param {string} plantUUID - UUID of the plant
+   * @returns {Promise<Array>} Array of pending/in-progress task objects
+   */
   async getPendingTasks(plantUUID) {
     const careState = await this.repo.findByPlantUUID(plantUUID);
     if (!careState) return [];
@@ -207,6 +267,11 @@ export class PlantTaskCareManager {
     );
   }
 
+  /**
+   * @description Returns active tasks sorted by priority (high > medium > low).
+   * @param {string} plantUUID - UUID of the plant
+   * @returns {Promise<Array>} Sorted array of tasks
+   */
   async prioritizeTasks(plantUUID) {
     const careState = await this.repo.findByPlantUUID(plantUUID);
     if (!careState) return [];
@@ -230,7 +295,13 @@ export class PlantTaskCareManager {
    * Finds all tasks with status "completed" still in the activeTasks array,
    * moves them to completedTasks, and logs the operation.
    */
-  async removeCompletedTasks(plantUUID) {
+  /**
+   * @description Finds completed tasks still in the active list, moves them
+   * to completedTasks, and logs the archival.
+   * @param {string} plantUUID - UUID of the plant
+   * @returns {Promise<Object|null>} Updated care state, or null if not found
+   */
+  async removeCompletedTasks(plantUUID, user = null) {
     const careState = await this.repo.findByPlantUUID(plantUUID);
     if (!careState) return null;
 
@@ -249,6 +320,7 @@ export class PlantTaskCareManager {
     if (completedInActive.length) {
       await this.actionLogger.logTaskCompleted(
         plantUUID,
+        user,
         `${completedInActive.length} completed task(s) moved to archive`,
         { count: completedInActive.length },
       );
@@ -258,129 +330,264 @@ export class PlantTaskCareManager {
   }
 }
 
-// ── ACTION LOGGER ───────────────────────────────
-
+/**
+ * @description Provides structured action logging for plant care events.
+ * Stores each action as an independent document in the ActionLog collection.
+ * Resolves plantInternalId and userInternalId at write time for fast indexed
+ * queries without joins.
+ */
 export class PlantCareActionLogger {
-  constructor(plantCareStateRepo) {
-    this.repo = plantCareStateRepo;
+  constructor(actionLogRepo, plantService) {
+    this.actionLogRepo = actionLogRepo;
+    this.plantService = plantService;
   }
 
-  /**
-   * @param {object} logData
-   * @param {string} logData.actionType - one of ACTION_TYPES
-   * @param {string} logData.description
-   * @param {object} [logData.metadata] - arbitrary extra data
-   */
-  async addActionLog(plantUUID, { actionType, description, metadata } = {}) {
-    const log = {
-      logId: undefined,
+  async #log(plantUUID, user, actionType, description, metadata) {
+    const plantInternalId = await this.plantService.getInternalId(plantUUID);
+    await this.actionLogRepo.create({
+      plantUUID,
+      plantInternalId,
+      userUUID: user.uuid,
+      userInternalId: await this.#resolveUserInternalId(user),
       actionType,
       description,
       metadata,
-      createdAt: new Date(),
-    };
-
-    return await this.repo.pushActionLog(plantUUID, log);
-  }
-
-  async logWatering(plantUUID, description = "Plant watered", metadata) {
-    return await this.addActionLog(plantUUID, {
-      actionType: "watered",
-      description,
-      metadata,
     });
   }
 
-  async logFertilizing(plantUUID, description = "Plant fertilized", metadata) {
-    return await this.addActionLog(plantUUID, {
-      actionType: "fertilized",
-      description,
-      metadata,
-    });
-  }
-
-  async logHarvest(plantUUID, description = "Plant harvested", metadata) {
-    return await this.addActionLog(plantUUID, {
-      actionType: "harvested",
-      description,
-      metadata,
-    });
-  }
-
-  async logDiseaseScan(
-    plantUUID,
-    description = "Disease scan performed",
-    metadata,
-  ) {
-    return await this.addActionLog(plantUUID, {
-      actionType: "disease_scan",
-      description,
-      metadata,
-    });
-  }
-
-  async logLightChanged(
-    plantUUID,
-    description = "Light conditions changed",
-    metadata,
-  ) {
-    return await this.addActionLog(plantUUID, {
-      actionType: "light_changed",
-      description,
-      metadata,
-    });
-  }
-
-  async logTaskCompleted(plantUUID, description = "Task completed", metadata) {
-    return await this.addActionLog(plantUUID, {
-      actionType: "task_completed",
-      description,
-      metadata,
-    });
-  }
-
-  async getRecentLogs(plantUUID, last = 5) {
-    const careState = await this.repo.findByPlantUUID(plantUUID);
-    if (!careState) return [];
-
-    const logs = careState.actionLogs || [];
-    return logs.slice(-last);
-  }
-
-  async getLogsByType(plantUUID, actionType) {
-    const careState = await this.repo.findByPlantUUID(plantUUID);
-    if (!careState) return [];
-
-    return (careState.actionLogs || []).filter(
-      (l) => l.actionType === actionType,
-    );
-  }
-
-  async paginateActionLogs(plantUUID, { page, limit } = {}) {
-    return await this.repo.paginateActionLogs(plantUUID, { page, limit });
+  async #resolveUserInternalId(user) {
+    if (user.internalId) return user.internalId;
+    const userDoc = await this.plantService.userService?.findByUUID?.(user.uuid);
+    return userDoc?.internalId;
   }
 
   /**
-   * Removes all action logs older than the given date.
+   * @description Appends a generic action log entry.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid (and optionally internalId)
+   * @param {Object} [logData]
+   * @param {string} logData.actionType - One of ACTION_TYPES
+   * @param {string} logData.description - Human-readable description
+   * @param {Object} [logData.metadata] - Arbitrary extra data
+   */
+  async addActionLog(plantUUID, user, { actionType, description, metadata } = {}) {
+    await this.#log(plantUUID, user, actionType, description, metadata);
+  }
+
+  /**
+   * @description Logs a watering event for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant watered"]
+   * @param {Object} [metadata]
+   */
+  async logWatering(plantUUID, user, description = "Plant watered", metadata) {
+    await this.#log(plantUUID, user, "watered", description, metadata);
+  }
+
+  /**
+   * @description Logs a fertilizing event for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant fertilized"]
+   * @param {Object} [metadata]
+   */
+  async logFertilizing(plantUUID, user, description = "Plant fertilized", metadata) {
+    await this.#log(plantUUID, user, "fertilized", description, metadata);
+  }
+
+  /**
+   * @description Logs a harvesting event for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant harvested"]
+   * @param {Object} [metadata]
+   */
+  async logHarvest(plantUUID, user, description = "Plant harvested", metadata) {
+    await this.#log(plantUUID, user, "harvested", description, metadata);
+  }
+
+  /**
+   * @description Logs a disease scan event for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Disease scan performed"]
+   * @param {Object} [metadata]
+   */
+  async logDiseaseScan(plantUUID, user, description = "Disease scan performed", metadata) {
+    await this.#log(plantUUID, user, "disease_scan", description, metadata);
+  }
+
+  /**
+   * @description Logs a light condition change event for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Light conditions changed"]
+   * @param {Object} [metadata]
+   */
+  async logLightChanged(plantUUID, user, description = "Light conditions changed", metadata) {
+    await this.#log(plantUUID, user, "light_changed", description, metadata);
+  }
+
+  /**
+   * @description Logs a task completion event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Task completed"]
+   * @param {Object} [metadata]
+   */
+  async logTaskCompleted(plantUUID, user, description = "Task completed", metadata) {
+    await this.#log(plantUUID, user, "task_completed", description, metadata);
+  }
+
+  /**
+   * @description Logs a task-added event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Task added"]
+   * @param {Object} [metadata]
+   */
+  async logTaskAdded(plantUUID, user, description = "Task added", metadata) {
+    await this.#log(plantUUID, user, "task_added", description, metadata);
+  }
+
+  /**
+   * @description Logs a plant-created event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant created"]
+   * @param {Object} [metadata]
+   */
+  async logPlantCreated(plantUUID, user, description = "Plant created", metadata) {
+    await this.#log(plantUUID, user, "plant_created", description, metadata);
+  }
+
+  /**
+   * @description Logs a plant-updated event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant updated"]
+   * @param {Object} [metadata]
+   */
+  async logPlantUpdated(plantUUID, user, description = "Plant updated", metadata) {
+    await this.#log(plantUUID, user, "plant_updated", description, metadata);
+  }
+
+  /**
+   * @description Logs a plant-deleted event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant deleted"]
+   * @param {Object} [metadata]
+   */
+  async logPlantDeleted(plantUUID, user, description = "Plant deleted", metadata) {
+    await this.#log(plantUUID, user, "plant_deleted", description, metadata);
+  }
+
+  /**
+   * @description Logs an image-uploaded event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Image uploaded"]
+   * @param {Object} [metadata]
+   */
+  async logImageUploaded(plantUUID, user, description = "Image uploaded", metadata) {
+    await this.#log(plantUUID, user, "image_uploaded", description, metadata);
+  }
+
+  /**
+   * @description Logs an image-removed event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Image removed"]
+   * @param {Object} [metadata]
+   */
+  async logImageRemoved(plantUUID, user, description = "Image removed", metadata) {
+    await this.#log(plantUUID, user, "image_removed", description, metadata);
+  }
+
+  /**
+   * @description Logs a disease-detected event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Disease detected"]
+   * @param {Object} [metadata]
+   */
+  async logDiseaseDetected(plantUUID, user, description = "Disease detected", metadata) {
+    await this.#log(plantUUID, user, "disease_detected", description, metadata);
+  }
+
+  /**
+   * @description Logs a plant-data-extracted event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="Plant data extracted from image"]
+   * @param {Object} [metadata]
+   */
+  async logPlantDataExtracted(plantUUID, user, description = "Plant data extracted from image", metadata) {
+    await this.#log(plantUUID, user, "plant_data_extracted", description, metadata);
+  }
+
+  /**
+   * @description Logs an insight-generated event.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} user - User object with uuid
+   * @param {string} [description="AI insight generated"]
+   * @param {Object} [metadata]
+   */
+  async logInsightGenerated(plantUUID, user, description = "AI insight generated", metadata) {
+    await this.#log(plantUUID, user, "insight_generated", description, metadata);
+  }
+
+  /**
+   * @description Returns the most recent N action logs for the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {number} [last=5] - Number of recent logs to retrieve
+   * @returns {Promise<Array>} Array of log entries
+   */
+  async getRecentLogs(plantUUID, last = 5) {
+    return await this.actionLogRepo.getRecent(plantUUID, last);
+  }
+
+  /**
+   * @description Returns action logs filtered by a specific action type.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {string} actionType - The action type to filter by
+   * @returns {Promise<Array>} Matching log entries
+   */
+  async getLogsByType(plantUUID, actionType) {
+    const result = await this.actionLogRepo.findByPlantUUID(plantUUID, { page: 1, limit: 1000 });
+    return (result.logs || []).filter((l) => l.actionType === actionType);
+  }
+
+  /**
+   * @description Paginates through all action logs for a plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {Object} [options]
+   * @param {number} [options.page]
+   * @param {number} [options.limit]
+   * @returns {Promise<Object>} Paginated result
+   */
+  async paginateActionLogs(plantUUID, { page = 1, limit = 20 } = {}) {
+    return await this.actionLogRepo.findByPlantUUID(plantUUID, { page, limit });
+  }
+
+  /**
+   * @description Removes all action logs older than the given date.
+   * @param {string} plantUUID - UUID of the plant
    * @param {Date} [date] - cutoff; defaults to now (clears everything)
+   * @returns {Promise<number>} Number of deleted documents
    */
   async clearOldLogs(plantUUID, date = new Date()) {
-    const careState = await this.repo.findByPlantUUID(plantUUID);
-    if (!careState) return null;
-
-    const cutoff = new Date(date);
-    const remaining = (careState.actionLogs || []).filter(
-      (l) => new Date(l.createdAt) >= cutoff,
-    );
-
-    return await this.repo.updateByPlantUUID(plantUUID, {
-      actionLogs: remaining,
-    });
+    return await this.actionLogRepo.deleteOlderThan(plantUUID, date);
   }
 }
 
-// ── TASK GENERATOR (LLM-BASED) ──────────────────
-
+/**
+ * @description Uses the LLM to generate care tasks based on the plant's
+ * current status and engine scores. Constructs a prompt with status enums
+ * and score values, then parses the model's JSON response into task objects.
+ */
 export class PlantCareTaskGenerator {
   constructor(llmService) {
     this.llmService = llmService;
@@ -400,6 +607,14 @@ export class PlantCareTaskGenerator {
     }
   }
 
+  /**
+   * @private
+   * @description Constructs an LLM prompt containing the plant's current
+   * status categories, engine scores, and valid enum constraints.
+   * @param {Object} status - Current water/nutrients/health/light statuses
+   * @param {Object} engineScores - Raw numeric scores from the engine
+   * @returns {{contents: Array}} Structured prompt for the LLM
+   */
   #buildPrompt(status, engineScores) {
     const enumConstraints = `
 - task type: one of ${JSON.stringify(TASK_TYPES)}
@@ -434,6 +649,13 @@ export class PlantCareTaskGenerator {
     };
   }
 
+  /**
+   * @private
+   * @description Extracts a JSON array from the LLM response, validates it,
+   * and maps each item to a PlantTaskModel.
+   * @param {Object|string} response - Raw LLM response
+   * @returns {Array<Object>} Array of parsed task objects
+   */
   #parseTasks(response) {
     try {
       let text =
@@ -467,8 +689,11 @@ export class PlantCareTaskGenerator {
   }
 }
 
-// ── AI INSIGHTS ─────────────────────────────────
-
+/**
+ * @description Generates AI-powered insights and answers for plant care.
+ * Uses the LLM to produce human-readable summaries based on current status
+ * and action history.
+ */
 export class PlantCareAiInsights {
   constructor(llmService) {
     this.llmService = llmService;
@@ -500,6 +725,14 @@ export class PlantCareAiInsights {
     }
   }
 
+  /**
+   * @private
+   * @description Builds a prompt for the LLM to generate care insights
+   * from current status and recent action logs.
+   * @param {Object} status - Current care status
+   * @param {Array} actionLogs - Plant action history
+   * @returns {{contents: Array}} Structured prompt
+   */
   #buildInsightPrompt(status, actionLogs) {
     const s = status || {};
     const recentLogs = (actionLogs || []).slice(-10);
@@ -528,6 +761,14 @@ export class PlantCareAiInsights {
     };
   }
 
+  /**
+   * @private
+   * @description Builds a prompt for answering a free-text user question
+   * about the plant based on recent action history.
+   * @param {string} question - User's question
+   * @param {Array} actionLogs - Plant action history
+   * @returns {{contents: Array}} Structured prompt
+   */
   #buildQuestionPrompt(question, actionLogs) {
     const recentLogs = (actionLogs || []).slice(-10);
     const logSummary = recentLogs
@@ -552,6 +793,13 @@ export class PlantCareAiInsights {
     };
   }
 
+  /**
+   * @private
+   * @description Extracts a JSON object from the LLM response with summary
+   * and recommendations fields.
+   * @param {Object|string} response - Raw LLM response
+   * @returns {{summary: string, recommendations: Array, generatedAt: Date}}
+   */
   #parseInsights(response) {
     try {
       let text =

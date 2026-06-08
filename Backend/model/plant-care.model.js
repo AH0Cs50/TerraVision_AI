@@ -1,5 +1,6 @@
 import mongoose from "../shared/db.js";
 import { v4 as uuidv4 } from "uuid";
+import { ACTION_TYPES } from "./action-log.model.js";
 
 /**
  * =========================================
@@ -41,23 +42,7 @@ export const TASK_STATUSES = [
 
 export const TASK_GENERATED_BY = ["ai", "system", "user"];
 
-/**
- * =========================================
- * ACTION LOG ENUMS
- * =========================================
- */
-
-export const ACTION_TYPES = [
-  "watered",
-  "fertilized",
-  "disease_scan",
-  "task_completed",
-  "task_added",
-  "task_updated",
-  "task_cancelled",
-  "light_changed",
-  "harvested",
-];
+export { ACTION_TYPES } from "./action-log.model.js";
 
 export function createPlantTaskModel(data) {
   if (!TASK_TYPES.includes(data.type)) {
@@ -164,14 +149,6 @@ export function createPlantCareStateModel(data) {
     completedAt: task.completedAt || now,
   }));
 
-  const actionLogs = (data.actionLogs || []).map((log) => ({
-    logId: log.logId || uuidv4(),
-
-    ...log,
-
-    createdAt: log.createdAt || now,
-  }));
-
   return {
     internalId: Date.now(),
 
@@ -186,8 +163,6 @@ export function createPlantCareStateModel(data) {
     activeTasks,
 
     completedTasks,
-
-    actionLogs,
 
     aiInsights: data.aiInsights
       ? {
@@ -253,17 +228,6 @@ const plantTaskSubSchema = new mongoose.Schema(
   { _id: false },
 );
 
-const actionLogSubSchema = new mongoose.Schema(
-  {
-    logId: { type: String, default: () => uuidv4() },
-    actionType: { type: String, enum: ACTION_TYPES, required: true },
-    description: { type: String, required: true },
-    metadata: mongoose.Schema.Types.Mixed,
-    createdAt: { type: Date, default: Date.now },
-  },
-  { _id: false },
-);
-
 const aiInsightsSubSchema = new mongoose.Schema(
   {
     summary: { type: String, required: true },
@@ -281,7 +245,6 @@ const plantCareMongooseSchema = new mongoose.Schema({
   engineScores: engineScoresSubSchema,
   activeTasks: { type: [plantTaskSubSchema], default: [] },
   completedTasks: { type: [plantTaskSubSchema], default: [] },
-  actionLogs: { type: [actionLogSubSchema], default: [] },
   aiInsights: aiInsightsSubSchema,
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

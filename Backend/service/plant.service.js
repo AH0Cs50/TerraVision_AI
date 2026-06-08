@@ -4,6 +4,12 @@ import { fillPrompt } from "./llm.service.js";
 
 import { GROWTH_STAGES } from "../model/plant.model.js";
 
+/**
+ * @description Core service for plant CRUD operations. Manages plant creation
+ * (with AI-driven growth stage and harvest date derivation), updates, deletion,
+ * image management, and access control. Provides a specialised data shape
+ * for the analysis engine.
+ */
 class PlantService {
   constructor(plantRepository, s3CloudRepository, userService, llmService) {
     this.plantRepository = plantRepository;
@@ -12,11 +18,26 @@ class PlantService {
     this.llmService = llmService;
   }
 
+  /**
+   * @private
+   * @description Resolves a user's UUID to their internal numeric ID.
+   * @param {string} userUUID - User's UUID
+   * @returns {Promise<number>} Internal user ID
+   */
   async #resolveUserInternalId(userUUID) {
     const user = await this.userService.findByUUID(userUUID);
     return user.internalId;
   }
 
+  /**
+   * @description Verifies that a user has access to a plant. Admins bypass
+   * ownership checks; regular users must own the plant.
+   * @param {string} plantUUID - UUID of the plant
+   * @param {string} userUUID - UUID of the requesting user
+   * @param {string} role - User role ("admin" bypasses ownership check)
+   * @returns {Promise<Object>} The plant document
+   * @throws {RouteError} NOT_FOUND or FORBIDDEN
+   */
   async verifyPlantAccess(plantUUID, userUUID, role) {
     const plant = await this.getPlantByUUID(plantUUID);
     if (!plant) {
@@ -30,6 +51,14 @@ class PlantService {
     return plant;
   }
 
+  /**
+   * @private
+   * @description Calculates the plant's age in days. Uses the provided
+   * ageDays value if given; otherwise computes from plantedAt.
+   * @param {number|null} ageDays - Explicit age in days
+   * @param {string|null} plantedAt - ISO date string of planting
+   * @returns {number} Age in days (0 if neither is available)
+   */
   #calcAgeDays(ageDays, plantedAt) {
     return (
       ageDays ??
@@ -39,9 +68,13 @@ class PlantService {
     );
   }
 
-  // =========================================
-  // Create Plant
-  // =========================================
+  /**
+   * @description Creates a new plant record. Derives ageDays, growth stage
+   * (via LLM if available), and expected harvest date automatically.
+   * @param {Object} data - Plant creation payload
+   * @param {string} userUUID - UUID of the owning user
+   * @returns {Promise<Object>} Created plant document
+   */
   async createPlant(data, userUUID) {
     const userInternalId = await this.#resolveUserInternalId(userUUID);
 
@@ -62,6 +95,14 @@ class PlantService {
     });
   }
 
+  /**
+   * @private
+   * @description Uses the LLM to determine the plant's growth stage from
+   * its name, family, category, and age. Falls back to "vegetative" on error
+   * or if no LLM service is available.
+   * @param {Object} data - Plant data with name, family, category, ageDays
+   * @returns {Promise<string>} Derived growth stage
+   */
   async #deriveGrowthStage(data) {
     if (!this.llmService) return data.growthStage || "vegetative";
     try {
@@ -85,6 +126,13 @@ class PlantService {
     }
   }
 
+  /**
+   * @private
+   * @description Uses the LLM to estimate the expected harvest date from
+   * plant metadata. Returns null on error or if no LLM service is available.
+   * @param {Object} data - Plant data with name, family, category, plantedAt
+   * @returns {Promise<Date|null>} Estimated harvest date or null
+   */
   async #deriveExpectedHarvestDate(data) {
     if (!this.llmService) return null;
     try {
@@ -105,24 +153,32 @@ class PlantService {
     }
   }
 
-  // =========================================
-  // Get Plant by UUID
-  // =========================================
+  /**
+   * @description Retrieves a plant by its UUID.
+   * @param {string} uuid - Plant UUID
+   * @returns {Promise<Object|null>} Plant document or null
+   */
   async getPlantByUUID(uuid) {
     return await this.plantRepository.findByUUID(uuid);
   }
 
-  // =========================================
-  // Get User Plants
-  // =========================================
+  /**
+   * @description Returns all plants owned by the given user.
+   * @param {string} userUUID - UUID of the user
+   * @returns {Promise<Array>} Array of plant documents
+   */
   async getUserPlants(userUUID) {
     const userInternalId = await this.#resolveUserInternalId(userUUID);
     return await this.plantRepository.findByUserInternalId(userInternalId);
   }
 
-  // =========================================
-  // Update Plant
-  // =========================================
+  /**
+   * @description Updates a plant's fields. Recalculates ageDays if plantedAt
+   * changes or ageDays is explicitly provided.
+   * @param {string} uuid - Plant UUID
+   * @param {Object} updateData - Fields to update
+   * @returns {Promise<Object|null>} Updated plant or null if not found
+   */
   async updatePlant(uuid, updateData) {
     const currentPlant = await this.getPlantByUUID(uuid);
     if (!currentPlant) return null;
@@ -138,23 +194,30 @@ class PlantService {
     });
   }
 
-  // =========================================
-  // Delete Plant
-  // =========================================
+  /**
+   * @description Deletes a plant by its UUID.
+   * @param {string} uuid - Plant UUID
+   * @returns {Promise<Object|null>} Deletion result
+   */
   async deletePlant(uuid) {
     return await this.plantRepository.deleteByUUID(uuid);
   }
 
-  // =========================================
-  // Get All Plants (Admin)
-  // =========================================
+  /**
+   * @description Returns all plants in the system (admin only).
+   * @returns {Promise<Array>} Array of all plant documents
+   */
   async getAllPlants() {
     return await this.plantRepository.findAll();
   }
 
-  // =========================================
-  // Paginate Plants
-  // =========================================
+  /**
+   * @description Paginates through all plants in the system.
+   * @param {Object} [options]
+   * @param {number} [options.page]
+   * @param {number} [options.limit]
+   * @returns {Promise<Object>} Paginated result
+   */
   async paginatePlants({ page, limit }) {
     return await this.plantRepository.paginate({
       page,
@@ -162,6 +225,15 @@ class PlantService {
     });
   }
 
+  /**
+   * @description Estimates the expected harvest date for a plant using the
+   * LLM, based on planting date, category, name, and family.
+   * @param {string} plantedAt - ISO date string of planting
+   * @param {string} category - Plant category (e.g. crop, ornamental)
+   * @param {string} plantName - Common name of the plant
+   * @param {string} family - Plant family
+   * @returns {Promise<Date|null>} Estimated date or null
+   */
   async calculateExpectedHarvestDate(plantedAt, category, plantName, family) {
     if (!this.llmService) return null;
     try {
@@ -180,6 +252,14 @@ class PlantService {
     }
   }
 
+  /**
+   * @description Composes a flat plant data object suited for the rule-based
+   * analysis engine. Extracts category, family, age, growth stage, soil,
+   * watering, and stress fields.
+   * @param {string} plantUUID - UUID of the plant
+   * @returns {Promise<{plant: Object, soil: Object, watering: Object, stress: Object}>}
+   * @throws {RouteError} NOT_FOUND if plant does not exist
+   */
   async getEnginePlantInput(plantUUID) {
     const Plant = await this.getPlantByUUID(plantUUID);
     if (!Plant) {
@@ -206,6 +286,49 @@ class PlantService {
     };
   }
 
+  /**
+   * @description Resolves a plant's UUID to its internal numeric ID.
+   * @param {string} plantUUID - Plant UUID
+   * @returns {Promise<number|null>} Internal plant ID or null if not found
+   */
+  async getInternalId(plantUUID) {
+    const plant = await this.plantRepository.findByUUID(plantUUID);
+    return plant ? plant.internalId : null;
+  }
+
+  /**
+   * @description Updates the watering record for a plant, resetting
+   * hoursSinceLastWatering (typically set to 0 after watering).
+   * @param {string} uuid - Plant UUID
+   * @param {number} [hoursSinceLastWatering=0] - Hours since last watering
+   * @returns {Promise<Object>} Updated plant document
+   * @throws {RouteError} BAD_REQUEST if value is negative, NOT_FOUND if plant missing
+   */
+  async updateWatering(uuid, hoursSinceLastWatering = 0) {
+    if (hoursSinceLastWatering < 0) {
+      throw new RouteError(
+        HttpStatusCodes.BAD_REQUEST,
+        "hoursSinceLastWatering must be >= 0",
+      );
+    }
+
+    const plant = await this.getPlantByUUID(uuid);
+    if (!plant) {
+      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Plant not found");
+    }
+
+    return await this.plantRepository.updateByUUID(uuid, {
+      "watering.hoursSinceLastWatering": hoursSinceLastWatering,
+    });
+  }
+
+  /**
+   * @description Adds an image reference to the plant. If it is the first
+   * image, also sets the base CDN path on the plant record.
+   * @param {string} uuid - Plant UUID
+   * @param {string} s3Key - Full S3 key of the uploaded image
+   * @returns {Promise<Object>} Updated plant document
+   */
   async addImage(uuid, s3Key) {
     const fileName = s3Key.substring(s3Key.lastIndexOf("/") + 1);
 
@@ -222,6 +345,12 @@ class PlantService {
     return result;
   }
 
+  /**
+   * @description Removes an image reference from the plant's image list.
+   * @param {string} uuid - Plant UUID
+   * @param {string} imageName - Image file name (or full key, name is extracted)
+   * @returns {Promise<Object|string>} Updated plant or "nothing to remove" message
+   */
   async removeImage(uuid, imageName) {
     const plant = await this.plantRepository.findByUUID(uuid);
     const empty = !plant?.cdn?.images?.length;

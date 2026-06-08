@@ -3,11 +3,13 @@ import UserRepository from "../repositories/user.repository.js";
 import PlantRepository from "../repositories/plant.repository.js";
 import S3Repository from "../repositories/s3Cloud.repository.js";
 import PlantCareRepository from "../repositories/plant-care.repository.js";
+import ActionLogRepository from "../repositories/action-log.repository.js";
 
 export const userRepo = new UserRepository();
 export const plantRepo = new PlantRepository();
 export const s3Repo = new S3Repository();
 export const plantCareRepo = new PlantCareRepository();
+export const actionLogRepo = new ActionLogRepository();
 
 //infrastructure services
 import TokenService from "../service/common/token.service.js";
@@ -29,6 +31,7 @@ import WeatherService, {
 } from "../service/weather.service.js";
 import LLMService from "../service/llm.service.js";
 import PlantAnalyserService from "../service/plant-analyser.service.js";
+import PlantVisionService from "../service/plant-vision.service.js";
 import PlantCareStateService, {
   PlantTaskCareManager,
   PlantCareActionLogger,
@@ -38,9 +41,21 @@ import PlantCareStateService, {
 
 export const userService = new UserService(userRepo);
 export const llmService = new LLMService();
-export const plantService = new PlantService(plantRepo, s3Repo, userService, llmService);
-export const diseaseDetectionService = new DiseaseDetectionService(plantRepo, userService);
+export const plantService = new PlantService(
+  plantRepo,
+  s3Repo,
+  userService,
+  llmService,
+);
+
 export const s3CloudService = new S3CloudService(s3Repo, userService);
+
+export const diseaseDetectionService = new DiseaseDetectionService(
+  plantRepo,
+  userService,
+  s3CloudService,
+);
+
 export const authService = new AuthService(
   tokenService,
   userService,
@@ -49,6 +64,12 @@ export const authService = new AuthService(
 
 export const weatherService = new WeatherService();
 export const weatherDescriber = new WeatherDescriber();
+export const plantVisionService = new PlantVisionService(
+  plantService,
+  s3CloudService,
+  llmService,
+);
+
 export const plantAnalyserService = new PlantAnalyserService(
   weatherService,
   weatherDescriber,
@@ -60,7 +81,7 @@ export const plantCareStateService = new PlantCareStateService(plantCareRepo);
 
 export const plantCareTaskGenerator = new PlantCareTaskGenerator(llmService);
 
-export const plantCareActionLogger = new PlantCareActionLogger(plantCareRepo);
+export const plantCareActionLogger = new PlantCareActionLogger(actionLogRepo, plantService);
 
 export const plantTaskCareManager = new PlantTaskCareManager(
   plantCareRepo,
