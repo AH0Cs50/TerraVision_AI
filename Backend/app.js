@@ -32,7 +32,8 @@ function appStart() {
   try {
     //some micro-service test check before run server
     const server = app.listen(port, "0.0.0.0", () => {
-      console.log("SERVER STARTED ON PORT:", server.address().port);
+      const addr = server.address();
+      console.log("SERVER STARTED ON PORT:", addr ? addr.port : port);
     });
   } catch {
     console.log("failed to start app server");

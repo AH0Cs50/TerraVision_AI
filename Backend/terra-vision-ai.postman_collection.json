@@ -1,0 +1,990 @@
+{
+  "info": {
+    "name": "TerraVisionAI API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Complete API collection for TerraVisionAI — Plant Disease Detection & Care Management System\n\nAll authenticated Plant Care routes use the authenticate middleware applied at the router level in app.js."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5500"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "plantUUID",
+      "value": ""
+    },
+    {
+      "key": "taskUUID",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.tokens.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\",\n  \"location\": {\n    \"city\": \"Cairo\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token', json.tokens.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your-refresh-token\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id"],
+              "variable": [
+                { "key": "id", "value": "user-uuid-here" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated User Name\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id"],
+              "variable": [
+                { "key": "id", "value": "user-uuid-here" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id"],
+              "variable": [
+                { "key": "id", "value": "user-uuid-here" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Verification Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "email"]
+            }
+          }
+        },
+        {
+          "name": "Get Email Verification Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/email",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "email"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/email/verify?token=your-verification-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "email", "verify"],
+              "query": [
+                { "key": "token", "value": "your-verification-token" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plants",
+      "item": [
+        {
+          "name": "Get All Plants",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants"]
+            }
+          }
+        },
+        {
+          "name": "Create Plant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tomato Plant\",\n  \"plantType\": \"crop\",\n  \"family\": \"fruiting_nightshade\",\n  \"growthStage\": \"vegetative\",\n  \"plantedAt\": \"2026-05-25T00:00:00.000Z\",\n  \"ageDays\": 0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants"]
+            }
+          }
+        },
+        {
+          "name": "Get Plant By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Plant",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Tomato Plant\",\n  \"growthStage\": \"flowering\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Plant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Plant Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"tomato_leaf.jpg\",\n  \"fileType\": \"image/jpeg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id", "upload"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Extract Plant Data from Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"s3-object-key-from-upload\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id/image/extract",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id", "image", "extract"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detect Plant Disease",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"s3-object-key-from-upload\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id/detect",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id", "detect"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Plant Image",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"s3-object-key-to-delete\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/:id/images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", ":id", "images"],
+              "variable": [
+                { "key": "id", "value": "{{plantUUID}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload General Image (Public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"unknown_leaf.jpg\",\n  \"fileType\": \"image/jpeg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/image/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", "image", "upload"]
+            }
+          }
+        },
+        {
+          "name": "General Disease Detection (Public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"s3-object-key-from-upload\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/detect",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "plants", "detect"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plant Care",
+      "item": [
+        {
+          "name": "Analysis & State",
+          "item": [
+            {
+              "name": "Analyze Plant",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/analyze",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "analyze"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Care State",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/care-state",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "care-state"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Action Logs",
+          "item": [
+            {
+              "name": "Get Recent Logs",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/logs?last=5",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "query": [
+                    { "key": "last", "value": "5" }
+                  ],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Logs by Type",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/logs?type=watered",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "query": [
+                    { "key": "type", "value": "watered" }
+                  ],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Logs (Paginated)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/logs?page=1&limit=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "query": [
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "20" }
+                  ],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Add Action Log",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"actionType\": \"watered\",\n  \"description\": \"Watered the plant\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/logs",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Clear Old Logs",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/logs?before=2026-01-01",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "query": [
+                    { "key": "before", "value": "2026-01-01" }
+                  ],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quick Actions",
+          "item": [
+            {
+              "name": "Water Plant",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/water",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "water"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Fertilize Plant",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/fertilize",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "fertilize"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Harvest Plant",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/harvest",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "harvest"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Light Condition",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"lightCondition\": \"partial_shade\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/light",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "light"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tasks",
+          "item": [
+            {
+              "name": "Get Tasks (Paginated)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks?page=1&limit=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks"],
+                  "query": [
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "20" }
+                  ],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Add Task",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"watering\",\n  \"title\": \"Water the plant\",\n  \"priority\": \"high\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Generate Tasks from Status",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/generate",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", "generate"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Complete Task",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"taskId\": \"{{taskUUID}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/complete",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", "complete"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Remove Completed Tasks",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/completed",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", "completed"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Overdue Tasks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/overdue",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", "overdue"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Pending Tasks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/pending",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", "pending"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Prioritized Tasks",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/prioritized",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", "prioritized"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Cancel Task",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/:taskId/cancel",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", ":taskId", "cancel"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" },
+                    { "key": "taskId", "value": "{{taskUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Reopen Task",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/:taskId/reopen",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "tasks", ":taskId", "reopen"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" },
+                    { "key": "taskId", "value": "{{taskUUID}}" }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "AI Insights",
+          "item": [
+            {
+              "name": "Generate AI Insights",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/ai-insights",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "ai-insights"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Ask Question to AI",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"question\": \"Why is my plant wilting?\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/ai-insights/ask",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "plants", ":id", "ai-insights", "ask"],
+                  "variable": [
+                    { "key": "id", "value": "{{plantUUID}}" }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

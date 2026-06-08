@@ -17,10 +17,11 @@ Backend/service/engine/
 ├── watering.js        Watering history modifier rules loader
 ├── pestDisease.js     Pest/disease cross-factor rules loader
 ├── light.js           Light exposure modifier rules loader
+├── report.md           Engine test report
 └── README.md          This file
 ```
 
-**Rule data** lives separately in `Backend/shared/db/rules/`:
+**Rule data** lives separately in `Backend/shared/rules/`:
 
 | Module            | Source file                              |
 | ----------------- | ---------------------------------------- |
@@ -243,7 +244,7 @@ Each sub-field independently unlocks its own set of rules. Providing partial dat
 ### `getRuleCount()`
 
 ```js
-{ global: 15, soil: 16, plantFamily: 24, growthStage: 18, watering: 12, pest: 8, total: 93 }
+{ global: 17, soil: 19, plantFamily: 35, growthStage: 18, watering: 7, pest: 9, light: 22, total: 127 }
 ```
 
 ---
@@ -255,6 +256,7 @@ Each rule file contains a `rules` array. A single rule:
 ```json
 {
   "id": "unique_id",
+  "explainKey": "unique_id",
   "factor": "weather",
   "condition": {
     "weather.temperature": { "gte": 30, "lt": 35 },
@@ -282,6 +284,7 @@ Each rule file contains a `rules` array. A single rule:
 | `effects`     | Additive & multiplier score changes    |
 | `weight`      | Numeric weight from source data        |
 | `explanation` | Human-readable rationale               |
+| `explainKey`  | Short identifier for client-side i18n mapping   |
 
 ### Effect Types
 
@@ -396,5 +399,5 @@ console.log(getRuleCount());
 
 ## Requirements
 
-- Node.js >= 14
+- Node.js >= 20.x
 - No external dependencies

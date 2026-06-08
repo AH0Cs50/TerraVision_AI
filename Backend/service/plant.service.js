@@ -86,7 +86,12 @@ class PlantService {
     const expectedHarvestDate =
       data.expectedHarvestDate ||
       (await this.#deriveExpectedHarvestDate({ ...dataWithAge, growthStage }));
-
+    console.log({
+      ...dataWithAge,
+      growthStage,
+      expectedHarvestDate,
+      userInternalId,
+    });
     return await this.plantRepository.create({
       ...dataWithAge,
       growthStage,
@@ -129,28 +134,37 @@ class PlantService {
   /**
    * @private
    * @description Uses the LLM to estimate the expected harvest date from
-   * plant metadata. Returns null on error or if no LLM service is available.
+   * plant metadata. Falls back to a category-based compute if LLM is
+   * unavailable, errors, or returns an unparseable date.
    * @param {Object} data - Plant data with name, family, category, plantedAt
-   * @returns {Promise<Date|null>} Estimated harvest date or null
+   * @returns {Promise<Date|null>} Estimated harvest date or null if plantedAt missing
    */
   async #deriveExpectedHarvestDate(data) {
-    if (!this.llmService) return null;
-    try {
-      const prompt = fillPrompt("HARVEST_DATE", {
-        plantName: data.name,
-        commonName: data.commonName || "not specified",
-        family: data.family,
-        category: data.category,
-        plantedAt: data.plantedAt ? new Date(data.plantedAt).toISOString() : "unknown",
-        growthStage: data.growthStage || "unknown",
-      });
-      const response = await this.llmService.generateResponse(prompt);
-      const dateStr = typeof response === "string" ? response.trim() : "";
-      const parsed = new Date(dateStr);
-      return Number.isNaN(parsed.getTime()) ? null : parsed;
-    } catch {
-      return null;
+    if (this.llmService) {
+      try {
+        const prompt = fillPrompt("HARVEST_DATE", {
+          plantName: data.name,
+          commonName: data.commonName || "not specified",
+          family: data.family,
+          category: data.category,
+          plantedAt: data.plantedAt
+            ? new Date(data.plantedAt).toISOString()
+            : "unknown",
+          growthStage: data.growthStage || "unknown",
+        });
+        const response = await this.llmService.generateResponse(prompt);
+        const dateStr = typeof response === "string" ? response.trim() : "";
+        const parsed = new Date(dateStr);
+        if (!Number.isNaN(parsed.getTime())) return parsed;
+      } catch {
+        /* fall through to fallback */
+      }
     }
+
+    if (!data.plantedAt) return null;
+    const fallbackDays = { crop: 90, flower: 60, tree: 365 };
+    const days = fallbackDays[data.category] || 90;
+    return new Date(new Date(data.plantedAt).getTime() + days * 86400000);
   }
 
   /**

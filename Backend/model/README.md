@@ -1,4 +1,4 @@
-# Models — Temp Objects
+# Models — Schema Reference
 
 ## user.model.js — UserSchema
 
@@ -80,7 +80,7 @@
 
 ---
 
-## plant_analysis.model.js — PlantCareStateSchema
+## plant-care.model.js — PlantCareStateSchema
 
 ```json
 {
@@ -150,4 +150,89 @@
   },
   "updatedAt": "2026-05-20T10:30:00.000Z"
 }
+
+### Computed fields (added by `createPlantCareStateModel`)
+
+```json
+{
+  "internalId": 1712345678901,
+  "uuid": "770e8400-...",
+  "createdAt": "2026-05-20T10:00:00.000Z"
+}
 ```
+
+---
+
+## action-log.model.js — ActionLogSchema
+
+```json
+{
+  "logId": "l1a2b3c4-...",
+  "plantUUID": "p1a2b3c4-...",
+  "plantInternalId": 1712345678901,
+  "userUUID": "u1a2b3c4-...",
+  "userInternalId": 1712345678901,
+  "actionType": "watered",
+  "description": "Watered 500ml at 8am",
+  "metadata": { "source": "manual" },
+  "createdAt": "2026-05-20T08:00:00.000Z"
+}
+```
+
+---
+
+## Enums Reference
+
+### `WATER_STATUSES`
+`["thirsty", "low", "satisfied", "overwatered"]`
+
+### `NUTRIENT_STATUSES`
+`["needs_feed", "low", "optimal", "excess"]`
+
+### `HEALTH_STATUSES`
+`["healthy", "warning", "diseased", "critical"]`
+
+### `LIGHT_STATUSES`
+`["low", "optimal", "high", "burn_risk"]`
+
+### `TASK_TYPES`
+`["watering", "fertilizing", "pruning", "disease_treatment", "move_light", "harvest"]`
+
+### `TASK_PRIORITIES`
+`["low", "medium", "high"]`
+
+### `TASK_STATUSES`
+`["pending", "in_progress", "completed", "cancelled"]`
+
+### `TASK_GENERATED_BY`
+`["ai", "system", "user"]`
+
+### `ACTION_TYPES`
+`["watered", "fertilized", "disease_scan", "disease_detected", "task_completed", "task_added", "task_updated", "task_cancelled", "light_changed", "harvested", "plant_created", "plant_updated", "plant_deleted", "image_uploaded", "image_removed", "plant_data_extracted", "insight_generated"]`
+
+---
+
+### Score → Status Mapping
+
+| Score Range | Water         | Nutrients    | Health     | Light       |
+| ----------- | ------------- | ------------ | ---------- | ----------- |
+| ≥ 1.7       | `thirsty`     | `excess`     | `critical` | `burn_risk` |
+| 1.3 – 1.69  | `low`         | `optimal`    | `diseased` | `high`      |
+| 0.8 – 1.29  | `satisfied`   | `low`        | `warning`  | `optimal`   |
+| < 0.8       | `overwatered` | `needs_feed` | `healthy`  | `low`       |
+
+---
+
+## Utility Functions
+
+### `engineScoresToStatus(scores)`
+Maps numeric engine scores (0.5–2.0) to categorical status enums. Returns `{ water, nutrients, health, light }`.
+
+### `buildEngineScores(engineResult)`
+Normalizes engine output for persistence. Strips `_appliedRules` and restructures as `{ waterScore, fertilizerScore, pestRiskScore, lightScore, appliedRules }`.
+
+### `createPlantCareStateModel(data)`
+Factory for new care state documents. Generates `internalId`, `uuid`, `createdAt`, `updatedAt`. Wraps tasks with createPlantTaskModel-like logic.
+
+### `createPlantTaskModel(data)`
+Factory for task objects. Validates `type` against `TASK_TYPES`, defaults `priority` to `"medium"`, `status` to `"pending"`, `generatedBy` to `"ai"`.

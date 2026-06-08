@@ -12,7 +12,7 @@ Modern agriculture faces increasing challenges from climate variability, pests, 
 
 - **Real-time disease detection** via a custom CNN ensemble model (86 crop-disease classes)
 - **Environmental analysis** integrating live weather data with plant-specific care rules
-- **Automated care scoring** through a 108-rule engine covering watering, nutrients, pest risk, and light
+- **Automated care scoring** through a 127-rule engine covering watering, nutrients, pest risk, and light
 - **AI-generated insights** powered by Google Gemini for actionable recommendations
 
 ### System Boundaries
@@ -38,7 +38,7 @@ User Devices (Web/Mobile)
 | Feature                 | Capability                                                  |
 | ----------------------- | ----------------------------------------------------------- |
 | Plant Disease Detection | 86-class CNN ensemble (1.04 GB model) via ML microservice   |
-| Rule Engine Analysis    | 7 layers × 108 rules scoring water, fertilizer, pest, light |
+| Rule Engine Analysis    | 7 layers × 127 rules scoring water, fertilizer, pest, light |
 | Real-time Weather       | OpenWeatherMap integration with location-based queries      |
 | AI Plant Care           | Gemini-powered task generation, insights, Q&A               |
 | Secure Storage          | Storj S3-compatible storage with pre-signed URLs            |
@@ -110,7 +110,7 @@ graph TD
 │   Auth    │   User   │   Plant   │   Plant Care     │
 │  Service  │  Service │  Service  │   Services       │
 ├──────────┴──────────┴───────────┴──────────────────┤
-│              Engine (108 Rules)                     │
+│              Engine (127 Rules)                     │
 │  global │ soil │ plantFamily │ growthStage │        │
 │  watering │ pestDisease │ light                      │
 ├──────────┬──────────┬───────────┬──────────────────┤
@@ -118,7 +118,7 @@ graph TD
 │  Repo    │  Repo    │  Repo     │   Repo            │
 ├──────────┴──────────┴───────────┴──────────────────┤
 │              MongoDB (terra_db)                     │
-│   users │ plants │ plantcares                      │
+│   users │ plants │ plantcares │ actionlogs          │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -246,13 +246,15 @@ Backend/
 ├── model/                          # Mongoose schemas
 │   ├── user.model.js
 │   ├── plant.model.js
-│   └── plant-care.model.js
+│   ├── plant-care.model.js
+│   └── action-log.model.js
 │
 ├── repositories/                   # Data access layer
 │   ├── user.repository.js
 │   ├── plant.repository.js
 │   ├── plant-care.repository.js
-│   └── s3Cloud.repository.js
+│   ├── s3Cloud.repository.js
+│   └── action-log.repository.js
 │
 ├── dto/                            # Zod validation schemas
 │   ├── user.dto.js
@@ -267,7 +269,7 @@ Backend/
 │   ├── container.js                # Dependency injection wiring
 │   ├── db.js                       # MongoDB connection
 │   ├── s3Client.cloud.js           # S3 client init
-│   ├── rules/                      # JSON rule files (7 files, 108 rules)
+│   ├── rules/                      # JSON rule files (7 files, 127 rules)
 │   └── util/
 │       ├── RouteError.js           # Operational error class
 │       └── HttpStatusCodes.js      # Status code constants
@@ -802,8 +804,10 @@ GET    /api/v1/plants/:id/logs          # Get recent action logs (?last=5)
 POST   /api/v1/plants/:id/logs          # Add manual action log
 GET    /api/v1/plants/:id/tasks         # Get pending tasks
 POST   /api/v1/plants/:id/tasks         # Add manual task
-PATCH  /api/v1/plants/:id/tasks/complete # Mark task complete
+PATCH  /api/v1/plants/:id/tasks/complete # Mark task complete (auto-logs)
+DELETE /api/v1/plants/:id/tasks/:taskId  # Delete a specific task
 POST   /api/v1/plants/:id/ai-insights   # Generate AI insights
+POST   /api/v1/plants/:id/ai/question   # Ask AI about plant care
 ```
 
 #### Analyze Plant
@@ -1019,23 +1023,22 @@ Each rule has three parts:
 
 | Layer            | Rules | Evaluates                                             |
 | ---------------- | ----- | ----------------------------------------------------- |
-| Global           | 15    | Temperature, humidity, base weather conditions        |
-| Soil             | 16    | Soil type, moisture level modifiers                   |
-| Plant Family     | 24    | Per-family water sensitivity, nutrient demand         |
+| Global           | 17    | Temperature, humidity, base weather conditions        |
+| Soil             | 19    | Soil type, moisture level modifiers                   |
+| Plant Family     | 35    | Per-family water sensitivity, nutrient demand         |
 | Growth Stage     | 18    | Germination through mature stage modifiers            |
-| Watering History | 6     | Hours-since-last-watering drought levels              |
+| Watering History | 7     | Hours-since-last-watering drought levels              |
 | Pest/Disease     | 9     | Disease type × severity × weather interactions        |
-| Light            | 20    | Cloud cover, time-of-day, family-specific light needs |
+| Light            | 22    | Cloud cover, time-of-day, family-specific light needs |
 
 ### Score → Status Mapping
 
 | Score Range | Water         | Nutrients    | Health     | Light       |
 | ----------- | ------------- | ------------ | ---------- | ----------- |
-| < 0.8       | `thirsty`     | `needs_feed` | `critical` | `low`       |
-| 0.8 – 1.0   | `low`         | `low`        | `diseased` | `low`       |
-| 1.0 – 1.3   | `satisfied`   | `optimal`    | `healthy`  | `optimal`   |
-| 1.3 – 1.6   | `satisfied`   | `optimal`    | `warning`  | `optimal`   |
-| > 1.6       | `overwatered` | `excess`     | `warning`  | `burn_risk` |
+| ≥ 1.7       | `thirsty`     | `excess`     | `critical` | `burn_risk` |
+| 1.3 – 1.69  | `low`         | `optimal`    | `diseased` | `high`      |
+| 0.8 – 1.29  | `satisfied`   | `low`        | `warning`  | `optimal`   |
+| < 0.8       | `overwatered` | `needs_feed` | `healthy`  | `low`       |
 
 ---
 
@@ -1307,6 +1310,8 @@ Common HTTP status codes used:
 erDiagram
     User ||--o{ Plant : owns
     Plant ||--o{ PlantCare : has
+    Plant ||--o{ ActionLog : "tracks"
+    User ||--o{ ActionLog : logs
     User {
         number internalId PK
         string uuid UK
@@ -1346,6 +1351,17 @@ erDiagram
         array actionLogs
         object aiInsights
     }
+    ActionLog {
+        number logId PK
+        string plantUUID UK
+        number plantInternalId
+        string userUUID
+        number userInternalId
+        string actionType
+        string description
+        object metadata
+        date createdAt
+    }
 ```
 
 ### Indexing Strategy
@@ -1376,6 +1392,24 @@ plantCareSchema.index({ "status.health": 1 });
 const MONGO_URI = "mongodb://127.0.0.1:27017/terra_db";
 await mongoose.connect(MONGO_URI);
 ```
+
+---
+
+## UUID / internalId Dual-Key Pattern
+
+Every model has two identifiers:
+
+| Field | Purpose |
+|---|---|
+| `uuid` (String, unique) | **Public-facing** — used in API requests, responses, JWT payload |
+| `internalId` (Number, unique, `Date.now()`) | **Internal relations** — used as foreign key in other models |
+
+**Foreign key relationships always use `internalId`**:
+- `plant.userInternalId` → `user.internalId`
+- `actionLog.plantInternalId` → `plant.internalId`
+- `actionLog.userInternalId` → `user.internalId`
+
+**Resolution flow:** API receives `uuid` → service resolves to `internalId` via `findByUUID()` → queries relations using `internalId`.
 
 ---
 

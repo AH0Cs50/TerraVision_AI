@@ -128,58 +128,6 @@ export function buildEngineScores(engineResult) {
   };
 }
 
-export function createPlantCareStateModel(data) {
-  const now = new Date();
-
-  const activeTasks = (data.activeTasks || []).map((task) => ({
-    taskId: task.taskId || uuidv4(),
-
-    ...task,
-
-    createdAt: task.createdAt || now,
-  }));
-
-  const completedTasks = (data.completedTasks || []).map((task) => ({
-    taskId: task.taskId || uuidv4(),
-
-    ...task,
-
-    createdAt: task.createdAt || now,
-
-    completedAt: task.completedAt || now,
-  }));
-
-  return {
-    internalId: Date.now(),
-
-    uuid: uuidv4(),
-
-    plantUUID: data.plantUUID,
-
-    status: data.status,
-
-    engineScores: data.engineScores,
-
-    activeTasks,
-
-    completedTasks,
-
-    aiInsights: data.aiInsights
-      ? {
-          ...data.aiInsights,
-
-          recommendations: data.aiInsights.recommendations || [],
-
-          generatedAt: data.aiInsights.generatedAt || now,
-        }
-      : undefined,
-
-    createdAt: now,
-
-    updatedAt: now,
-  };
-}
-
 // ── Mongoose Schemas ─────────────────────────────────────────────
 
 const statusSubSchema = new mongoose.Schema(

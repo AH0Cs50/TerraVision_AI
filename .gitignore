@@ -3,3 +3,13 @@ models
 *.h5
 Ml-service/.idea
 *.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+agent.md
+AGENTS.md
+opencode.json
+testsprite_tests\tmp\config.json

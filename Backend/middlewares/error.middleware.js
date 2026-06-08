@@ -29,7 +29,7 @@ export function errorHandler(err, req, res, next) {
       response.details = err.details;
     }
 
-    return res.status(err.statusCode).json(response);
+    return res.status(Number.isInteger(err.statusCode) ? err.statusCode : 500).json(response);
   }
 
   return res
