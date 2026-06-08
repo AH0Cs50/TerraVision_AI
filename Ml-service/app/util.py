@@ -12,12 +12,17 @@ def preprocess_image(image):
         image = load_image_from_bytes(image)
 
     image = image.convert("RGB")  # ensure 3 channels
-    image = image.resize(IMG_SIZE)
+    image = image.resize(IMG_SIZE, Image.LANCZOS)  # LANCZOS preserves features during downscale; NEAREST aliases pixels
 
-    image = np.array(image) / 255.0  # normalize
+    image = np.array(image, dtype=np.float32) / 255.0  # normalize, match training dtype
     image = np.expand_dims(image, axis=0)
 
     return image
 
 def load_image_from_bytes(image_bytes: bytes):
-    return Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    try:
+        return Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception as e:
+        raise ValueError(
+            f"Failed to decode image bytes ({len(image_bytes)} bytes): {e}"
+        ) from e

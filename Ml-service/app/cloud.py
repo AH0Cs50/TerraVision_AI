@@ -1,12 +1,18 @@
 import boto3
+from botocore.config import Config
 from app.config import cloudConfig
+
+s3_config = Config(
+    s3={"addressing_style": "path"} if cloudConfig["S3_FORCE_PATH_STYLE"] else {}
+)
 
 s3_client = boto3.client(
     "s3",
     aws_access_key_id=cloudConfig['S3_ACCESS_KEY'],
     aws_secret_access_key=cloudConfig['S3_SECRET_KEY'],
     region_name=cloudConfig['S3_REGION'],
-    endpoint_url=cloudConfig['S3_ENDPOINT']
+    endpoint_url=cloudConfig['S3_ENDPOINT'],
+    config=s3_config
 )
 
 BUCKET_NAME = cloudConfig['S3_BUCKET_NAME']
@@ -14,9 +20,21 @@ BUCKET_NAME = cloudConfig['S3_BUCKET_NAME']
 def get_file_by_key(key: str) -> bytes:
     """
     Fetch file from S3 and return its content as bytes.
+    Raises ValueError if the object is empty or not an image type.
     """
     response = s3_client.get_object(Bucket=BUCKET_NAME, Key=key)
-    return response["Body"].read()
+
+    content_type = response.get("ContentType", "")
+    if not content_type.startswith("image/"):
+        raise ValueError(
+            f"S3 object at '{key}' has ContentType '{content_type}', expected image/*"
+        )
+
+    body = response["Body"].read()
+    if not body:
+        raise ValueError(f"S3 object at '{key}' is empty")
+
+    return body
 
 def get_file_text(key: str, encoding: str = "utf-8") -> str:
     """

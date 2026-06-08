@@ -123,6 +123,45 @@ async function uploadFileToSignedUrl(uploadUrl, filePath, fileType) {
   }
 }
 
+async function uploadFileToSignedPost(uploadUrl, fields, filePath, fileType) {
+  try {
+    const image = await readFile(filePath);
+    const formData = new FormData();
+
+    for (const [key, value] of Object.entries(fields)) {
+      formData.append(key, value);
+    }
+
+    formData.append(
+      "file",
+      new Blob([image], { type: fileType }),
+      path.basename(filePath),
+    );
+
+    const res = await axios.post(uploadUrl, formData, {
+      maxBodyLength: Infinity,
+      validateStatus: () => true,
+    });
+
+    return { status: res.status, data: res.data, headers: res.headers };
+  } catch (e) {
+    return { status: 0, data: { message: e.message }, error: true };
+  }
+}
+
+async function uploadFileToSignedTarget(target, filePath, fileType) {
+  if (target?.fields) {
+    return uploadFileToSignedPost(
+      target.uploadUrl,
+      target.fields,
+      filePath,
+      fileType,
+    );
+  }
+
+  return uploadFileToSignedUrl(target.uploadUrl, filePath, fileType);
+}
+
 async function run() {
   await startServerIfNeeded();
   console.log("\n\x1b[36m═══════════════════════════════════════\x1b[0m");
@@ -185,8 +224,8 @@ async function run() {
 
       const uploadedImageKey = upload.data?.data?.key || "test-key";
       if (upload.data?.data?.uploadUrl) {
-        const fileUpload = await uploadFileToSignedUrl(
-          upload.data.data.uploadUrl,
+        const fileUpload = await uploadFileToSignedTarget(
+          upload.data.data,
           PLANT_UPLOAD_IMAGE,
           PLANT_UPLOAD_FILE_TYPE,
         );
@@ -233,8 +272,8 @@ async function run() {
 
     const generalUploadKey = uploadGen.data?.data?.key || "";
     if (uploadGen.data?.data?.uploadUrl) {
-      const generalFileUpload = await uploadFileToSignedUrl(
-        uploadGen.data.data.uploadUrl,
+      const generalFileUpload = await uploadFileToSignedTarget(
+        uploadGen.data.data,
         PLANT_UPLOAD_IMAGE,
         PLANT_UPLOAD_FILE_TYPE,
       );

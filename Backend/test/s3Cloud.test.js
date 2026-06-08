@@ -92,11 +92,11 @@ async function runTests() {
     });
 
     assert(
-      path.startsWith("plant/user_"),
-      "Path should start with 'plant/user_'",
+      path.startsWith("plants/"),
+      "Path should start with 'plants/'",
     );
-    assert(path.includes(testUserId), "Path should contain user ID");
-    assert(path.includes(testPlantId), "Path should contain plant ID");
+    assert(path.includes(testUserId), "Path should contain user UUID");
+    assert(path.includes(testPlantId), "Path should contain plant UUID");
     assert(path.includes("images/"), "Path should contain 'images/' folder");
     assert(
       path.includes("plant-analysis-photo"),
@@ -134,7 +134,7 @@ async function runTests() {
   // =========================
   try {
     const validKey =
-      "plant/user_user-123_plant_plant-456/images/1234567890-test-image.jpg";
+      "plants/user-123/plant-456/images/1234567890-test-image.jpg";
     const isValid = s3CloudService.validatePlantImageKey(validKey);
 
     assert(isValid === true, "Valid key should pass validation");
@@ -243,7 +243,7 @@ async function runTests() {
   // =========================
   try {
     const testKey =
-      "plant/user_user-123_plant_plant-456/images/1234567890-test-image.jpg";
+      "plants/user-123/plant-456/images/1234567890-test-image.jpg";
     const getUrl = await s3CloudService.generateGetUrl(testKey);
 
     assert(getUrl, "Should generate GET URL");
@@ -259,7 +259,7 @@ async function runTests() {
   // =========================
   try {
     const testKey =
-      "plant/user_user-123_plant_plant-456/images/1234567890-test-image.jpg";
+      "plants/user-123/plant-456/images/1234567890-test-image.jpg";
     const result = await s3CloudService.deleteFile(testKey);
 
     console.log("✅ Test 16 passed: Delete file operation executed");

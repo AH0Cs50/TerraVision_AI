@@ -24,8 +24,8 @@ async function runTests() {
 
     testPlant = await plantService.createPlant({
       name: "Test Plant",
-      varietyName: "Cherry Tomato",
-      plantType: "crop",
+      commonName: "Cherry Tomato",
+      category: "crop",
       family: "leafy_greens",
       growthStage: "vegetative",
       plantedAt: new Date(),
@@ -63,7 +63,7 @@ async function runTests() {
     // Note: This will make a real API call to the ML service
     // If ML service is not running, this will fail - that's expected behavior
     const result = await diseaseDetectionService.detectDisease({
-      key: "plant/user_123_plant_456/images/1234567890-test-image.jpg",
+      key: "plants/user-123/plant-456/images/1234567890-test-image.jpg",
       userId: testUser.uuid,
       plantId: testPlant.uuid,
     });
@@ -93,8 +93,7 @@ async function runTests() {
 
     console.log("❌ Test 3 failed: Should validate key format");
   } catch (error) {
-    // Expected to fail - key format invalid
-    if (error.message.includes("Failed to detect disease")) {
+    if (error.message.includes("INVALID_KEY_FORMAT")) {
       console.log("✅ Test 3 passed: Invalid key format rejected");
     } else {
       console.error("❌ Test 3 failed with unexpected error:", error.message);

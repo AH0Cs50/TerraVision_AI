@@ -4,15 +4,15 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-api": "node test-api.mjs",
+    "dev": "npx nodemon app.js"
   },
   "repository": {
     "type": "",
     "url": "git+https://github.com/AH0Cs50/farming_assistant_collage.git"
   },
-  "imports": {
-    "@src/": "./src/"
-  },
+  "imports": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -23,7 +23,9 @@
   "description": "",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",
+    "@aws-sdk/s3-presigned-post": "^3.1058.0",
     "@aws-sdk/s3-request-presigner": "^3.1048.0",
+    "@google/genai": "^2.7.0",
     "axios": "^1.15.1",
     "bcrypt": "^6.0.0",
     "cros": "^1.1.0",
@@ -31,7 +33,6 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.2",
-
     "nodemailer": "^8.0.7",
     "uuid": "^14.0.0",
     "zod": "^4.4.2"
@@ -40,6 +41,7 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.4.0",
     "eslint-plugin-node": "^11.1.0",
-    "globals": "^17.6.0"
+    "globals": "^17.6.0",
+    "nodemon": "^3.1.14"
   }
 }

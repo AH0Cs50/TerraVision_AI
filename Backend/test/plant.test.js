@@ -26,12 +26,13 @@ async function runTests() {
   // Test Plant Data
   const testPlantData = {
     name: "Tomato Plant",
-    varietyName: "Cherry Tomato",
-    plantType: "crop",
+    commonName: "Cherry Tomato",
+    category: "crop",
     family: "leafy_greens",
     growthStage: "vegetative",
     plantedAt: new Date(),
     soil: { type: "sandy", moisture: 60 },
+    watering: { hoursSinceLastWatering: 5 },
   };
 
   let createdPlant = null;
@@ -43,7 +44,13 @@ async function runTests() {
     createdPlant = await plantService.createPlant(testPlantData, testUser.uuid);
 
     assert(createdPlant.name === testPlantData.name, "Plant name mismatch");
-    assert(createdPlant.plantType === testPlantData.plantType, "Plant type mismatch");
+    assert(createdPlant.commonName === testPlantData.commonName, "Plant commonName mismatch");
+    assert(createdPlant.category === testPlantData.category, "Category mismatch");
+    assert(createdPlant.watering, "Plant watering not saved");
+    assert(
+      createdPlant.watering.hoursSinceLastWatering === 5,
+      "Watering hoursSinceLastWatering mismatch",
+    );
     assert(createdPlant.uuid, "Plant UUID not generated");
     assert(
       createdPlant.userInternalId === testUser.internalId,

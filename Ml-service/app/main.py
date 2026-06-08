@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime, timezone
+from typing import Optional
 import time
+
+import traceback
 
 from app.model import predict
 from app.util import load_image_from_bytes, preprocess_image
@@ -15,23 +18,34 @@ class PredictRequest(BaseModel):
     user_id: str
     plant_id: str
     key: str
+    expected_plant: Optional[str] = None
 
 
 # Request schema for general detection (no user/plant context)
 class GeneralPredictRequest(BaseModel):
     key: str
 
+@app.get("/")
+def welcome():
+    return {
+        "message": "Welcome to the Plant Disease Detection API 🚀",
+        "status": "running",
+        "version": "1.0.0"
+    }
 
 @app.post("/predict")
 async def predict_disease(data: PredictRequest):
+
     try:
+        print(f"Received prediction request for user_id={data.user_id}, plant_id={data.plant_id}, expected_plant={data.expected_plant}")
+        
         image_bytes = get_file_by_key(data.key)
 
         image = load_image_from_bytes(image_bytes)
         image = preprocess_image(image)
 
         start = time.time()
-        result = predict(image, top_k=5)
+        result = predict(image, top_k=5, expected_plant=data.expected_plant)
         inference_ms = round((time.time() - start) * 1000, 2)
 
         return {
@@ -52,12 +66,12 @@ async def predict_disease(data: PredictRequest):
         }
 
     except Exception as e:
+        print(e)
+        traceback.print_exc()
         return {
             "success": False,
             "error": str(e)
         }
-
-
 @app.post("/predict/general")
 async def predict_general(data: GeneralPredictRequest):
     try:
@@ -86,6 +100,7 @@ async def predict_general(data: GeneralPredictRequest):
         }
 
     except Exception as e:
+        traceback.print_exc()
         return {
             "success": False,
             "error": str(e)

@@ -8,13 +8,16 @@ FastAPI microservice for plant disease classification using a TensorFlow/Keras e
 
 ### `POST /predict`
 
+Plant-specific detection. Filters top-k predictions to only the user's plant type.
+
 **Request body:**
 
 ```json
 {
   "user_id": "u123",
   "plant_id": "p456",
-  "key": "plants/user_u123/images/leaf.jpg"
+  "key": "plants/user_uuid/plant_uuid/images/leaf.jpg",
+  "expected_plant": "Tomato"
 }
 ```
 
@@ -23,26 +26,45 @@ FastAPI microservice for plant disease classification using a TensorFlow/Keras e
 | `user_id` | `string` | User identifier |
 | `plant_id` | `string` | Plant identifier |
 | `key` | `string` | S3 object key (Storj) pointing to the plant image |
+| `expected_plant` | `string` | (optional) Plant name to narrow predictions |
 
-**Response:**
+### `POST /predict/general`
+
+No-user detection. Returns global top-k across all 88 classes (no plant filtering).
+
+**Request body:**
+
+```json
+{
+  "key": "general/images/12345-leaf.jpg"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `key` | `string` | S3 object key pointing to the uploaded image |
+
+**Response (both endpoints use the same format):**
 
 ```json
 {
   "success": true,
   "user_id": "u123",
   "plant_id": "p456",
-  "image_key": "plants/user_u123/images/leaf.jpg",
+  "image_key": "plants/user_uuid/plant_uuid/images/leaf.jpg",
   "prediction": {
-    "class": "Tomato early blight",
-    "plant": "Tomato",
-    "disease": "early blight",
+    "class": {
+      "plant": "Tomato",
+      "disease": "early blight",
+      "disease_type": "fungal"
+    },
     "confidence": 0.87,
     "top_k": [
-      { "class": "Tomato early blight", "plant": "Tomato", "disease": "early blight", "confidence": 0.87 },
-      { "class": "Tomato late blight",  "plant": "Tomato", "disease": "late blight",  "confidence": 0.06 },
-      { "class": "Tomato healthy",      "plant": "Tomato", "disease": "healthy",      "confidence": 0.03 },
-      { "class": "Tomato leaf mold",    "plant": "Tomato", "disease": "leaf mold",    "confidence": 0.02 },
-      { "class": "Tomato target spot",  "plant": "Tomato", "disease": "target spot",  "confidence": 0.01 }
+      { "class": { "plant": "Tomato", "disease": "early blight", "disease_type": "fungal" }, "confidence": 0.87 },
+      { "class": { "plant": "Tomato", "disease": "late blight", "disease_type": "fungal" }, "confidence": 0.06 },
+      { "class": { "plant": "Tomato", "disease": "healthy", "disease_type": "healthy" }, "confidence": 0.03 },
+      { "class": { "plant": "Tomato", "disease": "leaf mold", "disease_type": "fungal" }, "confidence": 0.02 },
+      { "class": { "plant": "Tomato", "disease": "target spot", "disease_type": "fungal" }, "confidence": 0.01 }
     ]
   },
   "model": {
@@ -72,8 +94,8 @@ FastAPI microservice for plant disease classification using a TensorFlow/Keras e
 
 1. Image fetched from S3 (Storj) via the provided `key`
 2. Converted to RGB (3 channels)
-3. Resized to **224×224** pixels
-4. Pixel values normalized to `[0, 1]` (divided by 255)
+3. Resized to **224×224** pixels using **NEAREST-neighbor interpolation** (matches training)
+4. Converted to `float32` and normalized to `[0, 1]` (divided by 255)
 5. Batch dimension added → final shape `(1, 224, 224, 3)`
 
 ---
@@ -85,11 +107,11 @@ FastAPI microservice for plant disease classification using a TensorFlow/Keras e
 | Architecture | 3-member ensemble CNN |
 | Framework | TensorFlow 2.16 / Keras 3.3 |
 | Input size | `(1, 224, 224, 3)` RGB |
-| Output | 86-class softmax (per branch), combined via weighted sum → averaged |
+| Output | 88-class softmax (per branch), combined via weighted sum `[0.2, 0.3, 0.5]` |
 
 ---
 
-## Supported classes (86)
+## Supported classes (88)
 
 ### Apple
 - Apple black rot, Apple healthy, Apple rust, Apple scab

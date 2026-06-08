@@ -1,15 +1,17 @@
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
+import re
 
 MODEL_PATH = Path(__file__).resolve().parent.parent / 'models' / 'plant.keras'
 
 
 
+ENSEMBLE_WEIGHTS = [0.2, 0.3, 0.5]  # EfficientNet, ResNet, MobileNet — matches training
+TEMPERATURE = 2.0  # Softmax temperature scaling for calibrated confidence values
+
 def weighted_sum(inputs):
-    # fallback implementation (safe version)
-    # NOTE: real logic may differ depending on training
-    return tf.add_n(inputs)
+    return tf.add_n([w * t for w, t in zip(ENSEMBLE_WEIGHTS, inputs)])
 
 tf.keras.config.enable_unsafe_deserialization()
 
@@ -156,30 +158,105 @@ def format_label(label):
     }
 
 
-def predict(image_array, top_k=5):
+def _normalize_plant_name(value):
+    if not value:
+        return ""
+
+    value = value.lower()
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    value = re.sub(r"\b(plant|crop|tree|flower)\b", " ", value)
+    value = " ".join(value.split())
+    value = value.replace("gauva", "guava")
+    return value
+
+
+def _plant_matches(label, expected_plant):
+    if not expected_plant:
+        return False
+
+    label_plant = _normalize_plant_name(format_label(label)["plant"])
+    expected = _normalize_plant_name(expected_plant)
+    label_tokens = set(label_plant.split())
+    expected_tokens = set(expected.split())
+
+    return bool(
+        label_plant
+        and expected
+        and (
+            label_plant == expected
+            or label_plant in expected
+            or expected in label_plant
+            or label_tokens == expected_tokens
+            or label_tokens.issubset(expected_tokens)
+        )
+    )
+
+
+def _format_ranked_predictions(predictions, indices, top_k):
+    k = max(1, int(top_k))
+    ranked_indices = sorted(indices, key=lambda idx: predictions[int(idx)], reverse=True)[:k]
+
+    return [
+        {
+            "class": format_label(CLASS_NAMES[int(idx)]),
+            "confidence": round(float(predictions[int(idx)]), 4)
+        }
+        for idx in ranked_indices
+    ]
+
+
+def predict(image_array, top_k=5, expected_plant=None):
     raw = model.predict(image_array, verbose=0)
 
-    # 3-member ensemble: each branch ends with softmax, weighted_sum adds them → range [0, 3].
-    # Divide by 3 for probabilities, convert to numpy (handles tf.Tensor/np.ndarray), clip to [0, 1]
-    predictions = np.asarray(raw[0] / 3.0)
-    predictions = np.clip(predictions, 0, 1)
+    # Each branch ends with softmax, weighted_sum produces weighted avg → range [0, 1]
+    predictions = np.asarray(raw[0])
+    predictions = np.clip(predictions, 1e-10, 1)
 
-    # determine top-k indices and build a readable list
-    k = max(1, int(top_k))
-    top_indices = np.argsort(predictions)[-k:][::-1]
-    top_list = []
-    for idx in top_indices:
-        label = CLASS_NAMES[int(idx)]
-        top_list.append({
-            "class": format_label(label),
-            "confidence": float(predictions[int(idx)])
-        })
+    # Temperature scaling: soften overconfident softmax probabilities
+    logits = np.log(predictions)
+    scaled = np.exp(logits / TEMPERATURE)
+    predictions = scaled / np.sum(scaled)
 
-    predicted_class = int(top_indices[0])
+    all_indices = list(range(len(CLASS_NAMES)))
+    global_top_list = _format_ranked_predictions(predictions, all_indices, top_k)
+
+    matching_indices = [
+        idx for idx, label in enumerate(CLASS_NAMES)
+        if _plant_matches(label, expected_plant)
+    ]
+
+    ranked_indices = matching_indices or all_indices
+    top_list = _format_ranked_predictions(predictions, ranked_indices, top_k)
+    predicted_class = next(
+        idx for idx in ranked_indices
+        if format_label(CLASS_NAMES[int(idx)]) == top_list[0]["class"]
+    )
     raw_label = CLASS_NAMES[predicted_class]
 
-    return {
+    # Uncertainty metrics
+    sorted_preds = np.sort(predictions)[::-1]
+    confidence_delta = round(float(sorted_preds[0] - sorted_preds[1]), 4)
+    eps = 1e-10
+    entropy = round(float(-np.sum(predictions * np.log(predictions + eps))), 4)
+
+    result = {
         "class": format_label(raw_label),
-        "confidence": float(predictions[predicted_class]),
+        "confidence": round(float(predictions[predicted_class]), 4),
+        "confidence_delta": confidence_delta,
+        "entropy": entropy,
         "top_k": top_list
     }
+
+    if expected_plant:
+        result["expected_plant"] = expected_plant
+        if matching_indices:
+            result["scope"] = "plant_constrained"
+            result["global_prediction"] = global_top_list[0]
+            result["global_top_k"] = global_top_list
+        else:
+            result["scope"] = "global"
+            result["plant_filter_warning"] = (
+                f"No supported model class matched expected plant '{expected_plant}'."
+            )
+
+    return result

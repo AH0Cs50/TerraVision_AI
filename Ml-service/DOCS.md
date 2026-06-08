@@ -6,7 +6,7 @@ A FastAPI microservice that classifies plant diseases from leaf images using a C
 
 - **Model:** 3-member ensemble CNN (`plant.keras`, ~1.04 GB)
 - **Input size:** 224×224 RGB pixels
-- **Output:** 80 plant-disease classes
+- **Output:** 88 plant-disease classes
 
 ---
 
@@ -14,13 +14,16 @@ A FastAPI microservice that classifies plant diseases from leaf images using a C
 
 ### `POST /predict`
 
+Plant-specific detection. Filters predictions to only the user's plant type.
+
 #### Request Body
 
 ```json
 {
   "user_id": "u123",
   "plant_id": "p456",
-  "key": "plant/user_u123_plant_p456/images/leaf.png"
+  "key": "plants/user_uuid/plant_uuid/images/leaf.png",
+  "expected_plant": "Tomato"
 }
 ```
 
@@ -29,8 +32,25 @@ A FastAPI microservice that classifies plant diseases from leaf images using a C
 | `user_id` | string | Unique identifier for the user |
 | `plant_id` | string | Unique identifier for the plant |
 | `key` | string | S3 object key pointing to the uploaded image |
+| `expected_plant` | string | (optional) Plant name for narrowing top predictions |
 
-The image is fetched from S3 (Storj) using the provided `key`, decoded, resized to 224×224, normalized to [0, 1], and passed to the model.
+### `POST /predict/general`
+
+No-user detection. No plant filtering — returns top global predictions across all 88 classes.
+
+#### Request Body
+
+```json
+{
+  "key": "general/images/12345-leaf.png"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `key` | string | S3 object key pointing to the uploaded image |
+
+The image is fetched from S3 (Storj) using the provided `key`, decoded, resized to 224×224 via **NEAREST-neighbor interpolation** (matching training pipeline), normalized to [0, 1] as float32, and passed to the model.
 
 #### Success Response
 
@@ -79,13 +99,13 @@ The image is fetched from S3 (Storj) using the provided `key`, decoded, resized 
 ## Image Preprocessing
 
 1. Convert to RGB (3 channels)
-2. Resize to 224×224 pixels
-3. Normalize pixel values to `[0, 1]` (divide by 255.0)
+2. Resize to 224×224 pixels using **NEAREST-neighbor interpolation** (must match training pipeline)
+3. Convert to `float32` and normalize pixel values to `[0, 1]` (divide by 255.0)
 4. Add batch dimension → shape `(1, 224, 224, 3)`
 
 ---
 
-## Supported Classes (80)
+## Supported Classes (88)
 
 ### Apple
 | Class | Disease |
@@ -301,5 +321,5 @@ boto3
 
 ## Notes
 
-- The model is a **3-member ensemble** — each sub-model outputs softmax probabilities (range [0, 1]), summed via a custom `weighted_sum` layer (range [0, 3]), then divided by 3 and clipped to produce final confidence values.
+- The model is a **3-member ensemble** (EfficientNetV2B0, ResNet101V2, MobileNetV2) — each sub-model outputs softmax probabilities (range [0, 1]), combined via a custom `weighted_sum` layer with weights `[0.2, 0.3, 0.5]` (range [0, 1]), then clipped to produce final confidence values.
 - Images are fetched from an **S3-compatible object store** (Storj) configured via `config.env`.
