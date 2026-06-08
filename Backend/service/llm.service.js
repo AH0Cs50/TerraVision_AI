@@ -27,7 +27,7 @@ export function fillPrompt(key, params = {}) {
   });
 }
 
-const MODEL = "gemini-2.5-flash";
+const MODEL_PRIORITY = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
 /**
  * @description Wraps the Google GenAI SDK to provide text-only and
@@ -48,13 +48,15 @@ export default class LLMService {
    * @throws {RouteError} If response text is empty
    */
   #processResponse(response) {
-    const text = response?.text;
+    let text = response?.text;
     if (!text) {
       throw new RouteError(
-        HttpStatusCode.InternalServerError,
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
         "Invalid LLM response: empty text",
       );
     }
+
+    text = text.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
 
     if (text.startsWith("{") || text.startsWith("[")) {
       try {
@@ -65,6 +67,51 @@ export default class LLMService {
     }
 
     return text;
+  }
+
+  /**
+   * @private
+   * @description Checks whether the error from Google GenAI is retryable
+   * (rate limit / temporarily unavailable) vs a permanent failure.
+   * @param {Error} error - The caught error
+   * @returns {boolean} True if retryable (429 or 503)
+   */
+  #isRetryableError(error) {
+    try {
+      const parsed = JSON.parse(error.message);
+      const code = parsed?.error?.code;
+      return code === 429 || code === 503;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * @private
+   * @description Attempts to generate content using each model in priority
+   * order, falling back to the next model on 429/503 errors. Throws if all
+   * models fail.
+   * @param {Array} contents - The contents payload for the model
+   * @returns {Promise<Object>} Raw GenAI response
+   * @throws {RouteError} If all models are unavailable
+   */
+  async #generateWithFallback(contents) {
+    const errors = [];
+
+    for (const model of MODEL_PRIORITY) {
+      try {
+        return await this.ai.models.generateContent({ model, contents });
+      } catch (error) {
+        if (!this.#isRetryableError(error)) throw error;
+        errors.push(`${model}: ${error.message}`);
+      }
+    }
+
+    throw new RouteError(
+      HttpStatusCode.SERVICE_UNAVAILABLE,
+      "All Gemini models are currently unavailable. Please try again later.",
+      errors.join(" | "),
+    );
   }
 
   /**
@@ -82,17 +129,14 @@ export default class LLMService {
           ? prompt.contents
           : prompt;
 
-      const response = await this.ai.models.generateContent({
-        model: MODEL,
-        contents,
-      });
+      const response = await this.#generateWithFallback(contents);
 
       return this.#processResponse(response);
     } catch (error) {
       if (error instanceof RouteError) throw error;
 
       throw new RouteError(
-        HttpStatusCode.InternalServerError,
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
         "Failed to generate response from LLM service",
         error.message,
       );
@@ -110,25 +154,22 @@ export default class LLMService {
    */
   async generateResponseWithImage(prompt, imageBase64, mimeType) {
     try {
-      const response = await this.ai.models.generateContent({
-        model: MODEL,
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType, data: imageBase64 } },
-            ],
-          },
-        ],
-      });
+      const response = await this.#generateWithFallback([
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType, data: imageBase64 } },
+          ],
+        },
+      ]);
 
       return this.#processResponse(response);
     } catch (error) {
       if (error instanceof RouteError) throw error;
 
       throw new RouteError(
-        HttpStatusCode.InternalServerError,
+        HttpStatusCode.INTERNAL_SERVER_ERROR,
         "Failed to generate response from LLM with image",
         error.message,
       );
