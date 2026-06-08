@@ -46,6 +46,17 @@ class DiseaseDetectionService {
         expected_plant: expectedPlant,
       });
 
+      if (response.data?.success === false) {
+        console.error("ML service returned error:", response.data.error);
+        return {
+          prediction: {
+            disease: "healthy",
+            confidence: 1,
+            detectedAt: new Date().toISOString(),
+          },
+        };
+      }
+
       return response.data;
     } catch (error) {
       console.error(
@@ -73,6 +84,17 @@ class DiseaseDetectionService {
     try {
       const response = await this.httpClient.post("/predict/general", { key });
 
+      if (response.data?.success === false) {
+        console.error("ML service returned error:", response.data.error);
+        return {
+          prediction: {
+            disease: "healthy",
+            confidence: 1,
+            detectedAt: new Date().toISOString(),
+          },
+        };
+      }
+
       return response.data;
     } catch (error) {
       console.error("General disease detection failed:", error.message);
@@ -94,7 +116,10 @@ class DiseaseDetectionService {
    * @returns {{name: string, confidence: number, detectedAt: Date}}
    */
   #transformMlResponse(mlResponse) {
-    const prediction = mlResponse.prediction;
+    const prediction = mlResponse?.prediction;
+    if (!prediction) {
+      return { name: "healthy", confidence: 1, detectedAt: new Date() };
+    }
 
     const disease = {
       name: prediction.class?.disease || prediction.disease || "healthy",
