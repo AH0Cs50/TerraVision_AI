@@ -118,7 +118,8 @@ export class PlantTaskCareManager {
    */
   async addTaskToPlant(plantUUID, taskData) {
     const task = createPlantTaskModel({ ...taskData, createdAt: new Date() });
-    return await this.repo.pushToActive(plantUUID, task);
+    const careState = await this.repo.pushToActive(plantUUID, task);
+    return { task, activeTasks: careState.activeTasks };
   }
 
   /**
@@ -148,7 +149,8 @@ export class PlantTaskCareManager {
       { taskId, taskType: completedTask.type },
     );
 
-    return await this.repo.findByPlantUUID(plantUUID);
+    const updated = await this.repo.findByPlantUUID(plantUUID);
+    return { task: completedTask, activeTasks: updated.activeTasks, completedTasks: updated.completedTasks };
   }
 
   /**
@@ -171,7 +173,8 @@ export class PlantTaskCareManager {
       { taskId, taskType: found.task.type, cancelled: true },
     );
 
-    return await this.repo.findByPlantUUID(plantUUID);
+    const updated = await this.repo.findByPlantUUID(plantUUID);
+    return { task: found.task, activeTasks: updated.activeTasks };
   }
 
   /**
@@ -202,7 +205,8 @@ export class PlantTaskCareManager {
       { taskId, taskType: reopenedTask.type, reopened: true },
     );
 
-    return await this.repo.findByPlantUUID(plantUUID);
+    const updated = await this.repo.findByPlantUUID(plantUUID);
+    return { task: reopenedTask, activeTasks: updated.activeTasks, completedTasks: updated.completedTasks };
   }
 
   /**
@@ -235,7 +239,8 @@ export class PlantTaskCareManager {
       { count: tasks.length, generatedBy: "ai" },
     );
 
-    return await this.repo.findByPlantUUID(plantUUID);
+    const updated = await this.repo.findByPlantUUID(plantUUID);
+    return { tasks, status: updated.status };
   }
 
   /**
@@ -326,7 +331,8 @@ export class PlantTaskCareManager {
       );
     }
 
-    return await this.repo.findByPlantUUID(plantUUID);
+    const updated = await this.repo.findByPlantUUID(plantUUID);
+    return { completedTasks: updated.completedTasks };
   }
 }
 

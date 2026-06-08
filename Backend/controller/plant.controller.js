@@ -53,7 +53,7 @@ export async function createPlant(req, res, next) {
     }
     const plant = await plantService.createPlant(parsed.data, req.user.uuid);
 
-    await plantCareActionLogger.logPlantCreated(plant.uuid, req.user, { plantName: plant.name });
+    await plantCareActionLogger.logPlantCreated(plant.uuid, req.user, "Plant created", { plantName: plant.name });
 
     return res
       .status(HttpStatusCodes.CREATED)
@@ -97,7 +97,7 @@ export async function uploadPlantPhoto(req, res, next) {
 
     await plantService.addImage(id, result.key);
 
-    await plantCareActionLogger.logImageUploaded(id, req.user, { fileName, s3Key: result.key });
+    await plantCareActionLogger.logImageUploaded(id, req.user, "Image uploaded", { fileName, s3Key: result.key });
 
     return res
       .status(HttpStatusCodes.OK)
@@ -143,14 +143,15 @@ export async function detectPlantDisease(req, res, next) {
       mlResponse,
     );
 
-    await plantCareActionLogger.logDiseaseDetected(id, req.user, {
+    await plantCareActionLogger.logDiseaseDetected(id, req.user, "Disease detected", {
       disease: mlResponse.prediction?.disease || "unknown",
       confidence: mlResponse.prediction?.confidence,
     });
 
+    const { disease, diseaseHistory } = updatedPlant;
     return res
       .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Disease detection completed", updatedPlant));
+      .json(HttpResponse.success("Disease detection completed", { disease, diseaseHistory }));
   } catch (error) {
     next(error);
   }
@@ -179,7 +180,7 @@ export async function extractPlantDataFromImage(req, res, next) {
       key,
     );
 
-    await plantCareActionLogger.logPlantDataExtracted(id, req.user, { s3Key: key });
+    await plantCareActionLogger.logPlantDataExtracted(id, req.user, "Plant data extracted from image", { s3Key: key });
 
     return res
       .status(HttpStatusCodes.OK)
@@ -268,7 +269,7 @@ export async function removePlantImage(req, res, next) {
     await s3CloudService.deleteFile(fullKey);
     await plantService.removeImage(id, fullKey);
 
-    await plantCareActionLogger.logImageRemoved(id, req.user, { key });
+    await plantCareActionLogger.logImageRemoved(id, req.user, "Image removed", { key });
 
     return res
       .status(HttpStatusCodes.OK)
@@ -295,7 +296,7 @@ export async function updatePlant(req, res, next) {
 
     const updated = await plantService.updatePlant(id, parsed.data);
 
-    await plantCareActionLogger.logPlantUpdated(id, req.user, { updateFields: Object.keys(parsed.data) });
+    await plantCareActionLogger.logPlantUpdated(id, req.user, "Plant updated", { updateFields: Object.keys(parsed.data) });
 
     return res
       .status(HttpStatusCodes.OK)
@@ -321,7 +322,7 @@ export async function deletePlant(req, res, next) {
 
     const plantName = plant.name;
 
-    await plantCareActionLogger.logPlantDeleted(id, req.user, { plantName });
+    await plantCareActionLogger.logPlantDeleted(id, req.user, "Plant deleted", { plantName });
     await actionLogRepo.deleteByPlantUUID(id);
     await plantCareStateService.deleteByPlantUUID(id);
     await plantService.deletePlant(id);

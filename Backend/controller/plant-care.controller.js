@@ -28,7 +28,7 @@ export async function analyzePlant(req, res, next) {
       { method: "analyze", engineResult },
     );
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant analysis completed", careState));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant analysis completed", { status: careState.status }));
   } catch (error) {
     next(error);
   }
@@ -125,9 +125,9 @@ export async function addTask(req, res, next) {
 
     const result = await plantTaskCareManager.addTaskToPlant(plantUUID, taskData);
 
-    await plantCareActionLogger.logTaskAdded(plantUUID, req.user, { taskType: taskData.type, title: taskData.title });
+    await plantCareActionLogger.logTaskAdded(plantUUID, req.user, "Task added", { taskType: taskData.type, title: taskData.title });
 
-    return res.status(HttpStatusCodes.CREATED).json(HttpResponse.success("Task added", result, HttpStatusCodes.CREATED));
+    return res.status(HttpStatusCodes.CREATED).json(HttpResponse.success("Task added", result.activeTasks, HttpStatusCodes.CREATED));
   } catch (error) {
     next(error);
   }
@@ -231,7 +231,7 @@ export async function updateLight(req, res, next) {
     await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
 
     const { lightCondition } = req.body;
-    await plantCareActionLogger.logLightChanged(plantUUID, req.user, { lightCondition });
+    await plantCareActionLogger.logLightChanged(plantUUID, req.user, "Light conditions changed", { lightCondition });
 
     return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Light condition updated"));
   } catch (error) {
@@ -325,7 +325,7 @@ export async function removeCompletedTasks(req, res, next) {
       return res.status(HttpStatusCodes.NOT_FOUND).json(HttpResponse.error("Care state not found", HttpStatusCodes.NOT_FOUND));
     }
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Completed tasks archived", result));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Completed tasks archived", result.completedTasks));
   } catch (error) {
     next(error);
   }
