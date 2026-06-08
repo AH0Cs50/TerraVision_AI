@@ -2,6 +2,10 @@ import nodemailer from "nodemailer";
 
 import emailConfig from "../../config/config.js";
 
+/**
+ * @description Sends transactional emails (verification, password reset)
+ * using Nodemailer with pre-configured SMTP transport from config.
+ */
 class EmailService {
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -16,9 +20,11 @@ class EmailService {
     });
   }
 
-  // =========================================
-  // Verify Email
-  // =========================================
+  /**
+   * @description Sends an email verification message with a clickable link.
+   * @param {string} userEmail - Recipient email address
+   * @param {string} token - Verification token
+   */
   async sendVerifyEmail(userEmail, token) {
     const verifyLink =
       `${process.env.APP_URL}/api/auth/verify-email?token=${token}`;
@@ -55,9 +61,11 @@ class EmailService {
     });
   }
 
-  // =========================================
-  // Reset Password Email
-  // =========================================
+  /**
+   * @description Sends a password reset email with a clickable link.
+   * @param {string} userEmail - Recipient email address
+   * @param {string} token - Reset token
+   */
   async sendResetPasswordEmail(userEmail, token) {
     const resetLink =
       `${process.env.APP_URL}/reset-password?token=${token}`;

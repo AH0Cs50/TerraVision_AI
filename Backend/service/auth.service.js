@@ -1,6 +1,11 @@
 import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 
+/**
+ * @description Handles user authentication operations including signup, login,
+ * logout, and token refresh. Delegates token management, password hashing,
+ * and user persistence to injected dependencies.
+ */
 class AuthService {
   constructor(tokenService, userService, passwordHasher) {
     this.tokenService = tokenService;
@@ -8,9 +13,17 @@ class AuthService {
     this.passwordHasher = passwordHasher;
   }
 
-  // =========================
-  // SIGNUP
-  // =========================
+  /**
+   * @description Registers a new user. Checks for duplicate email, hashes the
+   * password, creates the user, and returns JWT token pair.
+   * @param {Object} params
+   * @param {string} params.name - Display name
+   * @param {string} params.email - User email (used as unique identifier)
+   * @param {string} params.password - Raw password (hashed before storage)
+   * @param {string} [params.location] - Optional user location
+   * @returns {Promise<{user: {uuid: string, name: string, email: string, location: string}, tokens: {accessToken: string, refreshToken: string}}>}
+   * @throws {RouteError} CONFLICT if email already exists
+   */
   async signup({ name, email, password, location }) {
     let existingUser;
     try {
@@ -55,9 +68,15 @@ class AuthService {
     };
   }
 
-  // =========================
-  // LOGIN
-  // =========================
+  /**
+   * @description Authenticates a user by email and password. Returns JWT
+   * token pair on success.
+   * @param {Object} params
+   * @param {string} params.email - User email
+   * @param {string} params.password - Raw password
+   * @returns {Promise<{user: {uuid: string, name: string, email: string}, tokens: {accessToken: string, refreshToken: string}}>}
+   * @throws {RouteError} UNAUTHORIZED if credentials are invalid
+   */
   async login({ email, password }) {
     const user = await this.userService.findByEmail(email);
 
@@ -87,9 +106,12 @@ class AuthService {
     };
   }
 
-  // =========================
-  // LOGOUT
-  // =========================
+  /**
+   * @description Logs out a user by clearing their stored refresh token.
+   * @param {string} userUUID - UUID of the user to log out
+   * @returns {Promise<{message: string}>}
+   * @throws {RouteError} NOT_FOUND if user does not exist
+   */
   async logout(userUUID) {
     const user = await this.userService.findByUUID(userUUID);
     await this.userService.clearRefreshToken(user.internalId);
@@ -99,9 +121,13 @@ class AuthService {
     };
   }
 
-  // =========================
-  // REFRESH TOKEN
-  // =========================
+  /**
+   * @description Verifies a refresh token, validates it against the stored
+   * value, and issues a new JWT token pair (token rotation).
+   * @param {string} refreshToken - The refresh token to validate and rotate
+   * @returns {Promise<{accessToken: string, refreshToken: string}>}
+   * @throws {RouteError} UNAUTHORIZED if token is invalid or does not match
+   */
   async refresh(refreshToken) {
     const decoded = this.tokenService.verifyRefreshToken(refreshToken);
 

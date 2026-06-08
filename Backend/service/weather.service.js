@@ -1,21 +1,34 @@
 import axios from "axios";
 import { WEATHER_API_KEY } from "../config/config.js";
 
+/**
+ * @description Fetches live weather data from the OpenWeatherMap API.
+ * Supports city name and geographic coordinates as location inputs.
+ * Transforms the raw API response into a structured, client-friendly format
+ * with temperatures converted from Kelvin to Celsius.
+ */
 export default class WeatherService {
   static BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 
-  // =========================
-  // Public Entry Point
-  // =========================
+  /**
+   * @description Public entry point. Resolves the location, fetches raw
+   * weather data, and transforms it into a normalised format.
+   * @param {Object} location - Location object with `city` or `coordinates`
+   * @returns {Promise<Object>} Transformed weather data
+   */
   async getWeather(location) {
     const request = this.resolveLocation(location);
     const rawData = await this.fetchWeather(request);
     return WeatherService.transform(rawData);
   }
 
-  // =========================
-  // Resolve Location Strategy
-  // =========================
+  /**
+   * @description Determines whether to query by city name or coordinates
+   * based on the input shape.
+   * @param {Object} location - Location input
+   * @returns {{type: string, value: string|{lat: number, lon: number}}}
+   * @throws {Error} If neither city nor coordinates are provided
+   */
   resolveLocation(location) {
     if (!location || typeof location !== "object") {
       throw new Error("Location must be an object");
@@ -34,9 +47,12 @@ export default class WeatherService {
     throw new Error("Location must contain city or coordinates");
   }
 
-  // =========================
-  // API Dispatcher
-  // =========================
+  /**
+   * @description Dispatches the weather API request based on the resolved
+   * location type.
+   * @param {{type: string, value: *}} request - Resolved location request
+   * @returns {Promise<Object>} Raw API response
+   */
   async fetchWeather(request) {
     switch (request.type) {
       case "city":
@@ -50,9 +66,11 @@ export default class WeatherService {
     }
   }
 
-  // =========================
-  // City API Call
-  // =========================
+  /**
+   * @description Fetches weather data for a given city name.
+   * @param {string} city - City name
+   * @returns {Promise<Object>} Raw API response
+   */
   static async fetchByCity(city) {
     const response = await axios.get(this.BASE_URL, {
       params: {
@@ -64,9 +82,12 @@ export default class WeatherService {
     return response.data;
   }
 
-  // =========================
-  // Coordinates API Call
-  // =========================
+  /**
+   * @description Fetches weather data for a set of geographic coordinates.
+   * @param {{lat: number, lon: number}} coordinates - Latitude and longitude
+   * @returns {Promise<Object>} Raw API response
+   * @throws {Error} If coordinates are invalid
+   */
   static async fetchByCoordinates(coordinates) {
     const { lat, lon } = coordinates;
 
@@ -88,16 +109,23 @@ export default class WeatherService {
     return response.data;
   }
 
-  // =========================
-  // Helpers
-  // =========================
+  /**
+   * @description Converts a temperature from Kelvin to Celsius, rounded
+   * to two decimal places.
+   * @param {number|null} k - Temperature in Kelvin
+   * @returns {number|null} Temperature in Celsius, or null
+   */
   static kelvinToCelsius(k) {
     return k != null ? +(k - 273.15).toFixed(2) : null;
   }
 
-  // =========================
-  // Transformer (Normalize API Response)
-  // =========================
+  /**
+   * @description Transforms the raw OpenWeatherMap API response into a
+   * normalised structure with location, weather, temperature (in °C),
+   * humidity, pressure, wind, clouds, and visibility fields.
+   * @param {Object} data - Raw API response
+   * @returns {Object} Normalised weather object
+   */
   static transform(data) {
     return {
       location: {
@@ -139,9 +167,19 @@ export default class WeatherService {
   }
 }
 
+/**
+ * @description Adds human-readable category classifications to already-
+ * transformed weather data. Provides temperature, humidity, visibility,
+ * and wind categories, plus light condition prediction and engine-friendly
+ * output formatting.
+ */
 export class WeatherDescriber {
-  // Takes already-transformed weather (output of WeatherService.getWeather())
-  // and adds human-readable category classifications.
+  /**
+   * @description Adds categorical labels (e.g. hot, dry, excellent) to
+   * the numeric fields of previously transformed weather data.
+   * @param {Object} transformed - Output from WeatherService.transform()
+   * @returns {Object} Weather data with added category fields
+   */
   weatherDescribe(transformed) {
     const temp = transformed.temperature;
     const humidity = transformed.humidity;
@@ -192,7 +230,13 @@ export class WeatherDescriber {
     };
   }
 
-  // this function take the raw weather api response and change some unclear fields to clear text value based on API DOCS
+  /**
+   * @description Takes the raw OpenWeatherMap API response, transforms it,
+   * and adds descriptive categories. Also resolves the weather condition
+   * ID group (e.g. Thunderstorm, Rain, Clear).
+   * @param {Object} weatherResponse - Raw API response
+   * @returns {Promise<Object>} Fully described weather object
+   */
   async weatherApiDescribe(weatherResponse) {
     const normalized = WeatherService.transform(weatherResponse);
 
@@ -280,7 +324,13 @@ export class WeatherDescriber {
       timestamp: normalized.timestamp,
     };
   }
-  // predict the light condition based on the weather api response and the rules defined in the engine and return the light condition as string ( intense , full_sun , partial , indirect , shade )
+  /**
+   * @description Predicts the light condition from the raw API response.
+   * Returns one of: intense, full_sun, partial, indirect, shade.
+   * Based on cloud cover percentage, weather main category, and day/night.
+   * @param {Object} weatherResponse - Raw API response
+   * @returns {Promise<string>} Light condition label
+   */
   async weatherLightDescribe(weatherResponse) {
     const clouds = weatherResponse.clouds?.all;
     const icon = weatherResponse.weather?.[0]?.icon;
@@ -305,7 +355,13 @@ export class WeatherDescriber {
     if (clouds < 80) return "indirect";
     return "shade";
   }
-  // get the weather description for the engine based on the rules defined in the engine and return the weather description as object that contain the temperature , humidity , condition and light
+  /**
+   * @description Produces a flat weather object in the format expected by
+   * the rule-based analysis engine. Includes temperature, humidity,
+   * condition, light, and windSpeed.
+   * @param {Object} weatherDescription - Output from weatherDescribe()
+   * @returns {Promise<{temperature: number, humidity: number, condition: string, light: string, windSpeed: number}>}
+   */
   async weatherDescribeForEngine(weatherDescription) {
     const conditionMap = {
       Thunderstorm: "storm",
