@@ -682,20 +682,18 @@ HTTP/1.1 200 OK
 {
   "success": true,
   "data": {
-    "image_key": "plants/user-uuid/plant-uuid/images/1712345678-tomato_leaf.jpg",
-    "prediction": {
-      "class": {
-        "plant": "Tomato",
-        "disease": "early blight",
-        "disease_type": "fungal"
-      },
+    "disease": {
+      "name": "early blight",
       "confidence": 0.94,
-      "top_k": [
-        { "class": { "plant": "Tomato", "disease": "early blight", "disease_type": "fungal" }, "confidence": 0.94 },
-        { "class": { "plant": "Tomato", "disease": "late blight", "disease_type": "fungal" }, "confidence": 0.03 },
-        { "class": { "plant": "Tomato", "disease": "healthy", "disease_type": "healthy" }, "confidence": 0.02 }
-      ]
-    }
+      "detectedAt": "2026-03-15T12:00:00Z"
+    },
+    "diseaseHistory": [
+      {
+        "name": "early blight",
+        "confidence": 0.94,
+        "detectedAt": "2026-03-15T12:00:00Z"
+      }
+    ]
   }
 }
 ```
@@ -798,16 +796,27 @@ HTTP/1.1 200 OK
 ### Plant Care Endpoints
 
 ```
-POST   /api/v1/plants/:id/analyze       # Run rule engine analysis
-GET    /api/v1/plants/:id/care-state    # Get current care state
-GET    /api/v1/plants/:id/logs          # Get recent action logs (?last=5)
-POST   /api/v1/plants/:id/logs          # Add manual action log
-GET    /api/v1/plants/:id/tasks         # Get pending tasks
-POST   /api/v1/plants/:id/tasks         # Add manual task
-PATCH  /api/v1/plants/:id/tasks/complete # Mark task complete (auto-logs)
-DELETE /api/v1/plants/:id/tasks/:taskId  # Delete a specific task
-POST   /api/v1/plants/:id/ai-insights   # Generate AI insights
-POST   /api/v1/plants/:id/ai/question   # Ask AI about plant care
+POST   /api/v1/plants/:id/analyze             # Run rule engine analysis
+GET    /api/v1/plants/:id/care-state          # Get current care state
+GET    /api/v1/plants/:id/logs                # Get recent action logs (?last=5)
+POST   /api/v1/plants/:id/logs                # Add manual action log
+DELETE /api/v1/plants/:id/logs                # Clear old logs (?before=date)
+PATCH  /api/v1/plants/:id/water               # Log watering (quick action)
+POST   /api/v1/plants/:id/fertilize           # Log fertilizing (quick action)
+POST   /api/v1/plants/:id/harvest             # Log harvest (quick action)
+PATCH  /api/v1/plants/:id/light               # Log light change
+GET    /api/v1/plants/:id/tasks               # Get tasks (paginated)
+POST   /api/v1/plants/:id/tasks               # Add manual task
+POST   /api/v1/plants/:id/tasks/generate      # Auto-generate tasks from status
+GET    /api/v1/plants/:id/tasks/overdue       # Get overdue tasks
+GET    /api/v1/plants/:id/tasks/pending       # Get pending tasks
+GET    /api/v1/plants/:id/tasks/prioritized   # Get tasks sorted by priority
+PATCH  /api/v1/plants/:id/tasks/complete      # Mark task complete (auto-logs)
+DELETE /api/v1/plants/:id/tasks/completed     # Archive completed tasks
+PATCH  /api/v1/plants/:id/tasks/:taskId/cancel   # Cancel a task
+PATCH  /api/v1/plants/:id/tasks/:taskId/reopen   # Reopen a completed task
+POST   /api/v1/plants/:id/ai-insights        # Generate AI insights
+POST   /api/v1/plants/:id/ai-insights/ask    # Ask AI about plant care
 ```
 
 #### Analyze Plant
@@ -823,27 +832,30 @@ HTTP/1.1 200 OK
   "success": true,
   "message": "Plant analysis completed",
   "data": {
-    "uuid": "770e8400-e29b-41d4-a716-446655440002",
-    "plantUUID": "660e8400-e29b-41d4-a716-446655440001",
     "status": {
       "water": "low",
       "nutrients": "optimal",
       "health": "healthy",
       "light": "low"
-    },
-    "engineScores": {
-      "waterScore": 1.2,
-      "fertilizerScore": 1.0,
-      "pestRiskScore": 0.8,
-      "lightScore": 0.9,
-      "appliedRules": [
-        { "id": "global_temp_high", "layer": "global", "explainKey": "global_temp_high" },
-        { "id": "watering_drought_light", "layer": "watering", "explainKey": "watering_drought_light" }
-      ]
     }
   }
 }
 ```
+
+### Response Trimming
+
+Several endpoints return only a subset of the full resource to reduce payload size:
+
+| Endpoint                              | Returns                                           |
+| ------------------------------------- | ------------------------------------------------- |
+| `POST /:id/analyze`                   | `{ status }` — water, nutrients, health, light    |
+| `POST /:id/detect`                    | `{ disease, diseaseHistory }`                     |
+| `POST /:id/tasks`                     | `activeTasks` array                               |
+| `PATCH /:id/tasks/complete`           | `{ task, activeTasks, completedTasks }`           |
+| `PATCH /:id/tasks/:taskId/cancel`     | `{ task, activeTasks }`                           |
+| `PATCH /:id/tasks/:taskId/reopen`     | `{ task, activeTasks, completedTasks }`           |
+| `POST /:id/tasks/generate`            | `{ tasks, status }`                               |
+| `DELETE /:id/tasks/completed`         | `{ completedTasks }`                              |
 
 ### Standard Error Response
 
@@ -1078,6 +1090,8 @@ sequenceDiagram
 - **Supported crops:** Apple, Cassava, Cherry, Chili, Coffee, Corn, Cucumber, Guava, Grape, Jamun, Lemon, Mango, Peach, Pepper (bell), Pomegranate, Potato, Rice, Soybean, Strawberry, Sugarcane, Tea, Tomato, Wheat
 - **Disease classification:** Fungal, bacterial, viral, pest, physiological, healthy
 
+> **Resilience:** When the ML microservice returns `success: false` or is unreachable, the disease detection service falls back to a safe `"healthy"` prediction with 1.0 confidence, ensuring the API never blocks on ML failures.
+
 ---
 
 ## Background Jobs & Queues
@@ -1248,7 +1262,7 @@ function errorHandler(err, req, res, next) {
     if (err.details) {
       response.details = err.details;
     }
-    return res.status(err.statusCode).json(response);
+    return res.status(Number.isInteger(err.statusCode) ? err.statusCode : 500).json(response);
   }
 
   return res.status(500).json({
@@ -1258,6 +1272,10 @@ function errorHandler(err, req, res, next) {
   });
 }
 ```
+
+### Response Sanitization
+
+All API responses are automatically sanitized by the `HttpResponse` helper. Internal-only fields (`_id`, `__v`, `internalId`, `plantInternalId`, `userInternalId`, `password`) are stripped from every response. BSON ObjectIds are converted to strings, and Buffer types are excluded.
 
 ### Error Response Format
 
@@ -1279,6 +1297,7 @@ Common HTTP status codes used:
 | 409  | Duplicate email during signup                         |
 | 429  | Rate limit exceeded (future)                          |
 | 500  | Unexpected internal errors                            |
+| 503  | ML microservice or external API unavailable           |
 
 ---
 
@@ -1363,6 +1382,8 @@ erDiagram
         date createdAt
     }
 ```
+
+> **Logger description:** All `plantCareActionLogger` calls require a description string (3rd argument) explaining the action — e.g., `logDiseaseDetected(plantUUID, user, "Disease detected", ...)`. This populates the `ActionLog.description` field and ensures every log entry is human-readable without inspecting metadata.
 
 ### Indexing Strategy
 
@@ -1568,6 +1589,12 @@ flowchart TD
     H --> I[Store insights in care state]
     I --> J[Return insights to client]
 ```
+
+### LLM Resilience
+
+- **Model fallback**: Gemini models are tried in priority order: `gemini-2.5-flash` → `gemini-2.0-flash` → `gemini-1.5-flash`. Retries only on 429 (rate limit) and 503 (overloaded); permanent errors fail fast.
+- **Markdown fence stripping**: LLM responses that wrap JSON in `` ```json...``` `` fences are automatically cleaned before parsing.
+- **Harvest date fallback**: When LLM-derived `expectedHarvestDate` fails, a category-based fallback is used: crop = 90 days, flower = 60 days, tree = 365 days from planting.
 
 ---
 
