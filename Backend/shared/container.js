@@ -32,12 +32,11 @@ import WeatherService, {
 import LLMService from "../service/llm.service.js";
 import PlantAnalyserService from "../service/plant-analyser.service.js";
 import PlantVisionService from "../service/plant-vision.service.js";
-import PlantCareStateService, {
-  PlantTaskCareManager,
-  PlantCareActionLogger,
-  PlantCareTaskGenerator,
-  PlantCareAiInsights,
-} from "../service/plant-care-state.service.js";
+import PlantCareStateService from "../service/plant-care-state.service.js";
+import { PlantTaskCareManager } from "../service/plant-care-task-manager.service.js";
+import { PlantCareActionLogger } from "../service/plant-care-action-logger.service.js";
+import { PlantCareTaskGenerator } from "../service/plant-care-task-generator.service.js";
+import { PlantCareAiInsights } from "../service/plant-care-ai-insights.service.js";
 
 export const userService = new UserService(userRepo);
 export const llmService = new LLMService();

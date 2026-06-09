@@ -1,5 +1,5 @@
 import assert from "assert";
-import { PlantCareAiInsights } from "../service/plant-care-state.service.js";
+import { PlantCareAiInsights } from "../service/plant-care-ai-insights.service.js";
 
 class MockLLMService {
   constructor(responseProvider) {

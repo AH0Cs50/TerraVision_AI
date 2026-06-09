@@ -75,10 +75,11 @@ class DiseaseDetectionService {
 
   /**
    * @description Sends only the S3 key (no user/plant context) to the ML
-   * microservice for general-purpose disease detection.
+   * microservice for general-purpose disease detection. Returns a simplified
+   * result-focused shape with model metadata.
    * @param {Object} params
    * @param {string} params.key - S3 key of the image
-   * @returns {Promise<{prediction: {disease: string, confidence: number, detectedAt: string}}>}
+   * @returns {Promise<{disease: string, plant: string, confidence: number, disease_type: string, topPredictions: Array, model?: {name: string, version: string}}>}
    */
   async detectGeneralDisease({ key }) {
     try {
@@ -87,25 +88,66 @@ class DiseaseDetectionService {
       if (response.data?.success === false) {
         console.error("ML service returned error:", response.data.error);
         return {
-          prediction: {
-            disease: "healthy",
-            confidence: 1,
-            detectedAt: new Date().toISOString(),
-          },
+          disease: "healthy",
+          plant: "unknown",
+          confidence: 1,
+          disease_type: "healthy",
+          topPredictions: [],
         };
       }
 
-      return response.data;
+      return this.#simplifyMlResponse(response.data);
     } catch (error) {
       console.error("General disease detection failed:", error.message);
       return {
-        prediction: {
-          disease: "healthy",
-          confidence: 1,
-          detectedAt: new Date().toISOString(),
-        },
+        disease: "healthy",
+        plant: "unknown",
+        confidence: 1,
+        disease_type: "healthy",
+        topPredictions: [],
       };
     }
+  }
+
+  /**
+   * @private
+   * @description Extracts prediction result and model metadata from the raw
+   * ML response into a simpler shape.
+   * @param {Object} data - Raw response from ML service
+   * @returns {{disease: string, plant: string, confidence: number, disease_type: string, topPredictions: Array, model?: {name: string, version: string}}}
+   */
+  #simplifyMlResponse(data) {
+    const pred = data?.prediction;
+    if (!pred || !pred.class) {
+      return {
+        disease: "healthy",
+        plant: "unknown",
+        confidence: 1,
+        disease_type: "healthy",
+        topPredictions: [],
+      };
+    }
+
+    const result = {
+      disease: pred.class.disease || "healthy",
+      plant: pred.class.plant || "unknown",
+      confidence: pred.confidence ?? 1,
+      disease_type: pred.class.disease_type || "unknown",
+      topPredictions: (pred.top_k || []).map(p => ({
+        disease: p.class.disease,
+        plant: p.class.plant,
+        confidence: p.confidence,
+      })),
+    };
+
+    if (data.model) {
+      result.model = {
+        name: data.model.name,
+        version: data.model.version,
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -144,6 +186,33 @@ class DiseaseDetectionService {
       prediction: diseaseRecord,
     });
     return updatedPlant;
+  }
+
+  /**
+   * @description Combines detection + persistence in one call. Sends the
+   * image to the ML service, saves the result to the plant's disease history,
+   * and returns the response shape with model metadata (not persisted).
+   * @param {Object} params
+   * @param {string} params.key - S3 key of the plant image
+   * @param {string} params.userId - UUID of the plant owner
+   * @param {string} params.plantId - UUID of the plant
+   * @param {string} [params.expectedPlant] - Expected plant species
+   * @returns {Promise<{disease: Object, diseaseHistory: Array, model?: {name: string, version: string}}>}
+   */
+  async detectAndSaveDisease({ key, userId, plantId, expectedPlant }) {
+    const mlResponse = await this.detectDisease({ key, userId, plantId, expectedPlant });
+    const updatedPlant = await this.updateDiseaseHistory(plantId, mlResponse);
+    const { disease, diseaseHistory } = updatedPlant;
+
+    const result = { disease, diseaseHistory };
+    if (mlResponse.model) {
+      result.model = {
+        name: mlResponse.model.name,
+        version: mlResponse.model.version,
+      };
+    }
+
+    return result;
   }
 }
 

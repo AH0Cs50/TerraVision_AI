@@ -7,6 +7,7 @@ import {
   plantCareAiInsights,
   actionLogRepo,
 } from "../shared/container.js";
+
 import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 import HttpResponse from "../shared/util/HttpResponse.js";
@@ -21,11 +22,15 @@ export async function analyzePlant(req, res, next) {
 
     const careState = await plantCareStateService.saveEngineOutput(id, engineResult);
 
-    await plantCareActionLogger.logDiseaseScan(
+    const { waterScore, fertilizerScore, pestRiskScore, lightScore, _weatherWarning } = engineResult;
+    const metadata = { scores: { waterScore, fertilizerScore, pestRiskScore, lightScore } };
+    if (_weatherWarning) metadata.weatherWarning = _weatherWarning;
+
+    await plantCareActionLogger.logPlantAnalysis(
       id,
       req.user,
       "Plant analysis completed",
-      { method: "analyze", engineResult },
+      metadata,
     );
 
     return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant analysis completed", { status: careState.status }));

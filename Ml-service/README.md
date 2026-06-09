@@ -191,7 +191,7 @@ pip install -r requirement.txt
 uvicorn app.main:app --reload --port 5000
 ```
 
-Start the FastAPI development server on `http://localhost:5000`.
+Start the FastAPI development server on `http://localhost:8000`.
 
 ### Testing
 

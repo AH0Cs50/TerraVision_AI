@@ -68,19 +68,26 @@ i got response tell me the plant overwatered even last watering was 25 hours ago
     console.log("Plant input for engine:", plantInput);
 
     let weatherInput = null;
-    try {
-      const location = await this.userService.getUserLocation(userUUID);
-      console.log("User location:", location);
-      if (!location) {
-        throw new Error("No location found for user");
+    let weatherWarning = null;
+    const location = await this.userService.getUserLocation(userUUID);
+    console.log("User location:", location);
+
+    if (location) {
+      try {
+        weatherInput = await this.#buildEngineWeather(location);
+        console.log("Weather input for engine:", weatherInput);
+      } catch (error) {
+        weatherWarning = `Weather data unavailable: ${error.message}`;
+        console.warn(weatherWarning);
       }
-      weatherInput = await this.#buildEngineWeather(location);
-      console.log("Weather input for engine:", weatherInput);
-    } catch (error) {
-      console.error("Error occurred while fetching user location:", error);
-      // user has no saved location — skip weather
     }
 
-    return evaluate({ weather: weatherInput, ...plantInput });
+    const result = evaluate({ weather: weatherInput, ...plantInput });
+
+    if (weatherWarning) {
+      result._weatherWarning = weatherWarning;
+    }
+
+    return result;
   }
 }

@@ -110,6 +110,23 @@ class S3CloudService {
   }
 
   /**
+   * @private
+   * @description Verifies S3 connectivity before an operation. Throws
+   * RouteError(SERVICE_UNAVAILABLE) if the S3 bucket is unreachable.
+   * @throws {RouteError} SERVICE_UNAVAILABLE if S3 is not reachable
+   */
+  async ensureConnected() {
+    try {
+      await this.s3Repo.healthCheck();
+    } catch {
+      throw new RouteError(
+        HttpStatusCodes.SERVICE_UNAVAILABLE,
+        "S3 storage service is unavailable",
+      );
+    }
+  }
+
+  /**
    * @description Generates a pre-signed PUT URL for uploading a plant image
    * directly to S3. Validates the MIME type before generating the URL.
    * @param {Object} params
@@ -121,6 +138,7 @@ class S3CloudService {
    * @throws {RouteError} BAD_REQUEST if MIME type is invalid
    */
   async generateUploadUrl({ userId, plantId, fileName, fileType }) {
+    await this.ensureConnected();
     this.#throwIfInvalidMime(fileType);
 
     const key = this.buildPlantImagePath({
@@ -156,6 +174,7 @@ class S3CloudService {
    * @throws {RouteError} BAD_REQUEST if MIME type is invalid
    */
   async generateGeneralUploadUrl({ fileName, fileType }) {
+    await this.ensureConnected();
     this.#throwIfInvalidMime(fileType);
 
     const key = this.buildGeneralImagePath({ fileName });
@@ -183,6 +202,7 @@ class S3CloudService {
    * @returns {Promise<string>} Pre-signed download URL
    */
   async generateGetUrl(key) {
+    await this.ensureConnected();
     const command = new GetObjectCommand({
       Bucket: s3Config.bucketName,
       Key: key,
@@ -199,6 +219,7 @@ class S3CloudService {
    * @returns {Promise<Buffer>} Object content as a buffer
    */
   async getObjectBuffer(key) {
+    await this.ensureConnected();
     const { Body } = await this.s3Repo.get(key);
     const chunks = [];
     for await (const chunk of Body) {
@@ -214,6 +235,7 @@ class S3CloudService {
    * @returns {Promise<void>}
    */
   async deleteFile(key) {
+    await this.ensureConnected();
     try {
       return await this.s3Repo.delete(key);
     } catch (error) {

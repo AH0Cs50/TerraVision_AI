@@ -12,6 +12,7 @@ export const ACTION_TYPES = [
   "task_cancelled",
   "light_changed",
   "harvested",
+  "plant_analysis",
   "plant_created",
   "plant_updated",
   "plant_deleted",

@@ -1,5 +1,8 @@
 import assert from "assert";
-import PlantCareStateService, { PlantCareTaskGenerator, PlantTaskCareManager, PlantCareActionLogger } from "../service/plant-care-state.service.js";
+import PlantCareStateService from "../service/plant-care-state.service.js";
+import { PlantCareTaskGenerator } from "../service/plant-care-task-generator.service.js";
+import { PlantTaskCareManager } from "../service/plant-care-task-manager.service.js";
+import { PlantCareActionLogger } from "../service/plant-care-action-logger.service.js";
 
 // ── PlantCareTaskGenerator tests ──────────────────
 
@@ -68,12 +71,14 @@ async function testActionLogger() {
   // Test 1: Logs an action
   try {
     let pushed = null;
-    const mockRepo = { pushActionLog: async (uuid, log) => { pushed = { uuid, log }; return log; } };
-    const logger = new PlantCareActionLogger(mockRepo);
-    const result = await logger.addActionLog("plant-1", { actionType: "watered", description: "Watered plant" });
-    assert(pushed.uuid === "plant-1");
-    assert(result.actionType === "watered");
-    assert(result.createdAt instanceof Date);
+    const mockRepo = { create: async (data) => { pushed = data; return data; } };
+    const mockUserService = { findByUUID: async () => ({ internalId: 99 }) };
+    const mockPlantService = { getInternalId: async () => 1, userService: mockUserService };
+    const logger = new PlantCareActionLogger(mockRepo, mockPlantService);
+    await logger.addActionLog("plant-1", { uuid: "user-1" }, { actionType: "watered", description: "Watered plant" });
+    assert(pushed.plantUUID === "plant-1");
+    assert(pushed.actionType === "watered");
+    assert(pushed.userUUID === "user-1");
     console.log("✅ Test 1 passed: Action logged successfully");
     passed++;
   } catch (err) { console.error("❌ Test 1 failed:", err.message); failed++; }
@@ -81,9 +86,11 @@ async function testActionLogger() {
   // Test 2: Convenience method logWatering
   try {
     let pushed = null;
-    const mockRepo = { pushActionLog: async (uuid, log) => { pushed = log; return log; } };
-    const logger = new PlantCareActionLogger(mockRepo);
-    await logger.logWatering("plant-2");
+    const mockRepo = { create: async (data) => { pushed = data; return data; } };
+    const mockUserService = { findByUUID: async () => ({ internalId: 99 }) };
+    const mockPlantService = { getInternalId: async () => 1, userService: mockUserService };
+    const logger = new PlantCareActionLogger(mockRepo, mockPlantService);
+    await logger.logWatering("plant-2", { uuid: "user-1" });
     assert(pushed.actionType === "watered");
     console.log("✅ Test 2 passed: logWatering convenience method");
     passed++;
@@ -91,8 +98,9 @@ async function testActionLogger() {
 
   // Test 3: getRecentLogs returns last N logs
   try {
-    const mockRepo = { findByPlantUUID: async () => ({ actionLogs: [{ createdAt: new Date(1) }, { createdAt: new Date(2) }, { createdAt: new Date(3) }] }) };
-    const logger = new PlantCareActionLogger(mockRepo);
+    const mockRepo = { getRecent: async (uuid, last) => [{ createdAt: new Date(1) }, { createdAt: new Date(2) }, { createdAt: new Date(3) }].slice(-last) };
+    const mockPlantService = { getInternalId: async () => 1 };
+    const logger = new PlantCareActionLogger(mockRepo, mockPlantService);
     const logs = await logger.getRecentLogs("plant-3", 2);
     assert(logs.length === 2, "Should return last 2 logs");
     console.log("✅ Test 3 passed: getRecentLogs returns correct count");
@@ -132,7 +140,7 @@ async function testStateService() {
       updateByPlantUUID: async (uuid, data) => { updated = data; return { plantUUID: uuid, ...data }; },
     };
     const service = new PlantCareStateService(mockRepo);
-    const result = await service.saveEngineOutput("plant-2", { waterScore: 2.0, fertilizerScore: 1.5, pestRiskScore: 0.8, lightScore: 1.2, _appliedRules: [] });
+    await service.saveEngineOutput("plant-2", { waterScore: 2.0, fertilizerScore: 1.5, pestRiskScore: 0.8, lightScore: 1.2, _appliedRules: [] });
     assert(updated.status, "Should update status");
     assert(updated.engineScores, "Should update engineScores");
     console.log("✅ Test 2 passed: Existing care state updated");
@@ -173,8 +181,10 @@ async function testTaskManager() {
     };
     const mockLogger = { logTaskCompleted: async () => {} };
     const manager = new PlantTaskCareManager(mockRepo, null, mockLogger);
-    const result = await manager.completeTask("plant-1", taskId);
-    assert(result.plantUUID === "plant-1");
+    const result = await manager.completeTask("plant-1", taskId, { uuid: "user-1" });
+    assert(result.task.status === "completed");
+    assert(result.task.taskId === taskId);
+    assert(result.task.completedAt instanceof Date);
     console.log("✅ Test 2 passed: Task completed successfully");
     passed++;
   } catch (err) { console.error("❌ Test 2 failed:", err.message); failed++; }

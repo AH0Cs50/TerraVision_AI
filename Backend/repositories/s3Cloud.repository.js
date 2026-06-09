@@ -3,6 +3,7 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
   ListObjectsV2Command,
+  HeadBucketCommand,
 } from "@aws-sdk/client-s3";
 
 import s3Client from "../shared/s3Client.cloud.js";
@@ -67,6 +68,18 @@ class S3Repository {
     });
 
     return await this.s3Client.send(command);
+  }
+
+  /**
+   * @description Verifies the S3 bucket is reachable. Throws on connectivity failure.
+   * @returns {Promise<void>}
+   */
+  async healthCheck() {
+    const command = new HeadBucketCommand({
+      Bucket: s3Config.bucketName,
+    });
+
+    await this.s3Client.send(command);
   }
 
   /**

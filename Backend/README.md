@@ -90,7 +90,7 @@ graph TD
     E --> H[Weather Service]
     E --> I[LLM Service]
     E --> J[Rule Engine]
-    G --> K[ML Microservice :5000]
+    G --> K[ML Microservice :8000]
     H --> L[OpenWeatherMap API]
     I --> M[Google Gemini API]
     F --> N[Storj S3 Bucket]
@@ -223,7 +223,11 @@ Backend/
 │   ├── user.service.js
 │   ├── plant.service.js
 │   ├── plant-analyser.service.js   # Analysis orchestrator
-│   ├── plant-care-state.service.js # Care state, tasks, logs, AI
+│   ├── plant-care-state.service.js     # Care state CRUD
+│   ├── plant-care-task-generator.service.js  # LLM task generation
+│   ├── plant-care-task-manager.service.js   # Task lifecycle
+│   ├── plant-care-action-logger.service.js  # Action logging (17 types)
+│   ├── plant-care-ai-insights.service.js    # AI insights & Q&A
 │   ├── disease-detection.service.js# ML microservice client
 │   ├── s3Cloud.service.js          # S3 signed URL generation
 │   ├── weather.service.js          # OpenWeatherMap + WeatherDescriber
@@ -327,7 +331,7 @@ All environment variables are loaded from `Backend/config/config.env` via `doten
 | `EMAIL_USER`               | Yes      | SMTP login user                  | —                               |
 | `EMAIL_PASS`               | Yes      | SMTP login password              | —                               |
 | `EMAIL_FROM`               | Yes      | From address for outgoing email  | —                               |
-| `DISEASE_DETECTION_URL`    | Yes      | ML microservice base URL         | `http://localhost:5000`         |
+| `DISEASE_DETECTION_URL`    | Yes      | ML microservice base URL         | `http://localhost:8000`         |
 | `LLM_SERVICE_URL`          | Yes      | Google Gemini API endpoint       | —                               |
 | `ApiKey`                   | Yes      | Google Gemini API key            | —                               |
 

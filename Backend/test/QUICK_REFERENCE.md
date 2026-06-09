@@ -301,7 +301,7 @@ weatherService.transform(data);
 WEATHER_API_KEY=your_openweathermap_api_key
 
 # ML Microservice
-DISEASE_DETECTION_URL=http://localhost:5000
+DISEASE_DETECTION_URL=http://localhost:8000
 
 # AWS S3
 AWS_ACCESS_KEY_ID=your_access_key

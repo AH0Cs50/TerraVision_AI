@@ -131,27 +131,21 @@ export async function detectPlantDisease(req, res, next) {
 
     const fullKey = key.includes("/") ? key : (plant.cdn?.basePath || "") + key;
 
-    const mlResponse = await diseaseDetectionService.detectDisease({
+    const result = await diseaseDetectionService.detectAndSaveDisease({
       key: fullKey,
       userId: req.user.uuid,
       plantId: id,
       expectedPlant: plant.commonName || plant.name,
     });
 
-    const updatedPlant = await diseaseDetectionService.updateDiseaseHistory(
-      id,
-      mlResponse,
-    );
-
     await plantCareActionLogger.logDiseaseDetected(id, req.user, "Disease detected", {
-      disease: mlResponse.prediction?.disease || "unknown",
-      confidence: mlResponse.prediction?.confidence,
+      disease: result.disease?.name || "unknown",
+      confidence: result.disease?.confidence,
     });
 
-    const { disease, diseaseHistory } = updatedPlant;
     return res
       .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Disease detection completed", { disease, diseaseHistory }));
+      .json(HttpResponse.success("Disease detection completed", result));
   } catch (error) {
     next(error);
   }
@@ -267,7 +261,13 @@ export async function removePlantImage(req, res, next) {
 
     const fullKey = key.includes("/") ? key : (plant.cdn?.basePath || "") + key;
     await s3CloudService.deleteFile(fullKey);
-    await plantService.removeImage(id, fullKey);
+    const removeResult = await plantService.removeImage(id, fullKey);
+
+    if (!removeResult || removeResult === "nothing to remove") {
+      return res
+        .status(HttpStatusCodes.NOT_FOUND)
+        .json(HttpResponse.error("Image not found", HttpStatusCodes.NOT_FOUND));
+    }
 
     await plantCareActionLogger.logImageRemoved(id, req.user, "Image removed", { key });
 
@@ -295,6 +295,12 @@ export async function updatePlant(req, res, next) {
     }
 
     const updated = await plantService.updatePlant(id, parsed.data);
+
+    if (!updated) {
+      return res
+        .status(HttpStatusCodes.NOT_FOUND)
+        .json(HttpResponse.error("Plant not found", HttpStatusCodes.NOT_FOUND));
+    }
 
     await plantCareActionLogger.logPlantUpdated(id, req.user, "Plant updated", { updateFields: Object.keys(parsed.data) });
 

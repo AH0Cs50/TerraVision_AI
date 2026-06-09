@@ -131,13 +131,6 @@ class AuthService {
   async refresh(refreshToken) {
     const decoded = this.tokenService.verifyRefreshToken(refreshToken);
 
-    if (!decoded) {
-      throw new RouteError(
-        HttpStatusCodes.UNAUTHORIZED,
-        "Invalid refresh token",
-      );
-    }
-
     const user = await this.userService.findByUUID(decoded.uuid);
 
     if (!user || user.refreshToken !== refreshToken) {
