@@ -43,7 +43,7 @@ Backend/service/engine/
 | --------------------- | ------------------------------------------------ |
 | `evaluate(input)`     | `{ waterScore, fertilizerScore, pestRiskScore, lightScore, _appliedRules }` |
 | `evaluateByLayer(input)` | `{ layers: { global, soil, ... }, final: { ... } }` |
-| `getRuleCount()`      | `{ global: 17, soil: 19, plantFamily: 35, growthStage: 18, watering: 7, pest: 9, light: 22, total: 127 }` |
+| `getRuleCount()`      | `{ global: 17, soil: 19, plantFamily: 38, growthStage: 18, watering: 7, pest: 9, light: 22, total: 130 }` |
 
 ### `engine.js` — Core Engine
 
@@ -244,7 +244,7 @@ Each sub-field independently unlocks its own set of rules. Providing partial dat
 ### `getRuleCount()`
 
 ```js
-{ global: 17, soil: 19, plantFamily: 35, growthStage: 18, watering: 7, pest: 9, light: 22, total: 127 }
+{ global: 17, soil: 19, plantFamily: 38, growthStage: 18, watering: 7, pest: 9, light: 22, total: 130 }
 ```
 
 ---
@@ -305,24 +305,24 @@ Each rule file contains a `rules` array. A single rule:
 
 ### Plant Families
 
-| Family                | Water Sensitivity | Nutrient Demand | Pest Susceptibility |
-| --------------------- | :---------------: | :-------------: | :-----------------: |
-| leafy_greens          |       1.3×        |    baseline     |        +0.2         |
-| fruiting_nightshade   |       1.2×        |      +0.2       |      baseline       |
-| succulent             |       0.5×        |    baseline     |        -0.2         |
-| root_crops            |       1.1×        |      +0.1       |      baseline       |
-| brassicas             |       1.2×        |    baseline     |        +0.3         |
-| legumes               |       0.8×        |      -0.2       |      baseline       |
-| herbs                 |       0.7×        |    baseline     |        -0.2         |
-| tropical              |       1.4×        |    baseline     |        +0.2         |
-| citrus                |       1.1×        |    baseline     |        +0.2         |
-| vines                 |       1.0×        |    baseline     |        +0.2         |
-| grasses               |       0.8×        |      +0.2       |      baseline       |
-| flowering_ornamentals |       1.0×        |    baseline     |        +0.2         |
-| **cucurbits**         |     **1.3×**      |    **+0.2**     |      **+0.3**       |
-| **alliums**           |     **0.9×**      |    **+0.2**     |      **-0.1**       |
-| **berries**           |     **1.2×**      |    **+0.2**     |      **+0.2**       |
-| **palm**              |     **0.8×**      |    **+0.1**     |      baseline       |
+| Family                | Water Sensitivity | Nutrient Demand | Pest Susceptibility | Conditional Effects |
+| --------------------- | :---------------: | :-------------: | :-----------------: | ------------------- |
+| leafy_greens          |       1.3×        |    baseline     |        +0.2         | —                   |
+| fruiting_nightshade   |       1.2×        |      +0.2       |      baseline       | —                   |
+| succulent             |       0.5×        |    baseline     |        -0.2         | drought_dormancy: waterScore -1.5 (≥72h no water) |
+| root_crops            |       1.1×        |      +0.1       |      baseline       | —                   |
+| brassicas             |       1.2×        |    baseline     |        +0.3         | —                   |
+| legumes               |       0.8×        |      -0.2       |      baseline       | —                   |
+| herbs                 |       0.7×        |    baseline     |        -0.2         | —                   |
+| tropical              |       1.4×        |    baseline     |        +0.2         | heat_humidity_tolerance: pestRiskScore -0.3 (≥28°C & ≥70% humidity) |
+| citrus                |       1.1×        |    baseline     |        +0.2         | —                   |
+| vines                 |       1.0×        |    baseline     |        +0.2         | —                   |
+| grasses               |       0.8×        |      +0.2       |      baseline       | —                   |
+| flowering_ornamentals |       1.0×        |    baseline     |        +0.2         | —                   |
+| **cucurbits**         |     **1.3×**      |    **+0.2**     |      **+0.3**       | —                   |
+| **alliums**           |     **0.9×**      |    **+0.2**     |      **-0.1**       | —                   |
+| **berries**           |     **1.2×**      |    **+0.2**     |      **+0.2**       | —                   |
+| **palm**              |     **0.8×**      |    **+0.1**     |      baseline       | pest_resistance: pestRiskScore -0.2 (always) |
 
 ### Light Levels
 
@@ -379,7 +379,7 @@ console.log(layered.layers.global);
 console.log(layered.final);
 
 console.log(getRuleCount());
-// { global: 17, soil: 19, plantFamily: 35, growthStage: 18, watering: 7, pest: 9, light: 22, total: 127 }
+// { global: 17, soil: 19, plantFamily: 38, growthStage: 18, watering: 7, pest: 9, light: 22, total: 130 }
 ```
 
 ---

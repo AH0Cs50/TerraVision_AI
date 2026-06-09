@@ -78,7 +78,7 @@
         "plant.growthStage": { "eq": "vegetative" }
       },
       "effects": {
-        "waterMultiplier": 1.2,
+        "waterMultiplier": 1.05,
         "fertilizerScore": 0.3
       },
       "weight": 0.4,
@@ -106,7 +106,7 @@
         "plant.family": { "eq": "leafy_greens" }
       },
       "effects": {
-        "waterMultiplier": 1.4,
+        "waterMultiplier": 1.15,
         "fertilizerScore": 0.3
       },
       "weight": 0.6,

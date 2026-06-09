@@ -75,6 +75,19 @@
       "explanation": "Succulents naturally resist many pests due to thick cuticles and drought adaptation"
     },
     {
+      "id": "family_succulent_drought_dormancy",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "succulent" },
+        "watering.hoursSinceLastWatering": { "gte": 72 }
+      },
+      "effects": {
+        "waterScore": -1.5
+      },
+      "weight": 0.7,
+      "explanation": "Succulents enter CAM-idling metabolic dormancy during prolonged drought, dramatically reducing water demand"
+    },
+    {
       "id": "family_root_crops_water_sensitivity",
       "factor": "weather",
       "condition": {
@@ -193,6 +206,20 @@
       },
       "weight": 0.3,
       "explanation": "Tropical plants stress easily in low humidity, increasing secondary pest vulnerability"
+    },
+    {
+      "id": "family_tropical_heat_humidity_tolerance",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "tropical" },
+        "weather.temperature": { "gte": 28 },
+        "weather.humidity": { "gte": 70 }
+      },
+      "effects": {
+        "pestRiskScore": -0.3
+      },
+      "weight": 0.5,
+      "explanation": "Tropical plants evolved in warm, humid environments and do not experience heat-humidity pest stress in their native climate range"
     },
     {
       "id": "family_citrus_water_sensitivity",
@@ -428,6 +455,18 @@
       },
       "weight": 0.4,
       "explanation": "Palms have deep root systems and good drought tolerance once established; moderate nutrient demand"
+    },
+    {
+      "id": "family_palm_pest_resistance",
+      "factor": "weather",
+      "condition": {
+        "plant.family": { "eq": "palm" }
+      },
+      "effects": {
+        "pestRiskScore": -0.2
+      },
+      "weight": 0.4,
+      "explanation": "Palms have tough fibrous trunks and naturally pest-resistant foliage, especially mature specimens"
     }
   ]
 }

@@ -154,5 +154,41 @@ runTestCase("TC-12: Minimal Input — No Watering or Stress", {
   plant: { family: "citrus", growthStage: "flowering", ageDays: 200 },
 });
 
+// ─── TEST CASE 13: Wind + High ET ──────────────────────────────────────────
+runTestCase("TC-13: Wind + High ET — High Evapotranspiration", {
+  weather: { temperature: 32, humidity: 20, condition: "sunny", light: "full_sun", windSpeed: 7.2 },
+  soil: { type: "sandy", moisture: 12 },
+  plant: { family: "leafy_greens", growthStage: "vegetative", ageDays: 30 },
+  watering: { hoursSinceLastWatering: 72 },
+  stress: { diseaseType: "none", severity: "none" },
+});
+
+// ─── TEST CASE 14: Overwatering — Clay + Recent Rain ──────────────────────
+runTestCase("TC-14: Overwatering — Clay + Recent Watering + Cool", {
+  weather: { temperature: 18, humidity: 85, condition: "rainy", light: "shade" },
+  soil: { type: "clay", moisture: 90 },
+  plant: { family: "cucurbits", growthStage: "flowering", ageDays: 40 },
+  watering: { hoursSinceLastWatering: 2 },
+  stress: { diseaseType: "none", severity: "none" },
+});
+
+// ─── TEST CASE 15: New Family + New Soil + Berries ────────────────────────
+runTestCase("TC-15: Berries + Silt — Moderate Conditions", {
+  weather: { temperature: 24, humidity: 65, condition: "cloudy", light: "partial" },
+  soil: { type: "silt", moisture: 55 },
+  plant: { family: "berries", growthStage: "fruiting", ageDays: 90 },
+  watering: { hoursSinceLastWatering: 36 },
+  stress: { diseaseType: "none", severity: "none" },
+});
+
+// ─── TEST CASE 16: Intense Light + Palm — High Light Demand ──────────────
+runTestCase("TC-16: Palm + Intense Light — Light Score Focus", {
+  weather: { temperature: 35, humidity: 30, condition: "sunny", light: "intense" },
+  soil: { type: "loam", moisture: 25 },
+  plant: { family: "palm", growthStage: "mature", ageDays: 500 },
+  watering: { hoursSinceLastWatering: 96 },
+  stress: { diseaseType: "none", severity: "none" },
+});
+
 console.log("═".repeat(90));
 console.log("  ALL TESTS COMPLETE\n");
