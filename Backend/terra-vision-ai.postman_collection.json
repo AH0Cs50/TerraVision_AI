@@ -33,8 +33,12 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/",
-              "host": ["{{base_url}}"],
-              "path": [""]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                ""
+              ]
             }
           }
         }
@@ -62,7 +66,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -70,8 +77,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/signup",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "signup"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "signup"
+              ]
             }
           }
         },
@@ -94,7 +108,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -102,8 +119,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -112,8 +136,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -121,8 +151,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "refresh"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
             }
           }
         },
@@ -131,8 +168,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -140,8 +183,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "auth", "logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
             }
           }
         }
@@ -155,14 +205,27 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/users/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "users", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "user-uuid-here" }
+                {
+                  "key": "id",
+                  "value": "user-uuid-here"
+                }
               ]
             }
           }
@@ -172,8 +235,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -181,10 +250,20 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/users/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "users", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "user-uuid-here" }
+                {
+                  "key": "id",
+                  "value": "user-uuid-here"
+                }
               ]
             }
           }
@@ -194,14 +273,27 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/users/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "users", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "user-uuid-here" }
+                {
+                  "key": "id",
+                  "value": "user-uuid-here"
+                }
               ]
             }
           }
@@ -211,8 +303,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -220,8 +318,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/users/email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "users", "email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "email"
+              ]
             }
           }
         },
@@ -230,12 +335,22 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/users/email",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "users", "email"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "email"
+              ]
             }
           }
         },
@@ -246,10 +361,21 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/users/email/verify?token=your-verification-token",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "users", "email", "verify"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "email",
+                "verify"
+              ],
               "query": [
-                { "key": "token", "value": "your-verification-token" }
+                {
+                  "key": "token",
+                  "value": "your-verification-token"
+                }
               ]
             }
           }
@@ -264,12 +390,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/plants",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants"
+              ]
             }
           }
         },
@@ -278,33 +413,72 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Tomato Plant\",\n  \"plantType\": \"crop\",\n  \"family\": \"fruiting_nightshade\",\n  \"growthStage\": \"vegetative\",\n  \"plantedAt\": \"2026-05-25T00:00:00.000Z\",\n  \"ageDays\": 0\n}"
+              "raw": "{\n  \"name\": \"Tomato Plant\",\n  \"category\": \"crop\",\n  \"family\": \"fruiting_nightshade\",\n  \"growthStage\": \"vegetative\",\n  \"plantedAt\": \"2026-05-25T00:00:00.000Z\",\n  \"ageDays\": 0\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/plants",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants"
+              ]
             }
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('plantUUID', json.data.uuid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         },
         {
           "name": "Get Plant By ID",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/plants/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+                {
+                  "key": "id",
+                  "value": "{{plantUUID}}"
+                }
               ]
             }
           }
@@ -314,8 +488,14 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -323,10 +503,20 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/plants/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+                {
+                  "key": "id",
+                  "value": "{{plantUUID}}"
+                }
               ]
             }
           }
@@ -336,36 +526,67 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/v1/plants/:id",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+                {
+                  "key": "id",
+                  "value": "{{plantUUID}}"
+                }
               ]
             }
           }
         },
         {
-          "name": "Upload Plant Image",
+          "name": "Upload Plant Photo",
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"fileName\": \"tomato_leaf.jpg\",\n  \"fileType\": \"image/jpeg\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/plants/:id/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id", "upload"],
+              "raw": "{{base_url}}/api/v1/plants/:id/image/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                ":id",
+                "image",
+                "upload"
+              ],
               "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+                {
+                  "key": "id",
+                  "value": "{{plantUUID}}"
+                }
               ]
             }
           }
@@ -375,19 +596,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"key\": \"s3-object-key-from-upload\"\n}"
+              "raw": "{\n  \"key\": \"s3-object-key-from-user-upload\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/plants/:id/image/extract",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id", "image", "extract"],
-              "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+              "raw": "{{base_url}}/api/v1/plants/image/extract",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                "image",
+                "extract"
               ]
             }
           }
@@ -397,8 +629,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -406,10 +644,21 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/plants/:id/detect",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id", "detect"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                ":id",
+                "detect"
+              ],
               "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+                {
+                  "key": "id",
+                  "value": "{{plantUUID}}"
+                }
               ]
             }
           }
@@ -419,8 +668,14 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -428,10 +683,21 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/plants/:id/images",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", ":id", "images"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                ":id",
+                "images"
+              ],
               "variable": [
-                { "key": "id", "value": "{{plantUUID}}" }
+                {
+                  "key": "id",
+                  "value": "{{plantUUID}}"
+                }
               ]
             }
           }
@@ -441,7 +707,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -449,8 +718,50 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/plants/image/upload",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", "image", "upload"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                "image",
+                "upload"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload User Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileName\": \"my_plant.jpg\",\n  \"fileType\": \"image/jpeg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/plants/user/image/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                "user",
+                "image",
+                "upload"
+              ]
             }
           }
         },
@@ -459,7 +770,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -467,8 +781,15 @@
             },
             "url": {
               "raw": "{{base_url}}/api/v1/plants/detect",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "plants", "detect"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plants",
+                "detect"
+              ]
             }
           }
         }
@@ -485,8 +806,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -494,10 +821,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/analyze",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "analyze"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "analyze"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -507,14 +845,28 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/care-state",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "care-state"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "care-state"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -529,17 +881,34 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/logs?last=5",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "logs"
+                  ],
                   "query": [
-                    { "key": "last", "value": "5" }
+                    {
+                      "key": "last",
+                      "value": "5"
+                    }
                   ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -549,18 +918,38 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/logs?type=watered",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "logs"
+                  ],
                   "query": [
-                    { "key": "type", "value": "watered" }
+                    {
+                      "key": "type",
+                      "value": "watered"
+                    }
                   ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -570,19 +959,42 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/logs?page=1&limit=20",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "logs"
+                  ],
                   "query": [
-                    { "key": "page", "value": "1" },
-                    { "key": "limit", "value": "20" }
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
                   ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -592,8 +1004,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -601,10 +1019,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/logs",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "logs"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -614,17 +1043,34 @@
               "request": {
                 "method": "DELETE",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/logs?before=2026-01-01",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "logs"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "logs"
+                  ],
                   "query": [
-                    { "key": "before", "value": "2026-01-01" }
+                    {
+                      "key": "before",
+                      "value": "2026-01-01"
+                    }
                   ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -639,8 +1085,14 @@
               "request": {
                 "method": "PATCH",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -648,10 +1100,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/water",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "water"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "water"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -661,8 +1124,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -670,10 +1139,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/fertilize",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "fertilize"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "fertilize"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -683,8 +1163,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -692,10 +1178,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/harvest",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "harvest"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "harvest"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -705,8 +1202,14 @@
               "request": {
                 "method": "PATCH",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -714,10 +1217,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/light",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "light"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "light"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -732,18 +1246,38 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks?page=1&limit=20",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks"
+                  ],
                   "query": [
-                    { "key": "page", "value": "1" },
-                    { "key": "limit", "value": "20" }
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
                   ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -753,8 +1287,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -762,10 +1302,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -775,8 +1326,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -784,10 +1341,22 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/generate",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", "generate"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    "generate"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -797,8 +1366,14 @@
               "request": {
                 "method": "PATCH",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -806,10 +1381,22 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/complete",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", "complete"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    "complete"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -819,8 +1406,14 @@
               "request": {
                 "method": "DELETE",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -828,10 +1421,22 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/completed",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", "completed"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    "completed"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -841,14 +1446,29 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/overdue",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", "overdue"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    "overdue"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -858,14 +1478,29 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/pending",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", "pending"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    "pending"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -875,14 +1510,29 @@
               "request": {
                 "method": "GET",
                 "header": [
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/prioritized",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", "prioritized"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    "prioritized"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -892,8 +1542,14 @@
               "request": {
                 "method": "PATCH",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -901,11 +1557,27 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/:taskId/cancel",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", ":taskId", "cancel"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    ":taskId",
+                    "cancel"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" },
-                    { "key": "taskId", "value": "{{taskUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    },
+                    {
+                      "key": "taskId",
+                      "value": "{{taskUUID}}"
+                    }
                   ]
                 }
               }
@@ -915,8 +1587,14 @@
               "request": {
                 "method": "PATCH",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -924,11 +1602,27 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/tasks/:taskId/reopen",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "tasks", ":taskId", "reopen"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "tasks",
+                    ":taskId",
+                    "reopen"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" },
-                    { "key": "taskId", "value": "{{taskUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    },
+                    {
+                      "key": "taskId",
+                      "value": "{{taskUUID}}"
+                    }
                   ]
                 }
               }
@@ -943,8 +1637,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -952,10 +1652,21 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/ai-insights",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "ai-insights"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "ai-insights"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
@@ -965,8 +1676,14 @@
               "request": {
                 "method": "POST",
                 "header": [
-                  { "key": "Content-Type", "value": "application/json" },
-                  { "key": "Authorization", "value": "Bearer {{token}}" }
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
                 ],
                 "body": {
                   "mode": "raw",
@@ -974,10 +1691,22 @@
                 },
                 "url": {
                   "raw": "{{base_url}}/api/v1/plants/:id/ai-insights/ask",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "plants", ":id", "ai-insights", "ask"],
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "ai-insights",
+                    "ask"
+                  ],
                   "variable": [
-                    { "key": "id", "value": "{{plantUUID}}" }
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
                   ]
                 }
               }
