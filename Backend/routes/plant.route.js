@@ -7,6 +7,7 @@ import {
   detectPlantDisease,
   extractPlantDataFromImage,
   uploadGeneralImage,
+  uploadUserImage,
   detectGeneralDisease,
   updatePlant,
   deletePlant,
@@ -17,17 +18,17 @@ import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// General routes (no auth) — must be BEFORE parameterized routes
-router.post("/image/upload", uploadGeneralImage);
-router.post("/detect", detectGeneralDisease);
+// Image routes — literal routes before /:id routes (Express 5 precedence)
+router.post("/image/upload", uploadGeneralImage);           // public — general/images/...
+router.post("/user/image/upload", authenticate, uploadUserImage); // auth — users/{userId}/images/...
+router.post("/image/extract", authenticate, extractPlantDataFromImage); // auth — pre-plant extraction
+router.post("/detect", detectGeneralDisease);               // public — general detection
 
 router.get("", authenticate, getUserPlants);
 router.get("/:id", authenticate, getPlant);
 
 router.post("", authenticate, createPlant);
-router.post("/:id/upload", authenticate, uploadPlantPhoto);
 router.post("/:id/image/upload", authenticate, uploadPlantPhoto);
-router.post("/:id/image/extract", authenticate, extractPlantDataFromImage);
 router.post("/:id/detect", authenticate, detectPlantDisease);
 
 router.put("/:id", authenticate, updatePlant);

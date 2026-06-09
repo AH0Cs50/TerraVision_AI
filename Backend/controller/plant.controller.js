@@ -153,7 +153,6 @@ export async function detectPlantDisease(req, res, next) {
 
 export async function extractPlantDataFromImage(req, res, next) {
   try {
-    const { id } = req.params;
     const { key } = req.body;
 
     if (!key) {
@@ -167,18 +166,40 @@ export async function extractPlantDataFromImage(req, res, next) {
         );
     }
 
-    await plantService.verifyPlantAccess(id, req.user.uuid, req.user.role);
-
-    const extracted = await plantVisionService.extractPlantDataFromImage(
-      id,
-      key,
-    );
-
-    await plantCareActionLogger.logPlantDataExtracted(id, req.user, "Plant data extracted from image", { s3Key: key });
+    const extracted = await plantVisionService.extractImageData(key);
 
     return res
       .status(HttpStatusCodes.OK)
       .json(HttpResponse.success("Plant data extracted from image", extracted));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function uploadUserImage(req, res, next) {
+  try {
+    const { fileName, fileType } = req.body;
+
+    if (!fileName || !fileType) {
+      return res
+        .status(HttpStatusCodes.BAD_REQUEST)
+        .json(
+          HttpResponse.error(
+            "fileName and fileType are required",
+            HttpStatusCodes.BAD_REQUEST,
+          ),
+        );
+    }
+
+    const result = await s3CloudService.generateUserUploadUrl({
+      userId: req.user.uuid,
+      fileName,
+      fileType,
+    });
+
+    return res
+      .status(HttpStatusCodes.OK)
+      .json(HttpResponse.success("Upload form generated", result));
   } catch (error) {
     next(error);
   }

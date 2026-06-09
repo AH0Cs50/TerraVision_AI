@@ -66,6 +66,23 @@ class S3CloudService {
   }
 
   /**
+   * @description Constructs an S3 key for a user-scoped (pre-plant) image
+   * with the format `users/{userId}/images/{timestamp}-{safeName}`.
+   * @param {Object} params
+   * @param {string} params.userId - User UUID
+   * @param {string} params.fileName - Original file name (sanitised)
+   * @returns {string} S3 object key
+   */
+  buildUserImagePath({ userId, fileName }) {
+    const safeName = fileName
+      .replace(/[^a-zA-Z0-9.-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .toLowerCase();
+    return `users/${userId}/images/${Date.now()}-${safeName}`;
+  }
+
+  /**
    * @description Constructs an S3 key for a general (non-plant) image with
    * the format `general/images/{timestamp}-{safeName}`.
    * @param {Object} params
@@ -146,6 +163,39 @@ class S3CloudService {
       plantId,
       fileName,
     });
+
+    const command = new PutObjectCommand({
+      Bucket: s3Config.bucketName,
+      Key: key,
+      ContentType: fileType,
+    });
+
+    const uploadUrl = await getSignedUrl(this.s3Repo.getS3Client(), command, {
+      expiresIn: s3Config.signedUrlExpiresIn,
+    });
+
+    return {
+      uploadUrl,
+      key,
+      expiresIn: s3Config.signedUrlExpiresIn,
+    };
+  }
+
+  /**
+   * @description Generates a pre-signed PUT URL for uploading a user-scoped
+   * (pre-plant) image directly to S3.
+   * @param {Object} params
+   * @param {string} params.userId - User UUID
+   * @param {string} params.fileName - Original file name
+   * @param {string} params.fileType - MIME type of the file
+   * @returns {Promise<{uploadUrl: string, key: string, expiresIn: number}>}
+   * @throws {RouteError} BAD_REQUEST if MIME type is invalid
+   */
+  async generateUserUploadUrl({ userId, fileName, fileType }) {
+    await this.ensureConnected();
+    this.#throwIfInvalidMime(fileType);
+
+    const key = this.buildUserImagePath({ userId, fileName });
 
     const command = new PutObjectCommand({
       Bucket: s3Config.bucketName,

@@ -4,7 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "baseUrl": ".",
+    "baseUrl": "",
     "paths": {
       "@src/*": ["./*"]
     }

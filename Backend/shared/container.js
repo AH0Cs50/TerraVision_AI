@@ -64,7 +64,6 @@ export const authService = new AuthService(
 export const weatherService = new WeatherService();
 export const weatherDescriber = new WeatherDescriber();
 export const plantVisionService = new PlantVisionService(
-  plantService,
   s3CloudService,
   llmService,
 );

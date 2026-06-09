@@ -1,15 +1,13 @@
-import RouteError from "../shared/util/RouteError.js";
-import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 import { fillPrompt } from "./llm.service.js";
 
 /**
  * @description Extracts structured plant data from images using an LLM
  * vision model. Downloads the image from S3, sends it to Gemini with a
- * data-extraction prompt, and stores the resulting image reference.
+ * data-extraction prompt, and returns the parsed result. No side effects
+ * on plant documents — callers are responsible for persisting.
  */
 export default class PlantVisionService {
-  constructor(plantService, s3CloudService, llmService) {
-    this.plantService = plantService;
+  constructor(s3CloudService, llmService) {
     this.s3CloudService = s3CloudService;
     this.llmService = llmService;
   }
@@ -34,18 +32,12 @@ export default class PlantVisionService {
 
   /**
    * @description Downloads the image from S3, sends it to the LLM for
-   * plant data extraction, and saves the image reference to the plant.
-   * @param {string} plantUUID - UUID of the target plant
+   * plant data extraction, and returns the parsed result. Pure extraction
+   * with no database side effects.
    * @param {string} s3Key - S3 key of the uploaded image
    * @returns {Promise<Object>} Parsed plant data from the LLM
-   * @throws {RouteError} NOT_FOUND if plant does not exist
    */
-  async extractPlantDataFromImage(plantUUID, s3Key) {
-    const plant = await this.plantService.getPlantByUUID(plantUUID);
-    if (!plant) {
-      throw new RouteError(HttpStatusCodes.NOT_FOUND, "Plant not found");
-    }
-
+  async extractImageData(s3Key) {
     const buffer = await this.s3CloudService.getObjectBuffer(s3Key);
     const base64 = buffer.toString("base64");
     const mimeType = this.#mimeFromKey(s3Key);
@@ -56,8 +48,6 @@ export default class PlantVisionService {
       base64,
       mimeType,
     );
-
-    await this.plantService.addImage(plantUUID, s3Key);
 
     return typeof response === "object" && response !== null
       ? response
