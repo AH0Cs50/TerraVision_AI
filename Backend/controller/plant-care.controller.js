@@ -5,10 +5,9 @@ import {
   plantCareActionLogger,
   plantTaskCareManager,
   plantCareAiInsights,
-  actionLogRepo,
+  plantCareActionService,
 } from "../shared/container.js";
 
-import RouteError from "../shared/util/RouteError.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 import HttpResponse from "../shared/util/HttpResponse.js";
 
@@ -117,51 +116,6 @@ export async function getTasks(req, res, next) {
   }
 }
 
-export async function addTask(req, res, next) {
-  try {
-    const plantUUID = req.params.id;
-    const taskData = req.body;
-
-    if (!taskData.type || !taskData.title) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .json(HttpResponse.error("type and title are required", HttpStatusCodes.BAD_REQUEST));
-    }
-
-    const result = await plantTaskCareManager.addTaskToPlant(plantUUID, taskData);
-
-    await plantCareActionLogger.logTaskAdded(plantUUID, req.user, "Task added", { taskType: taskData.type, title: taskData.title });
-
-    return res.status(HttpStatusCodes.CREATED).json(HttpResponse.success("Task added", result.activeTasks, HttpStatusCodes.CREATED));
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function completeTask(req, res, next) {
-  try {
-    const plantUUID = req.params.id;
-    const { taskId } = req.body;
-
-    if (!taskId) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .json(HttpResponse.error("taskId is required", HttpStatusCodes.BAD_REQUEST));
-    }
-
-    const result = await plantTaskCareManager.completeTask(plantUUID, taskId, req.user);
-    if (!result) {
-      return res
-        .status(HttpStatusCodes.NOT_FOUND)
-        .json(HttpResponse.error("Task not found", HttpStatusCodes.NOT_FOUND));
-    }
-
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Task completed", result));
-  } catch (error) {
-    next(error);
-  }
-}
-
 export async function generateAiInsights(req, res, next) {
   try {
     const plantUUID = req.params.id;
@@ -173,7 +127,7 @@ export async function generateAiInsights(req, res, next) {
         .json(HttpResponse.error("Care state not found", HttpStatusCodes.NOT_FOUND));
     }
 
-    const actionLogs = await actionLogRepo.findByPlantUUID(plantUUID, { page: 1, limit: 100 });
+    const actionLogs = await plantCareActionLogger.paginateActionLogs(plantUUID, { page: 1, limit: 100 });
     const insights = await plantCareAiInsights.generateInsights(
       plantUUID,
       careState.status,
@@ -188,17 +142,20 @@ export async function generateAiInsights(req, res, next) {
   }
 }
 
-// ── NEW ROUTE HANDLERS ──────────────────────────
+// ── ACTION HANDLERS ─────────────────────────────
 
 export async function waterPlant(req, res, next) {
   try {
     const plantUUID = req.params.id;
     await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
 
-    await plantService.updateWatering(plantUUID, 0);
-    await plantCareActionLogger.logWatering(plantUUID, req.user);
+    const result = await plantCareActionService.performAction(
+      plantUUID, "watering", req.user,
+      () => plantService.updateWatering(plantUUID, 0),
+      { actionType: "watered", description: "Plant watered" },
+    );
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant watered successfully"));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant watered", result));
   } catch (error) {
     next(error);
   }
@@ -209,9 +166,13 @@ export async function fertilizePlant(req, res, next) {
     const plantUUID = req.params.id;
     await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
 
-    await plantCareActionLogger.logFertilizing(plantUUID, req.user);
+    const result = await plantCareActionService.performAction(
+      plantUUID, "fertilizing", req.user,
+      () => plantService.applyFertilizing(plantUUID),
+      { actionType: "fertilized", description: "Plant fertilized" },
+    );
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant fertilized"));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant fertilized", result));
   } catch (error) {
     next(error);
   }
@@ -222,9 +183,13 @@ export async function harvestPlant(req, res, next) {
     const plantUUID = req.params.id;
     await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
 
-    await plantCareActionLogger.logHarvest(plantUUID, req.user);
+    const result = await plantCareActionService.performAction(
+      plantUUID, "harvest", req.user,
+      () => plantService.applyHarvest(plantUUID),
+      { actionType: "harvested", description: "Plant harvested" },
+    );
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant harvested"));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant harvested", result));
   } catch (error) {
     next(error);
   }
@@ -234,58 +199,49 @@ export async function updateLight(req, res, next) {
   try {
     const plantUUID = req.params.id;
     await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
-
     const { lightCondition } = req.body;
-    await plantCareActionLogger.logLightChanged(plantUUID, req.user, "Light conditions changed", { lightCondition });
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Light condition updated"));
+    const result = await plantCareActionService.performAction(
+      plantUUID, "move_light", req.user,
+      async () => {},
+      { actionType: "light_changed", description: "Light conditions changed", metadata: { lightCondition } },
+    );
+
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Light condition updated", result));
   } catch (error) {
     next(error);
   }
 }
 
-export async function cancelTask(req, res, next) {
+export async function treatDisease(req, res, next) {
   try {
     const plantUUID = req.params.id;
-    const { taskId } = req.params;
+    await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
 
-    const result = await plantTaskCareManager.cancelTask(plantUUID, taskId, req.user);
-    if (!result) {
-      return res.status(HttpStatusCodes.NOT_FOUND).json(HttpResponse.error("Task not found", HttpStatusCodes.NOT_FOUND));
-    }
+    const result = await plantCareActionService.performAction(
+      plantUUID, "disease_treatment", req.user,
+      () => plantService.applyDiseaseTreatment(plantUUID),
+      { actionType: "disease_scan", description: "Disease scan performed" },
+    );
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Task cancelled", result));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Disease treated", result));
   } catch (error) {
     next(error);
   }
 }
 
-export async function reopenTask(req, res, next) {
+export async function prunePlant(req, res, next) {
   try {
     const plantUUID = req.params.id;
-    const { taskId } = req.params;
+    await plantService.verifyPlantAccess(plantUUID, req.user.uuid, req.user.role);
 
-    const result = await plantTaskCareManager.reopenTask(plantUUID, taskId, req.user);
-    if (!result) {
-      return res.status(HttpStatusCodes.NOT_FOUND).json(HttpResponse.error("Task not found", HttpStatusCodes.NOT_FOUND));
-    }
+    const result = await plantCareActionService.performAction(
+      plantUUID, "pruning", req.user,
+      () => plantService.applyPruning(plantUUID),
+      { actionType: "pruned", description: "Plant pruned" },
+    );
 
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Task reopened", result));
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function generateTasks(req, res, next) {
-  try {
-    const plantUUID = req.params.id;
-
-    const result = await plantTaskCareManager.generateTasksFromStatus(plantUUID, req.user);
-    if (!result) {
-      return res.status(HttpStatusCodes.NOT_FOUND).json(HttpResponse.error("Care state not found", HttpStatusCodes.NOT_FOUND));
-    }
-
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Tasks generated from status", result));
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Plant pruned", result));
   } catch (error) {
     next(error);
   }
@@ -316,21 +272,6 @@ export async function getPrioritizedTasks(req, res, next) {
     const plantUUID = req.params.id;
     const tasks = await plantTaskCareManager.prioritizeTasks(plantUUID);
     return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Prioritized tasks retrieved", tasks));
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function removeCompletedTasks(req, res, next) {
-  try {
-    const plantUUID = req.params.id;
-
-    const result = await plantTaskCareManager.removeCompletedTasks(plantUUID, req.user);
-    if (!result) {
-      return res.status(HttpStatusCodes.NOT_FOUND).json(HttpResponse.error("Care state not found", HttpStatusCodes.NOT_FOUND));
-    }
-
-    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Completed tasks archived", result.completedTasks));
   } catch (error) {
     next(error);
   }
@@ -368,7 +309,7 @@ export async function askQuestion(req, res, next) {
       return res.status(HttpStatusCodes.NOT_FOUND).json(HttpResponse.error("Care state not found", HttpStatusCodes.NOT_FOUND));
     }
 
-    const actionLogs = await actionLogRepo.findByPlantUUID(plantUUID, { page: 1, limit: 100 });
+    const actionLogs = await plantCareActionLogger.paginateActionLogs(plantUUID, { page: 1, limit: 100 });
     const answer = await plantCareAiInsights.answerQuestion(
       plantUUID,
       question,

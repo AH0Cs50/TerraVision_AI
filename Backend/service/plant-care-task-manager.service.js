@@ -26,12 +26,16 @@ export class PlantTaskCareManager {
 
   /**
    * @description Moves a task from active to completed, records completion
-   * timestamp, and logs the event.
+   * timestamp, and logs the event. When archive is true, the task is removed
+   * from active without being pushed to completed (auto-archive).
    * @param {string} plantUUID - UUID of the plant
    * @param {string} taskId - ID of the task to complete
+   * @param {Object} [user=null] - User object with uuid
+   * @param {Object} [options={}]
+   * @param {boolean} [options.archive=false] - Skip push to completed
    * @returns {Promise<Object|null>} Updated care state, or null if task not found
    */
-  async completeTask(plantUUID, taskId, user = null) {
+  async completeTask(plantUUID, taskId, user = null, { archive = false } = {}) {
     const found = await this.repo.findTaskInActive(plantUUID, taskId);
     if (!found) return null;
 
@@ -42,13 +46,16 @@ export class PlantTaskCareManager {
     };
 
     await this.repo.removeFromActive(plantUUID, taskId);
-    await this.repo.pushToCompleted(plantUUID, completedTask);
+
+    if (!archive) {
+      await this.repo.pushToCompleted(plantUUID, completedTask);
+    }
 
     await this.actionLogger.logTaskCompleted(
       plantUUID,
       user,
       `Task "${completedTask.title}" completed`,
-      { taskId, taskType: completedTask.type },
+      { taskId, taskType: completedTask.type, archived: archive },
     );
 
     const updated = await this.repo.findByPlantUUID(plantUUID);

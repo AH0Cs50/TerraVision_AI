@@ -37,6 +37,7 @@ import { PlantTaskCareManager } from "../service/plant-care-task-manager.service
 import { PlantCareActionLogger } from "../service/plant-care-action-logger.service.js";
 import { PlantCareTaskGenerator } from "../service/plant-care-task-generator.service.js";
 import { PlantCareAiInsights } from "../service/plant-care-ai-insights.service.js";
+import { PlantCareActionService } from "../service/plant-care-action.service.js";
 
 export const userService = new UserService(userRepo);
 export const llmService = new LLMService();
@@ -88,3 +89,11 @@ export const plantTaskCareManager = new PlantTaskCareManager(
 );
 
 export const plantCareAiInsights = new PlantCareAiInsights(llmService);
+
+export const plantCareActionService = new PlantCareActionService(
+  plantAnalyserService,
+  plantCareStateService,
+  plantTaskCareManager,
+  plantCareAiInsights,
+  plantCareActionLogger,
+);

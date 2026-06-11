@@ -5,20 +5,16 @@ import {
   getLogs,
   addActionLog,
   getTasks,
-  addTask,
-  completeTask,
   generateAiInsights,
   waterPlant,
   fertilizePlant,
   harvestPlant,
   updateLight,
-  cancelTask,
-  reopenTask,
-  generateTasks,
+  treatDisease,
+  prunePlant,
   getOverdueTasks,
   getPendingTasks,
   getPrioritizedTasks,
-  removeCompletedTasks,
   clearOldLogs,
   askQuestion,
 } from "../controller/plant-care.controller.js";
@@ -41,20 +37,14 @@ router.patch("/:id/water", waterPlant);
 router.post("/:id/fertilize", fertilizePlant);
 router.post("/:id/harvest", harvestPlant);
 router.patch("/:id/light", updateLight);
+router.post("/:id/treat-disease", treatDisease);
+router.post("/:id/prune", prunePlant);
 
-// ── Tasks — literal paths first ────────────────
+// ── Tasks (read-only views) ─────────────────────
 router.get("/:id/tasks", getTasks);
-router.post("/:id/tasks", addTask);
-router.post("/:id/tasks/generate", generateTasks);
 router.get("/:id/tasks/overdue", getOverdueTasks);
 router.get("/:id/tasks/pending", getPendingTasks);
 router.get("/:id/tasks/prioritized", getPrioritizedTasks);
-router.patch("/:id/tasks/complete", completeTask);
-router.delete("/:id/tasks/completed", removeCompletedTasks);
-
-// ── Tasks — parameterised paths ────────────────
-router.patch("/:id/tasks/:taskId/cancel", cancelTask);
-router.patch("/:id/tasks/:taskId/reopen", reopenTask);
 
 // ── AI Insights ────────────────────────────────
 router.post("/:id/ai-insights", generateAiInsights);
