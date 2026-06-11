@@ -271,6 +271,129 @@ async function runTests() {
     }
   }
 
+  // =========================
+  // Test 17: Build User Image Path
+  // =========================
+  try {
+    const path = s3CloudService.buildUserImagePath({
+      userId: testUserId,
+      fileName: "User Profile Photo",
+    });
+
+    assert(path.startsWith("users/"), "Path should start with 'users/'");
+    assert(path.includes(testUserId), "Path should contain user UUID");
+    assert(path.includes("images/"), "Path should contain 'images/' folder");
+    assert(
+      path.includes("user-profile-photo"),
+      "Path should contain sanitized filename",
+    );
+
+    console.log("✅ Test 17 passed: User image path built correctly");
+  } catch (error) {
+    console.error("❌ Test 17 failed:", error.message);
+  }
+
+  // =========================
+  // Test 18: Build User Image Path - Special Characters
+  // =========================
+  try {
+    const path = s3CloudService.buildUserImagePath({
+      userId: testUserId,
+      fileName: "My  File@Name #123",
+    });
+
+    assert(!path.includes("@"), "Path should not contain @");
+    assert(!path.includes("#"), "Path should not contain #");
+    assert(!path.includes(" "), "Path should not contain spaces");
+    assert(path.includes("-"), "Path should contain hyphens for spaces");
+
+    console.log("✅ Test 18 passed: User image path handles special chars");
+  } catch (error) {
+    console.error("❌ Test 18 failed:", error.message);
+  }
+
+  // =========================
+  // Test 19: Build General Image Path
+  // =========================
+  try {
+    const path = s3CloudService.buildGeneralImagePath({
+      fileName: "General Upload Test",
+    });
+
+    assert(path.startsWith("general/"), "Path should start with 'general/'");
+    assert(path.includes("images/"), "Path should contain 'images/' folder");
+    assert(
+      path.includes("general-upload-test"),
+      "Path should contain sanitized filename",
+    );
+
+    console.log("✅ Test 19 passed: General image path built correctly");
+  } catch (error) {
+    console.error("❌ Test 19 failed:", error.message);
+  }
+
+  // =========================
+  // Test 20: Validate General Image Key - Valid Format
+  // =========================
+  try {
+    const validKey = "general/images/1234567890-test-image.jpg";
+    const isValid = s3CloudService.validateGeneralImageKey(validKey);
+
+    assert(isValid === true, "Valid general key should pass");
+    console.log("✅ Test 20 passed: Valid general image key accepted");
+  } catch (error) {
+    console.error("❌ Test 20 failed:", error.message);
+  }
+
+  // =========================
+  // Test 21: Validate General Image Key - Invalid Format
+  // =========================
+  try {
+    const invalidKey = "plants/user/plant/images/file.jpg";
+    const isValid = s3CloudService.validateGeneralImageKey(invalidKey);
+
+    assert(isValid === false, "Invalid general key should be rejected");
+    console.log("✅ Test 21 passed: Invalid general key rejected");
+  } catch (error) {
+    console.error("❌ Test 21 failed:", error.message);
+  }
+
+  // =========================
+  // Test 22: Validate General Image Key - Null
+  // =========================
+  try {
+    const isValid = s3CloudService.validateGeneralImageKey(null);
+
+    assert(isValid === false, "Null key should be rejected");
+    console.log("✅ Test 22 passed: Null general key rejected");
+  } catch (error) {
+    console.error("❌ Test 22 failed:", error.message);
+  }
+
+  // =========================
+  // Test 23: Validate General Image Key - Empty String
+  // =========================
+  try {
+    const isValid = s3CloudService.validateGeneralImageKey("");
+
+    assert(isValid === false, "Empty key should be rejected");
+    console.log("✅ Test 23 passed: Empty general key rejected");
+  } catch (error) {
+    console.error("❌ Test 23 failed:", error.message);
+  }
+
+  // =========================
+  // Test 24: Validate General Image Key - Non-String
+  // =========================
+  try {
+    const isValid = s3CloudService.validateGeneralImageKey(12345);
+
+    assert(isValid === false, "Non-string key should be rejected");
+    console.log("✅ Test 24 passed: Non-string general key rejected");
+  } catch (error) {
+    console.error("❌ Test 24 failed:", error.message);
+  }
+
   // Cleanup: Delete test user
   try {
     await userService.deleteUser(testUserId);

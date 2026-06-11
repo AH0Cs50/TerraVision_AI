@@ -157,20 +157,7 @@ async function testTaskManager() {
   console.log("Running PlantTaskCareManager Tests...\n");
   let passed = 0, failed = 0;
 
-  // Test 1: addTaskToPlant pushes to active
-  try {
-    let pushed = null;
-    const mockRepo = { pushToActive: async (uuid, task) => { pushed = task; return task; } };
-    const manager = new PlantTaskCareManager(mockRepo, null, { logTaskCompleted: async () => {} });
-    await manager.addTaskToPlant("plant-1", { type: "watering", title: "Water", priority: "high" });
-    assert(pushed.type === "watering");
-    assert(pushed.status === "pending");
-    assert(pushed.taskId, "Should have taskId");
-    console.log("✅ Test 1 passed: Task added to plant");
-    passed++;
-  } catch (err) { console.error("❌ Test 1 failed:", err.message); failed++; }
-
-  // Test 2: completeTask moves from active to completed
+  // Test 1: completeTask moves from active to completed
   try {
     const taskId = "task-123";
     const mockRepo = {
@@ -185,17 +172,36 @@ async function testTaskManager() {
     assert(result.task.status === "completed");
     assert(result.task.taskId === taskId);
     assert(result.task.completedAt instanceof Date);
-    console.log("✅ Test 2 passed: Task completed successfully");
+    console.log("✅ Test 1 passed: Task completed successfully");
     passed++;
-  } catch (err) { console.error("❌ Test 2 failed:", err.message); failed++; }
+  } catch (err) { console.error("❌ Test 1 failed:", err.message); failed++; }
 
-  // Test 3: completeTask returns null for non-existent task
+  // Test 2: completeTask returns null for non-existent task
   try {
     const mockRepo = { findTaskInActive: async () => null };
     const manager = new PlantTaskCareManager(mockRepo, null, { logTaskCompleted: async () => {} });
     const result = await manager.completeTask("plant-1", "nonexistent");
     assert(result === null, "Should return null");
-    console.log("✅ Test 3 passed: Non-existent task returns null");
+    console.log("✅ Test 2 passed: Non-existent task returns null");
+    passed++;
+  } catch (err) { console.error("❌ Test 2 failed:", err.message); failed++; }
+
+  // Test 3: completeTask with archive=true skips pushToCompleted
+  try {
+    const taskId = "task-456";
+    let pushToCompletedCalled = false;
+    const mockRepo = {
+      findTaskInActive: async () => ({ task: { taskId, type: "fertilizing", title: "Fertilize", status: "pending" } }),
+      removeFromActive: async () => true,
+      pushToCompleted: async () => { pushToCompletedCalled = true; },
+      findByPlantUUID: async () => ({ plantUUID: "plant-1" }),
+    };
+    const mockLogger = { logTaskCompleted: async () => {} };
+    const manager = new PlantTaskCareManager(mockRepo, null, mockLogger);
+    const result = await manager.completeTask("plant-1", taskId, { uuid: "user-1" }, { archive: true });
+    assert(result.task.status === "completed");
+    assert(pushToCompletedCalled === false, "Should NOT push to completed");
+    console.log("✅ Test 3 passed: completeTask with archive=true skips completed");
     passed++;
   } catch (err) { console.error("❌ Test 3 failed:", err.message); failed++; }
 

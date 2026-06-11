@@ -40,7 +40,7 @@ export async function startServer() {
 
   console.log(`\x1b[33mStarting backend server at ${SERVER_ROOT}...\x1b[0m`);
   managedServer = spawn("node", ["app.js"], {
-    cwd: path.resolve(__dirname, "../.."),
+    cwd: path.resolve(__dirname, "../../.."),
     env: { ...process.env, PORT: "5500" },
     stdio: ["ignore", "pipe", "pipe"],
   });

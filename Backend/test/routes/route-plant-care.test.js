@@ -56,69 +56,68 @@ export async function runTests(baseUrl, token, userUUID, plantUUID) {
     check("POST /plants/:id/logs (201)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 5. PATCH /plants/:id/water (200)
+  // 5. PATCH /plants/:id/water (200) — now returns status + aiInsights
   {
     const r = await req("PATCH", `/plants/${plantUUID}/water`, {
       headers: auth,
     });
-    const ok = r.status === 200;
-    check("PATCH /plants/:id/water (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
+    const ok = r.status === 200 && r.data?.status;
+    check("PATCH /plants/:id/water (200) with status", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 6. POST /plants/:id/fertilize (200)
+  // 6. POST /plants/:id/fertilize (200) — now returns status + aiInsights
   {
     const r = await req("POST", `/plants/${plantUUID}/fertilize`, {
       headers: auth,
     });
-    const ok = r.status === 200;
-    check("POST /plants/:id/fertilize (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
+    const ok = r.status === 200 && r.data?.status;
+    check("POST /plants/:id/fertilize (200) with status", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 7. POST /plants/:id/harvest (200)
+  // 7. POST /plants/:id/harvest (200) — now returns status + aiInsights
   {
     const r = await req("POST", `/plants/${plantUUID}/harvest`, {
       headers: auth,
     });
-    const ok = r.status === 200;
-    check("POST /plants/:id/harvest (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
+    const ok = r.status === 200 && r.data?.status;
+    check("POST /plants/:id/harvest (200) with status", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 8. PATCH /plants/:id/light (200)
+  // 8. PATCH /plants/:id/light (200) — now returns status + aiInsights
   {
     const r = await req("PATCH", `/plants/${plantUUID}/light`, {
       headers: auth,
       body: { lightCondition: "partial_shade" },
     });
-    const ok = r.status === 200;
-    check("PATCH /plants/:id/light (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
+    const ok = r.status === 200 && r.data?.status;
+    check("PATCH /plants/:id/light (200) with status", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 9. GET /plants/:id/tasks (200)
+  // 9. POST /plants/:id/treat-disease (200)
+  {
+    const r = await req("POST", `/plants/${plantUUID}/treat-disease`, {
+      headers: auth,
+    });
+    const ok = r.status === 200 && r.data?.status;
+    check("POST /plants/:id/treat-disease (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
+  }
+
+  // 10. POST /plants/:id/prune (200)
+  {
+    const r = await req("POST", `/plants/${plantUUID}/prune`, {
+      headers: auth,
+    });
+    const ok = r.status === 200 && r.data?.status;
+    check("POST /plants/:id/prune (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
+  }
+
+  // 11. GET /plants/:id/tasks (200)
   {
     const r = await req("GET", `/plants/${plantUUID}/tasks`, {
       headers: auth,
     });
     const ok = r.status === 200;
     check("GET /plants/:id/tasks (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
-  }
-
-  // 10. POST /plants/:id/tasks (201)
-  {
-    const r = await req("POST", `/plants/${plantUUID}/tasks`, {
-      headers: auth,
-      body: { type: "watering", title: "Water plants", priority: "high" },
-    });
-    const ok = r.status === 201;
-    check("POST /plants/:id/tasks (201)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
-  }
-
-  // 11. POST /plants/:id/tasks/generate (200 or 404)
-  {
-    const r = await req("POST", `/plants/${plantUUID}/tasks/generate`, {
-      headers: auth,
-    });
-    const ok = r.status === 200 || r.status === 404;
-    check("POST /plants/:id/tasks/generate (200/404)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
   // 12. GET /plants/:id/tasks/overdue (200)
@@ -148,44 +147,7 @@ export async function runTests(baseUrl, token, userUUID, plantUUID) {
     check("GET /plants/:id/tasks/prioritized (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 15. PATCH /plants/:id/tasks/complete (400) — empty taskId
-  {
-    const r = await req("PATCH", `/plants/${plantUUID}/tasks/complete`, {
-      headers: auth,
-      body: { taskId: "" },
-    });
-    const ok = r.status === 400;
-    check("PATCH /plants/:id/tasks/complete empty taskId (400)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
-  }
-
-  // 16. DELETE /plants/:id/tasks/completed (200)
-  {
-    const r = await req("DELETE", `/plants/${plantUUID}/tasks/completed`, {
-      headers: auth,
-    });
-    const ok = r.status === 200;
-    check("DELETE /plants/:id/tasks/completed (200)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
-  }
-
-  // 17. PATCH /plants/:id/tasks/:taskId/cancel (404)
-  {
-    const r = await req("PATCH", `/plants/${plantUUID}/tasks/nonexistent-task-id/cancel`, {
-      headers: auth,
-    });
-    const ok = r.status === 404;
-    check("PATCH /plants/:id/tasks/:taskId/cancel (404)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
-  }
-
-  // 18. PATCH /plants/:id/tasks/:taskId/reopen (404)
-  {
-    const r = await req("PATCH", `/plants/${plantUUID}/tasks/nonexistent-task-id/reopen`, {
-      headers: auth,
-    });
-    const ok = r.status === 404;
-    check("PATCH /plants/:id/tasks/:taskId/reopen (404)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
-  }
-
-  // 19. POST /plants/:id/ai-insights (200 or 404)
+  // 15. POST /plants/:id/ai-insights (200 or 404)
   {
     const r = await req("POST", `/plants/${plantUUID}/ai-insights`, {
       headers: auth,
@@ -194,7 +156,7 @@ export async function runTests(baseUrl, token, userUUID, plantUUID) {
     check("POST /plants/:id/ai-insights (200/404)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 20. POST /plants/:id/ai-insights/ask (400) — no question
+  // 16. POST /plants/:id/ai-insights/ask (400) — no question
   {
     const r = await req("POST", `/plants/${plantUUID}/ai-insights/ask`, {
       headers: auth,
@@ -204,7 +166,7 @@ export async function runTests(baseUrl, token, userUUID, plantUUID) {
     check("POST /plants/:id/ai-insights/ask no question (400)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 21. POST /plants/:id/ai-insights/ask (200 or 404) — with question
+  // 17. POST /plants/:id/ai-insights/ask (200 or 404) — with question
   {
     const r = await req("POST", `/plants/${plantUUID}/ai-insights/ask`, {
       headers: auth,
@@ -214,7 +176,7 @@ export async function runTests(baseUrl, token, userUUID, plantUUID) {
     check("POST /plants/:id/ai-insights/ask with question (200/404)", ok ? "PASS" : "FAIL", `\u2192 ${r.status}`);
   }
 
-  // 22. DELETE /plants/:id/logs (200)
+  // 18. DELETE /plants/:id/logs (200)
   {
     const r = await req("DELETE", `/plants/${plantUUID}/logs`, {
       headers: auth,
@@ -270,6 +232,7 @@ if (isMain) {
         family: "leafy_greens",
         growthStage: "vegetative",
         plantedAt: new Date().toISOString(),
+        soil: { type: "sandy" },
       },
     });
     if (plantRes.status !== 201) {

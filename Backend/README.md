@@ -12,7 +12,7 @@ Modern agriculture faces increasing challenges from climate variability, pests, 
 
 - **Real-time disease detection** via a custom CNN ensemble model (86 crop-disease classes)
 - **Environmental analysis** integrating live weather data with plant-specific care rules
-- **Automated care scoring** through a 127-rule engine covering watering, nutrients, pest risk, and light
+- **Automated care scoring** through a 131-rule engine covering watering, nutrients, pest risk, and light
 - **AI-generated insights** powered by Google Gemini for actionable recommendations
 
 ### System Boundaries
@@ -24,7 +24,7 @@ User Devices (Web/Mobile)
 ┌───────────────────┐     ┌──────────────────┐
 │  Express API      │────▶│  ML Microservice  │
 │  (Backend)        │     │  (FastAPI + Keras)│
-│  Port 5500        │     │  Port 5000        │
+│  Port 5500        │     │  Port 8000        │
 └───────┬───────────┘     └──────────────────┘
         │
         ├── MongoDB (terra_db) ──── User profiles, plants, care state
@@ -38,7 +38,7 @@ User Devices (Web/Mobile)
 | Feature                 | Capability                                                  |
 | ----------------------- | ----------------------------------------------------------- |
 | Plant Disease Detection | 86-class CNN ensemble (1.04 GB model) via ML microservice   |
-| Rule Engine Analysis    | 7 layers × 127 rules scoring water, fertilizer, pest, light |
+| Rule Engine Analysis    | 7 layers × 131 rules scoring water, fertilizer, pest, light |
 | Real-time Weather       | OpenWeatherMap integration with location-based queries      |
 | AI Plant Care           | Gemini-powered task generation, insights, Q&A               |
 | Secure Storage          | Storj S3-compatible storage with pre-signed URLs            |
@@ -110,7 +110,7 @@ graph TD
 │   Auth    │   User   │   Plant   │   Plant Care     │
 │  Service  │  Service │  Service  │   Services       │
 ├──────────┴──────────┴───────────┴──────────────────┤
-│              Engine (127 Rules)                     │
+│              Engine (131 Rules)                     │
 │  global │ soil │ plantFamily │ growthStage │        │
 │  watering │ pestDisease │ light                      │
 ├──────────┬──────────┬───────────┬──────────────────┤
@@ -191,15 +191,15 @@ graph TD
 
 ### Testing
 
-| Tool             | Purpose                                                   |
-| ---------------- | --------------------------------------------------------- |
-| Node.js `assert` | Unit & integration tests (~90 test cases across 10 files) |
+| Tool             | Purpose                                                    |
+| ---------------- | ---------------------------------------------------------- |
+| Node.js `assert` | Unit & integration tests (~110 test cases across 11 files) |
 
 ---
 
 ## Folder Structure
 
-```
+````
 Backend/
 ├── app.js                          # Express application entry + server start
 ├── config/
@@ -278,7 +278,7 @@ Backend/
 │       ├── RouteError.js           # Operational error class
 │       └── HttpStatusCodes.js      # Status code constants
 │
-└── test/                           # Test suites (~90 tests)
+└── test/                           # Test suites (~110 tests)
     ├── auth.test.js
     ├── user.test.js
     ├── plant.test.js
@@ -288,11 +288,12 @@ Backend/
     ├── token.test.js
     ├── engine.test.js
     ├── plant-care-state.test.js
-    └── plant-care-ai-insights.test.js
-```
+    ├── plant-care-ai-insights.test.js
+    └── route-plant-care.test.js
+    ```
 
-```
-Ml-service/
+    ```
+    Ml-service/
 ├── app/
 │   ├── main.py                     # FastAPI application
 │   ├── model.py                    # Keras CNN model (86 classes)
@@ -304,7 +305,7 @@ Ml-service/
 │   └── plant.keras                 # Pre-trained CNN ensemble (~1.04 GB)
 ├── test_images/                    # Sample images for testing
 └── requirement.txt                 # Python dependencies
-```
+````
 
 ---
 
@@ -388,7 +389,7 @@ pip install -r requirement.txt
 cp config.env.example config.env  # Edit with your S3 credentials
 
 # Start the FastAPI server
-uvicorn app.main:app --reload --port 5000
+uvicorn app.main:app --reload --port 8000
 ```
 
 ### Docker Setup (Manual)
@@ -420,7 +421,7 @@ docker run -p 5500:5500 --env-file Backend/config/config.env farming-backend
 node --watch app.js                    # Hot reload via Node.js --watch flag
 
 # Terminal 2: ML Service
-uvicorn app.main:app --reload --port 5000
+uvicorn app.main:app --reload --port 8000
 
 # Terminal 3: MongoDB (if local)
 mongod
@@ -571,15 +572,15 @@ Each rule has three parts:
 
 ### Layer Execution Order
 
-| Layer            | Rules | Evaluates                                             |
-| ---------------- | ----- | ----------------------------------------------------- |
-| Global           | 17    | Temperature, humidity, base weather conditions        |
-| Soil             | 19    | Soil type, moisture level modifiers                   |
-| Plant Family     | 35    | Per-family water sensitivity, nutrient demand         |
-| Growth Stage     | 18    | Germination through mature stage modifiers            |
-| Watering History | 7     | Hours-since-last-watering drought levels              |
-| Pest/Disease     | 9     | Disease type × severity × weather interactions        |
-| Light            | 22    | Cloud cover, time-of-day, family-specific light needs |
+| Layer            | Rules | Evaluates                                               |
+| ---------------- | ----- | ------------------------------------------------------- |
+| Global           | 17    | Temperature, humidity, base weather conditions          |
+| Soil             | 20    | Soil type, moisture level modifiers, recent fertilizing |
+| Plant Family     | 38    | Per-family water sensitivity, nutrient demand           |
+| Growth Stage     | 18    | Germination through mature stage modifiers              |
+| Watering History | 7     | Hours-since-last-watering drought levels                |
+| Pest/Disease     | 9     | Disease type × severity × weather interactions          |
+| Light            | 22    | Cloud cover, time-of-day, family-specific light needs   |
 
 ### Score → Status Mapping
 
@@ -667,7 +668,8 @@ test/
 ├── token.test.js                # 7 tests: generate, verify, invalid token
 ├── engine.test.js               # 12 tests: all rule layers
 ├── plant-care-state.test.js     # ~15 tests: tasks, logs, manager
-└── plant-care-ai-insights.test.js # ~15 tests: insights, Q&A
+├── plant-care-ai-insights.test.js # ~15 tests: insights, Q&A
+└── route-plant-care.test.js     # 18 tests: action pipeline, task views
 ```
 
 ### Running Tests
@@ -777,7 +779,7 @@ class RouteError extends Error {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = true; // Distinguishes expected errors from bugs
-    this.details = details;    // Optional validation error details
+    this.details = details; // Optional validation error details
   }
 }
 
@@ -800,7 +802,9 @@ function errorHandler(err, req, res, next) {
     if (err.details) {
       response.details = err.details;
     }
-    return res.status(Number.isInteger(err.statusCode) ? err.statusCode : 500).json(response);
+    return res
+      .status(Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json(response);
   }
 
   return res.status(500).json({
@@ -958,12 +962,13 @@ await mongoose.connect(MONGO_URI);
 
 Every model has two identifiers:
 
-| Field | Purpose |
-|---|---|
-| `uuid` (String, unique) | **Public-facing** — used in API requests, responses, JWT payload |
-| `internalId` (Number, unique, `Date.now()`) | **Internal relations** — used as foreign key in other models |
+| Field                                       | Purpose                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `uuid` (String, unique)                     | **Public-facing** — used in API requests, responses, JWT payload |
+| `internalId` (Number, unique, `Date.now()`) | **Internal relations** — used as foreign key in other models     |
 
 **Foreign key relationships always use `internalId`**:
+
 - `plant.userInternalId` → `user.internalId`
 - `actionLog.plantInternalId` → `plant.internalId`
 - `actionLog.userInternalId` → `user.internalId`
@@ -1026,7 +1031,7 @@ const LAYER_ORDER = [..., { layer: myLayer, rules: myRules }];
 | --------------------------------- | --------------------------- | --------------------------------------------------------- |
 | `ECONNREFUSED` on startup         | MongoDB not running         | Start `mongod`                                            |
 | 401 on authenticated routes       | Expired or invalid JWT      | Call `/auth/refresh` to rotate tokens                     |
-| ML service returns 502            | ML microservice not running | Start `uvicorn app.main:app --port 5000`                  |
+| ML service returns 502            | ML microservice not running | Start `uvicorn app.main:app --port 8000`                  |
 | `INVALID_FILE_TYPE`               | Unsupported MIME type       | Use `image/jpeg`, `image/png`, or `image/webp`            |
 | `Weather API 401`                 | Invalid or expired API key  | Check `WEATHER_API_KEY` in config.env                     |
 | `MODULE_NOT_FOUND` for rules JSON | Missing rule file           | Ensure `shared/rules/*.json` exists for each engine layer |
@@ -1131,7 +1136,7 @@ flowchart TD
 ### LLM Resilience
 
 - **Model fallback**: Gemini models are tried in priority order: `gemini-2.5-flash` → `gemini-2.0-flash` → `gemini-1.5-flash`. Retries only on 429 (rate limit) and 503 (overloaded); permanent errors fail fast.
-- **Markdown fence stripping**: LLM responses that wrap JSON in `` ```json...``` `` fences are automatically cleaned before parsing.
+- **Markdown fence stripping**: LLM responses that wrap JSON in ` ```json...``` ` fences are automatically cleaned before parsing.
 - **Harvest date fallback**: When LLM-derived `expectedHarvestDate` fails, a category-based fallback is used: crop = 90 days, flower = 60 days, tree = 365 days from planting.
 
 ---

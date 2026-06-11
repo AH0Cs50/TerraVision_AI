@@ -8,39 +8,33 @@
 
 ---
 
-## 🎯 Service Dependencies at a Glance
+## Test Files Overview
 
-```
-┌─ AuthService
-│  ├─ Depends on: TokenService, UserService, PasswordHasher
-│  ├─ Test: node Backend/test/auth.test.js
-│  └─ 6 test cases
-│
-├─ UserService
-│  ├─ Depends on: UserRepository
-│  ├─ Test: node Backend/test/user.test.js
-│  └─ 11 test cases
-│
-├─ PlantService
-│  ├─ Depends on: PlantRepository, S3CloudRepository
-│  ├─ Test: node Backend/test/plant.test.js
-│  └─ 9 test cases
-│
-├─ DiseaseDetectionService
-│  ├─ Depends on: PlantRepository, axios, DISEASE_DETECTION_URL
-│  ├─ Test: node Backend/test/disease-detection.test.js
-│  └─ 7 test cases
-│
-├─ S3CloudService
-│  ├─ Depends on: S3Repository, AWS SDK
-│  ├─ Test: node Backend/test/s3Cloud.test.js
-│  └─ 16 test cases
-│
-└─ WeatherService
-   ├─ Depends on: axios, WEATHER_API_KEY
-   ├─ Test: node Backend/test/weather.test.js
-   └─ 3 test cases (existing)
-```
+### Unit / Service Tests (10 files, ~92 tests)
+
+| Test File | Service(s) Tested | Tests | Run Command |
+|---|---|---|---|---|
+| `auth.test.js` | AuthService | 6 | `node Backend/test/service/auth.test.js` |
+| `user.test.js` | UserService | 11 | `node Backend/test/service/user.test.js` |
+| `plant.test.js` | PlantService | 9 | `node Backend/test/service/plant.test.js` |
+| `disease-detection.test.js` | DiseaseDetectionService | 7 | `node Backend/test/service/disease-detection.test.js` |
+| `s3Cloud.test.js` | S3CloudService | 16 | `node Backend/test/service/s3Cloud.test.js` |
+| `weather.test.js` | WeatherService | 3 | `node Backend/test/service/weather.test.js` |
+| `token.test.js` | TokenService | 7 | `node Backend/test/service/token.test.js` |
+| `engine.test.js` | Engine (7-layer rule eval) | 16 | `node Backend/test/service/engine.test.js` |
+| `plant-care-state.test.js` | PlantCareState/Logger/Generator/Manager | 10 | `node Backend/test/service/plant-care-state.test.js` |
+| `plant-care-ai-insights.test.js` | PlantCareAiInsights | 17 | `node Backend/test/service/plant-care-ai-insights.test.js` |
+
+### Route / Integration Tests (4 files, ~46 tests)
+
+| Test File | Routes Tested | Run Command |
+|---|---|---|
+| `route-auth.test.js` | Auth (4 endpoints) | `node Backend/test/routes/run-route-tests.js` |
+| `route-plant.test.js` | Plants (9 endpoints) | (same runner) |
+| `route-plant-care.test.js` | Plant-Care (17 endpoints) | (same runner) |
+| `route-user.test.js` | Users (6 endpoints) | (same runner) |
+
+**Run all route tests:** `node Backend/test/routes/run-route-tests.js`
 
 ---
 
@@ -113,54 +107,53 @@ WeatherService
 
 ## 🧪 Test Execution Quick Commands
 
-### Run All Tests
+### Run All Unit Tests
 
 ```bash
-node Backend/test/auth.test.js && \
-node Backend/test/user.test.js && \
-node Backend/test/plant.test.js && \
-node Backend/test/disease-detection.test.js && \
-node Backend/test/s3Cloud.test.js && \
-node Backend/test/weather.test.js
+node Backend/test/service/auth.test.js && node Backend/test/service/user.test.js && node Backend/test/service/plant.test.js && node Backend/test/service/disease-detection.test.js && node Backend/test/service/s3Cloud.test.js && node Backend/test/service/weather.test.js && node Backend/test/service/token.test.js && node Backend/test/service/engine.test.js && node Backend/test/service/plant-care-state.test.js && node Backend/test/service/plant-care-ai-insights.test.js
+```
+
+### Run All Route Tests (requires server up)
+
+```bash
+node Backend/test/routes/run-route-tests.js
 ```
 
 ### Run by Category
 
-**Authentication:**
-
 ```bash
-node Backend/test/auth.test.js
+# Authentication
+node Backend/test/service/auth.test.js
+
+# User Management
+node Backend/test/service/user.test.js
+
+# Plant Management
+node Backend/test/service/plant.test.js
+
+# ML Integration
+node Backend/test/service/disease-detection.test.js
+
+# Cloud Storage
+node Backend/test/service/s3Cloud.test.js
+
+# Weather
+node Backend/test/service/weather.test.js
+
+# JWT Token
+node Backend/test/service/token.test.js
+
+# Rule Engine
+node Backend/test/service/engine.test.js
+
+# Plant Care Subsystem
+node Backend/test/service/plant-care-state.test.js
+node Backend/test/service/plant-care-ai-insights.test.js
+
+# Route Integration (all 4 modules)
+node Backend/test/routes/run-route-tests.js
 ```
 
-**User Management:**
-
-```bash
-node Backend/test/user.test.js
-```
-
-**Plant Management:**
-
-```bash
-node Backend/test/plant.test.js
-```
-
-**ML Integration:**
-
-```bash
-node Backend/test/disease-detection.test.js
-```
-
-**Cloud Storage:**
-
-```bash
-node Backend/test/s3Cloud.test.js
-```
-
-**Weather:**
-
-```bash
-node Backend/test/weather.test.js
-```
 
 ---
 
@@ -204,23 +197,44 @@ runTests().catch((error) => {
 
 ---
 
-## 📊 Test Coverage Matrix
+## 📊 Test Coverage Matrix (Service Unit Tests)
 
 ```
 ┌─────────────────────────────────────┬──────┬──────┬──────┐
 │ Test Category                       │ Pass │ Fail │ Skip │
 ├─────────────────────────────────────┼──────┼──────┼──────┤
-│ Authentication                      │  6   │  -   │  -   │
+│ Authentication (auth)               │  6   │  -   │  -   │
 │ User CRUD                           │  11  │  -   │  -   │
 │ Plant CRUD                          │  9   │  -   │  -   │
 │ Disease Detection                   │  7   │  -   │  1*  │
 │ S3 Cloud Operations                 │  16  │  -   │  -   │
 │ Weather API                         │  3   │  -   │  -   │
+│ Token Service (JWT)                 │  7   │  -   │  -   │
+│ Rule Engine (16 scenarios)          │  16  │  -   │  -   │
+│ Plant Care State/Logger/Tasks       │  10  │  -   │  -   │
+│ Plant Care AI Insights              │  17  │  -   │  -   │
 ├─────────────────────────────────────┼──────┼──────┼──────┤
-│ TOTAL                               │  52  │  -   │  1*  │
+│ TOTAL Unit Tests                    │  102 │  -   │  1*  │
 └─────────────────────────────────────┴──────┴──────┴──────┘
 
 * Disease Detection test may skip if ML service is not running
+```
+
+### Route Integration Tests (~46 tests across 4 modules)
+
+```
+┌─────────────────────────────┬───────────┐
+│ Module                      │  Tests    │
+├─────────────────────────────┼───────────┤
+│ Auth Routes (4 endpoints)   │  6        │
+│ Plant Routes (9 endpoints)  │  10       │
+│ Plant-Care (17 endpoints)   │  18       │
+│ User Routes (6 endpoints)   │  6        │
+├─────────────────────────────┼───────────┤
+│ Total                       │  ~46      │
+└─────────────────────────────┴───────────┘
+
+Run: `node Backend/test/routes/run-route-tests.js`
 ```
 
 ---
@@ -288,6 +302,57 @@ weatherService.fetchWeather(request);
 weatherService.fetchByCity(city);
 weatherService.fetchByCoordinates(coordinates);
 weatherService.transform(data);
+```
+
+### TokenService
+
+```javascript
+tokenService.generateAccessToken(payload);
+tokenService.generateRefreshToken(payload);
+tokenService.verifyAccessToken(token);
+tokenService.verifyRefreshToken(token);
+```
+
+### Rule Engine
+
+```javascript
+evaluate(input);           // → {waterScore, fertilizerScore, pestRiskScore, lightScore, _appliedRules}
+evaluateByLayer(input);    // → {layers: Object, final: Object}
+getRuleCount();            // → {global, soil, plantFamily, growthStage, watering, pest, light, total}
+```
+
+### PlantCareStateService
+
+```javascript
+plantCareStateService.saveEngineOutput(plantUUID, engineResult);
+plantCareStateService.getByPlantUUID(plantUUID);
+```
+
+### PlantCareActionLogger
+
+```javascript
+actionLogger.addActionLog(plantUUID, user, { actionType, description, metadata });
+actionLogger.logWatering(plantUUID, user, description, metadata);
+actionLogger.getRecentLogs(plantUUID, last);
+```
+
+### PlantCareTaskGenerator
+
+```javascript
+taskGenerator.generateTasksFromStatus(status, engineScores);
+```
+
+### PlantTaskCareManager
+
+```javascript
+taskManager.completeTask(plantUUID, taskId, user, { archive });
+```
+
+### PlantCareAiInsights
+
+```javascript
+aiInsights.generateInsights(plantUUID, status, actionLogs);
+aiInsights.answerQuestion(plantUUID, question, actionLogs);
 ```
 
 ---
@@ -391,14 +456,11 @@ Business Services
 
 ## 🚀 Next Steps
 
-- [ ] Read SERVICES_ARCHITECTURE.md
-- [ ] Read TEST_MODULES_SUMMARY.md
-- [ ] Run auth.test.js
-- [ ] Run user.test.js
-- [ ] Run plant.test.js
-- [ ] Run disease-detection.test.js
-- [ ] Run s3Cloud.test.js
-- [ ] Run weather.test.js
+- [ ] Read all doc files (QUICK_REFERENCE, TEST_MODULES_SUMMARY)
+- [ ] Run unit tests: `node Backend/test/service/engine.test.js && node Backend/test/service/token.test.js`
+- [ ] Run route tests: `node Backend/test/routes/run-route-tests.js`
+- [ ] Write tests for uncovered critical services (PlantAnalyser, PlantCareAction, LLM)
+- [ ] Add success-path tests for WeatherService
 - [ ] Set up CI/CD pipeline
 - [ ] Add mocking for external services
 
@@ -416,4 +478,4 @@ Refer to these documentation files for detailed information:
 ---
 
 Generated: May 2026
-Last Updated: May 16, 2026
+Last Updated: June 11, 2026

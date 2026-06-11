@@ -12,6 +12,7 @@ __pycache__/
 agent.md
 AGENTS.md
 opencode.json
+.opencode/
 testsprite_tests\tmp\config.json
 prompt_doc.md
 changes.md

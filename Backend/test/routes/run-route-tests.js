@@ -1,4 +1,4 @@
-import { startServer, stopServer, resetCounts, getCounts, BASE_URL, req, log, printSummary } from "./route-helpers/setup.js";
+import { startServer, stopServer, resetCounts, getCounts, BASE_URL, req, log, printSummary } from "./helpers/setup.js";
 
 async function createSharedUser() {
   const email = `route-test-${Date.now()}@example.com`;

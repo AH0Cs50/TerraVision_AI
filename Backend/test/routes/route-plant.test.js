@@ -69,12 +69,12 @@ export async function runTests(BASE_URL, token, userUUID, plantUUID) {
   const updateOk = updateRes.status === 200 && (updateRes.data?.data?.name || "").includes("Updated");
   log("PUT /plants/:id (200 - update)", updateOk ? "PASS" : "FAIL", `→ ${updateRes.status}`);
 
-  const uploadRes = await req("POST", `/plants/${plantIdForTests}/upload`, {
+  const uploadRes = await req("POST", `/plants/${plantIdForTests}/image/upload`, {
     headers: auth,
     body: { fileName: "test.jpg", fileType: "image/jpeg" },
   });
   const uploadOk = uploadRes.status === 200 && !!(uploadRes.data?.data?.uploadUrl);
-  log("POST /plants/:id/upload (200)", uploadOk ? "PASS" : "FAIL", `→ ${uploadRes.status}`);
+  log("POST /plants/:id/image/upload (200)", uploadOk ? "PASS" : "FAIL", `→ ${uploadRes.status}`);
 
   const detectRes = await req("POST", `/plants/${plantIdForTests}/detect`, {
     headers: auth,
@@ -83,12 +83,12 @@ export async function runTests(BASE_URL, token, userUUID, plantUUID) {
   const detectOk = detectRes.status === 200;
   log("POST /plants/:id/detect (200)", detectOk ? "PASS" : "FAIL", `→ ${detectRes.status}`);
 
-  const extractRes = await req("POST", `/plants/${plantIdForTests}/image/extract`, {
+  const extractRes = await req("POST", `/plants/image/extract`, {
     headers: auth,
     body: { key: "test-key" },
   });
   const extractOk = extractRes.status === 200;
-  log("POST /plants/:id/image/extract (200)", extractOk ? "PASS" : "FAIL", `→ ${extractRes.status}`);
+  log("POST /plants/image/extract (200)", extractOk ? "PASS" : "FAIL", `→ ${extractRes.status}`);
 
   const deleteTarget = await req("POST", "/plants", {
     headers: auth,
