@@ -22,6 +22,10 @@ const {
 // //db config vars
 // const {DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT} = process.env;
 
+if (!GEMINI_API_KEY) console.warn("Missing GEMINI_API_KEY — AI features will fail");
+if (!WEATHER_API_KEY) console.warn("Missing WEATHER_API_KEY — weather analysis will be unavailable");
+if (!MongoURI) console.warn("Missing MongoURI — will use default localhost");
+
 export {
   WEATHER_API_KEY,
   DISEASE_DETECTION_URL,

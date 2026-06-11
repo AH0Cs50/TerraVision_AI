@@ -1,14 +1,16 @@
+import logging
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
 import time
 
-import traceback
-
 from app.model import predict
 from app.util import load_image_from_bytes, preprocess_image
 from app.cloud import get_file_by_key
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Plant Disease Detection API")
 
@@ -37,7 +39,7 @@ def welcome():
 async def predict_disease(data: PredictRequest):
 
     try:
-        print(f"Received prediction request for user_id={data.user_id}, plant_id={data.plant_id}, expected_plant={data.expected_plant}")
+        logger.info("Predict request: user=%s plant=%s expected=%s", data.user_id, data.plant_id, data.expected_plant)
         
         image_bytes = get_file_by_key(data.key)
 
@@ -66,8 +68,7 @@ async def predict_disease(data: PredictRequest):
         }
 
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        logger.error("Prediction failed: %s", str(e), exc_info=True)
         return {
             "success": False,
             "error": str(e)
@@ -100,7 +101,7 @@ async def predict_general(data: GeneralPredictRequest):
         }
 
     except Exception as e:
-        traceback.print_exc()
+        logger.error("General prediction failed: %s", str(e), exc_info=True)
         return {
             "success": False,
             "error": str(e)

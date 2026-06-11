@@ -80,10 +80,11 @@
 
 | Commit | Message | Scope |
 |---|---|---|
-| (uncommitted) | refactor: trim controller responses to action-specific data | plant-care.controller.js, plant.controller.js, plant-care-state.service.js |
-| (uncommitted) | fix: adapt disease detection to Python `success: false` response | disease-detection.service.js |
-| (uncommitted) | feat: Gemini model fallback priority + markdown fence stripping | llm.service.js, HttpStatusCodes.js |
-| (uncommitted) | fix: HttpResponse sanitize + harvestDate fallback + enum casing | HttpResponse.js, plant.service.js, error.middleware.js, llm.service.js |
+| `541fd57` | docs: update Backend README with latest features | Backend/README.md |
+| `c3c90d9` | fix: add HttpResponse sanitization, harvestDate fallback, error handler guard, test files | HttpResponse.js, plant.service.js, error.middleware.js, agnostic test files |
+| `396dfc6` | feat: add Gemini model fallback with retry logic and fix enum casing | llm.service.js, HttpStatusCodes.js |
+| `ffa8593` | fix: adapt disease detection to Python `success: false` response pattern | disease-detection.service.js |
+| `b9ac297` | refactor: trim controller responses + restructure PlantTaskCareManager returns | plant-care.controller.js, plant.controller.js, plant-care-state.service.js |
 
 ---
 

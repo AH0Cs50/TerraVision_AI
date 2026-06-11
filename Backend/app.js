@@ -1,4 +1,5 @@
 import express from "express";
+import morgan from "morgan";
 //routes
 import authRouter from "./routes/auth.route.js";
 import plantsRouter from "./routes/plant.route.js";
@@ -7,6 +8,7 @@ import plantCareRouter from "./routes/plant-care.route.js";
 //middlewares
 import { authenticate } from "./middlewares/auth.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
+import mongoose from "./shared/db.js";
 
 const app = express();
 // APP CONSTRUCTION
@@ -16,6 +18,7 @@ app.get("/", (req, res) => {
 
 //global middleware
 app.use(express.json());
+app.use(morgan(":method :url :status :response-time ms"));
 
 //routes
 app.use("/api/v1/auth", authRouter);
@@ -35,10 +38,26 @@ function appStart() {
       const addr = server.address();
       console.log("SERVER STARTED ON PORT:", addr ? addr.port : port);
     });
+
+    process.on("SIGTERM", () => gracefulShutdown(server));
+    process.on("SIGINT", () => gracefulShutdown(server));
   } catch {
     console.log("failed to start app server");
     process.exit(1);
   }
+}
+
+async function gracefulShutdown(server) {
+  console.log("Shutting down gracefully...");
+  server.close(async () => {
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed");
+    process.exit(0);
+  });
+  setTimeout(() => {
+    console.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10000);
 }
 
 appStart(); // start server app

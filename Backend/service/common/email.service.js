@@ -26,39 +26,45 @@ class EmailService {
    * @param {string} token - Verification token
    */
   async sendVerifyEmail(userEmail, token) {
-    const verifyLink =
-      `${process.env.APP_URL}/api/auth/verify-email?token=${token}`;
+    try {
+      console.log(`Sending verification email to ${userEmail}`);
+      const verifyLink =
+        `${process.env.APP_URL}/api/auth/verify-email?token=${token}`;
 
-    await this.transporter.sendMail({
-      from: emailConfig.from,
-      to: userEmail,
+      await this.transporter.sendMail({
+        from: emailConfig.from,
+        to: userEmail,
 
-      subject: "Verify Your Email",
+        subject: "Verify Your Email",
 
-      html: `
-        <div style="font-family: Arial;">
-          <h2>Email Verification</h2>
+        html: `
+          <div style="font-family: Arial;">
+            <h2>Email Verification</h2>
 
-          <p>
-            Click the button below to verify your email.
-          </p>
+            <p>
+              Click the button below to verify your email.
+            </p>
 
-          <a
-            href="${verifyLink}"
-            style="
-              display:inline-block;
-              padding:12px 20px;
-              background:#2e7d32;
-              color:white;
-              text-decoration:none;
-              border-radius:6px;
-            "
-          >
-            Verify Email
-          </a>
-        </div>
-      `,
-    });
+            <a
+              href="${verifyLink}"
+              style="
+                display:inline-block;
+                padding:12px 20px;
+                background:#2e7d32;
+                color:white;
+                text-decoration:none;
+                border-radius:6px;
+              "
+            >
+              Verify Email
+            </a>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send verification email:", error.message);
+      throw error;
+    }
   }
 
   /**
@@ -67,39 +73,45 @@ class EmailService {
    * @param {string} token - Reset token
    */
   async sendResetPasswordEmail(userEmail, token) {
-    const resetLink =
-      `${process.env.APP_URL}/reset-password?token=${token}`;
+    try {
+      console.log(`Sending password reset email to ${userEmail}`);
+      const resetLink =
+        `${process.env.APP_URL}/reset-password?token=${token}`;
 
-    await this.transporter.sendMail({
-      from: emailConfig.from,
-      to: userEmail,
+      await this.transporter.sendMail({
+        from: emailConfig.from,
+        to: userEmail,
 
-      subject: "Reset Password",
+        subject: "Reset Password",
 
-      html: `
-        <div style="font-family: Arial;">
-          <h2>Password Reset</h2>
+        html: `
+          <div style="font-family: Arial;">
+            <h2>Password Reset</h2>
 
-          <p>
-            Click the button below to reset your password.
-          </p>
+            <p>
+              Click the button below to reset your password.
+            </p>
 
-          <a
-            href="${resetLink}"
-            style="
-              display:inline-block;
-              padding:12px 20px;
-              background:#1565c0;
-              color:white;
-              text-decoration:none;
-              border-radius:6px;
-            "
-          >
-            Reset Password
-          </a>
-        </div>
-      `,
-    });
+            <a
+              href="${resetLink}"
+              style="
+                display:inline-block;
+                padding:12px 20px;
+                background:#1565c0;
+                color:white;
+                text-decoration:none;
+                border-radius:6px;
+              "
+            >
+              Reset Password
+            </a>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send password reset email:", error.message);
+      throw error;
+    }
   }
 }
 
