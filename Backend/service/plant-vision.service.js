@@ -38,19 +38,24 @@ export default class PlantVisionService {
    * @returns {Promise<Object>} Parsed plant data from the LLM
    */
   async extractImageData(s3Key) {
-    const buffer = await this.s3CloudService.getObjectBuffer(s3Key);
-    const base64 = buffer.toString("base64");
-    const mimeType = this.#mimeFromKey(s3Key);
+    try {
+      const buffer = await this.s3CloudService.getObjectBuffer(s3Key);
+      const base64 = buffer.toString("base64");
+      const mimeType = this.#mimeFromKey(s3Key);
 
-    const prompt = fillPrompt("EXTRACT_PLANT_DATA");
-    const response = await this.llmService.generateResponseWithImage(
-      prompt,
-      base64,
-      mimeType,
-    );
+      const prompt = fillPrompt("EXTRACT_PLANT_DATA");
+      const response = await this.llmService.generateResponseWithImage(
+        prompt,
+        base64,
+        mimeType,
+      );
 
-    return typeof response === "object" && response !== null
-      ? response
-      : JSON.parse(response);
+      return typeof response === "object" && response !== null
+        ? response
+        : JSON.parse(response);
+    } catch (error) {
+      console.error("Image extraction failed:", error?.message || "unknown");
+      throw error;
+    }
   }
 }

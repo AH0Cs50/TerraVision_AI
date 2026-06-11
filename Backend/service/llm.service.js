@@ -103,10 +103,12 @@ export default class LLMService {
         return await this.ai.models.generateContent({ model, contents });
       } catch (error) {
         if (!this.#isRetryableError(error)) throw error;
+        console.warn(`Gemini model ${model} unavailable (429/503), falling back`);
         errors.push(`${model}: ${error.message}`);
       }
     }
 
+    console.error("All Gemini models exhausted:", errors.join(" | "));
     throw new RouteError(
       HttpStatusCode.SERVICE_UNAVAILABLE,
       "All Gemini models are currently unavailable. Please try again later.",

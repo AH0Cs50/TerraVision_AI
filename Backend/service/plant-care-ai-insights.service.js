@@ -18,7 +18,8 @@ export class PlantCareAiInsights {
       const prompt = this.#buildInsightPrompt(status, actionLogs);
       const response = await this.llmService.generateResponse(prompt);
       return this.#parseInsights(response);
-    } catch {
+    } catch (error) {
+      console.error("AI insight generation failed:", error?.message || "unknown");
       return { summary: "", recommendations: [], generatedAt: new Date() };
     }
   }
@@ -31,7 +32,8 @@ export class PlantCareAiInsights {
       const prompt = this.#buildQuestionPrompt(question, actionLogs);
       const response = await this.llmService.generateResponse(prompt);
       return this.#parseInsights(response);
-    } catch {
+    } catch (error) {
+      console.error("AI question answering failed:", error?.message || "unknown");
       return { summary: "", recommendations: [], generatedAt: new Date() };
     }
   }
@@ -133,7 +135,8 @@ export class PlantCareAiInsights {
           : [],
         generatedAt: new Date(),
       };
-    } catch {
+    } catch (error) {
+      console.error("Failed to parse AI insight response:", error?.message || "unknown");
       return {
         summary: "",
         recommendations: [],

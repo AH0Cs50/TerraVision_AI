@@ -33,6 +33,7 @@ class AuthService {
     }
 
     if (existingUser) {
+      console.warn(`Signup failed — email already exists: ${email}`);
       throw new RouteError(HttpStatusCodes.CONFLICT, "Email already exists");
     }
 
@@ -54,6 +55,7 @@ class AuthService {
     await this.userService.setRefreshToken(user.internalId, refreshToken);
     //set email token here to user to verify their email
 
+    console.log(`User signed up: ${email}`);
     return {
       user: {
         uuid: user.uuid,
@@ -71,11 +73,6 @@ class AuthService {
   /**
    * @description Authenticates a user by email and password. Returns JWT
    * token pair on success.
-   * @param {Object} params
-   * @param {string} params.email - User email
-   * @param {string} params.password - Raw password
-   * @returns {Promise<{user: {uuid: string, name: string, email: string}, tokens: {accessToken: string, refreshToken: string}}>}
-   * @throws {RouteError} UNAUTHORIZED if credentials are invalid
    */
   async login({ email, password }) {
     const user = await this.userService.findByEmail(email);
@@ -83,6 +80,7 @@ class AuthService {
     const isValid = await this.passwordHasher.compare(password, user.password);
 
     if (!isValid) {
+      console.warn(`Failed login attempt for email: ${email}`);
       throw new RouteError(HttpStatusCodes.UNAUTHORIZED, "Invalid credentials");
     }
 
@@ -93,6 +91,7 @@ class AuthService {
 
     await this.userService.setRefreshToken(user.internalId, refreshToken);
 
+    console.log(`User logged in: ${email}`);
     return {
       user: {
         uuid: user.uuid,
@@ -108,14 +107,12 @@ class AuthService {
 
   /**
    * @description Logs out a user by clearing their stored refresh token.
-   * @param {string} userUUID - UUID of the user to log out
-   * @returns {Promise<{message: string}>}
-   * @throws {RouteError} NOT_FOUND if user does not exist
    */
   async logout(userUUID) {
     const user = await this.userService.findByUUID(userUUID);
     await this.userService.clearRefreshToken(user.internalId);
 
+    console.log(`User logged out: ${userUUID}`);
     return {
       message: "Logged out successfully",
     };
@@ -124,9 +121,6 @@ class AuthService {
   /**
    * @description Verifies a refresh token, validates it against the stored
    * value, and issues a new JWT token pair (token rotation).
-   * @param {string} refreshToken - The refresh token to validate and rotate
-   * @returns {Promise<{accessToken: string, refreshToken: string}>}
-   * @throws {RouteError} UNAUTHORIZED if token is invalid or does not match
    */
   async refresh(refreshToken) {
     const decoded = this.tokenService.verifyRefreshToken(refreshToken);
@@ -134,6 +128,7 @@ class AuthService {
     const user = await this.userService.findByUUID(decoded.uuid);
 
     if (!user || user.refreshToken !== refreshToken) {
+      console.warn(`Refresh token reuse or invalid token for UUID: ${decoded.uuid}`);
       throw new RouteError(
         HttpStatusCodes.UNAUTHORIZED,
         "Refresh token invalid",
@@ -150,6 +145,7 @@ class AuthService {
 
     await this.userService.setRefreshToken(user.internalId, newRefreshToken);
 
+    console.log(`Token refreshed for user: ${user.uuid}`);
     return {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,

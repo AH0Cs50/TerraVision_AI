@@ -18,8 +18,13 @@ export default class WeatherService {
    */
   async getWeather(location) {
     const request = this.resolveLocation(location);
-    const rawData = await this.fetchWeather(request);
-    return WeatherService.transform(rawData);
+    try {
+      const rawData = await this.fetchWeather(request);
+      return WeatherService.transform(rawData);
+    } catch (error) {
+      console.error("Weather API call failed:", error.message);
+      throw error;
+    }
   }
 
   /**

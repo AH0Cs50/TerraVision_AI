@@ -28,7 +28,8 @@ export class PlantCareTaskGenerator {
       const prompt = this.#buildPrompt(status, engineScores);
       const response = await this.llmService.generateResponse(prompt);
       return this.#parseTasks(response);
-    } catch {
+    } catch (error) {
+      console.error("Task generation via LLM failed:", error?.message || "unknown");
       return [];
     }
   }
@@ -109,7 +110,8 @@ export class PlantCareTaskGenerator {
           createdAt: new Date(),
         }),
       );
-    } catch {
+    } catch (error) {
+      console.error("Failed to parse LLM task response:", error?.message || "unknown");
       return [];
     }
   }
