@@ -86,12 +86,6 @@ class PlantService {
     const expectedHarvestDate =
       data.expectedHarvestDate ||
       (await this.#deriveExpectedHarvestDate({ ...dataWithAge, growthStage }));
-    console.log({
-      ...dataWithAge,
-      growthStage,
-      expectedHarvestDate,
-      userInternalId,
-    });
     return await this.plantRepository.create({
       ...dataWithAge,
       growthStage,
@@ -289,6 +283,9 @@ class PlantService {
       soil: {
         type: Plant.soil?.type,
         moisture: Plant.soil?.moisture,
+        hoursSinceLastFertilized: Plant.soil?.lastFertilized
+          ? Math.floor((Date.now() - new Date(Plant.soil.lastFertilized).getTime()) / 3600000)
+          : null,
       },
       watering: {
         hoursSinceLastWatering: Plant.watering?.hoursSinceLastWatering,
@@ -373,6 +370,44 @@ class PlantService {
 
     const fileName = imageName.substring(imageName.lastIndexOf("/") + 1);
     return await this.plantRepository.removeImage(uuid, fileName);
+  }
+
+  async applyFertilizing(uuid) {
+    return await this.plantRepository.updateByUUID(uuid, { "soil.lastFertilized": new Date() });
+  }
+
+  async applyPruning(uuid) {
+    return await this.plantRepository.updateByUUID(uuid, { "soil.lastPruned": new Date() });
+  }
+
+  async applyDiseaseTreatment(uuid) {
+    return await this.plantRepository.updateByUUID(uuid, {
+      disease: { name: "healthy", confidence: 1 },
+      "stress.diseaseType": "none",
+      "stress.severity": "none",
+      hasDisease: false,
+    });
+  }
+
+  async applyHarvest(uuid) {
+    return await this.plantRepository.updateByUUID(uuid, { growthStage: "mature" });
+  }
+
+  async applyTaskAction(uuid, taskType) {
+    switch (taskType) {
+      case "fertilizing":
+        return this.applyFertilizing(uuid);
+      case "pruning":
+        return this.applyPruning(uuid);
+      case "disease_treatment":
+        return this.applyDiseaseTreatment(uuid);
+      case "harvest":
+        return this.applyHarvest(uuid);
+      case "move_light":
+        return null;
+      default:
+        return null;
+    }
   }
 }
 

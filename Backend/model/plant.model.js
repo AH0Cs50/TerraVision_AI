@@ -60,6 +60,8 @@ const plantMongooseSchema = new mongoose.Schema({
   soil: {
     type: { type: String, enum: SOIL_TYPES },
     moisture: { type: Number, min: 0, max: 100 },
+    lastFertilized: { type: Date },
+    lastPruned: { type: Date },
   },
   watering: {
     hoursSinceLastWatering: { type: Number, min: 0 },

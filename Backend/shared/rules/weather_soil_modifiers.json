@@ -251,6 +251,18 @@
       },
       "weight": 0.3,
       "explanation": "Silt soil has moderate water retention and good natural fertility, slight risk of surface crusting"
+    },
+    {
+      "id": "soil_recently_fertilized_nutrient_sufficiency",
+      "factor": "weather",
+      "condition": {
+        "soil.hoursSinceLastFertilized": { "lte": 168 }
+      },
+      "effects": {
+        "fertilizerScore": -0.3
+      },
+      "weight": 0.4,
+      "explanation": "Recently fertilized (within 7 days) — reduced immediate nutrient demand"
     }
   ]
 }
