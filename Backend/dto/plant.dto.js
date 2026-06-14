@@ -19,6 +19,8 @@ function parseDate(value) {
 export const PlantDTO = z.object({
   name: z.string().min(2).max(100),
 
+  growthStage: GrowthStageEnum.optional(),
+
   commonName: z.string().min(2).max(100).optional(),
 
   category: z.enum(["crop", "tree", "flower"]),

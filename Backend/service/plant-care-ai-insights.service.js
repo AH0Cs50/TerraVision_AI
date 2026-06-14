@@ -1,4 +1,4 @@
-import { fillPrompt } from "./llm.service.js";
+import { fillPrompt } from "../infrastructure/service/llm.service.js";
 
 /**
  * @description Generates AI-powered insights and answers for plant care.

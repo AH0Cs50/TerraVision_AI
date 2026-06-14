@@ -1,4 +1,4 @@
-import { fillPrompt } from "./llm.service.js";
+import { fillPrompt } from "../infrastructure/service/llm.service.js";
 
 /**
  * @description Extracts structured plant data from images using an LLM

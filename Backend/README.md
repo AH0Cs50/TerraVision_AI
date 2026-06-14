@@ -51,7 +51,7 @@ User Devices (Web/Mobile)
 
 ### Architecture Style
 
-**Modular Monolith** with an external ML microservice. The core backend is a single Express application organized into domain modules (auth, user, plant, plant-care) communicating via in-process function calls through a dependency injection container. Disease detection is delegated to a separate Python FastAPI microservice.
+**Modular Monolith** with an external ML microservice. The core backend uses **Use Cases** for business logic, **Entities** for domain state, and **Infrastructure** for external concerns — all wired through a dependency injection container. Disease detection is delegated to a separate Python FastAPI microservice.
 
 ### Request Lifecycle
 
@@ -60,19 +60,22 @@ sequenceDiagram
     participant Client
     participant Middleware
     participant Controller
-    participant Service
+    participant UseCase
+    participant Entity
     participant Repository
     participant DB
 
     Client->>Middleware: HTTP Request + JWT
     Middleware->>Middleware: Verify Token / Attach req.user
     Middleware->>Controller: Forward Request
-    Controller->>Service: Delegate Business Logic
-    Service->>Repository: Data Access
+    Controller->>UseCase: Delegate Business Logic
+    UseCase->>Entity: Load / Mutate Domain State
+    Entity->>Repository: Data Access
     Repository->>DB: Query / Write
     DB-->>Repository: Result
-    Repository-->>Service: Domain Object
-    Service-->>Controller: Result DTO
+    Repository-->>Entity: Domain Object
+    Entity-->>UseCase: Updated State
+    UseCase-->>Controller: Result DTO
     Controller-->>Client: JSON Response
     Middleware->>Middleware: Error Handling (if any)
 ```
@@ -86,14 +89,21 @@ graph TD
     A --> D[Plant Module]
     A --> E[Plant Care Module]
     D --> F[S3 Cloud Service]
-    D --> G[Disease Detection Service]
-    E --> H[Weather Service]
-    E --> I[LLM Service]
-    E --> J[Rule Engine]
-    G --> K[ML Microservice :8000]
-    H --> L[OpenWeatherMap API]
-    I --> M[Google Gemini API]
-    F --> N[Storj S3 Bucket]
+    D --> G[Plant Use Cases]
+    G --> H[Plant Entity]
+    H --> I[Plant Repo]
+    D --> J[Disease Detection Use Case]
+    J --> K[ML Microservice :8000]
+    E --> L[Plant Care Use Cases]
+    L --> M[Plant Care Entity]
+    M --> N[Plant Care Repo]
+    M --> O[Action Log Repo]
+    E --> P[Weather Service]
+    E --> Q[LLM Service]
+    E --> R[Rule Engine]
+    P --> S[OpenWeatherMap API]
+    Q --> T[Google Gemini API]
+    F --> U[Storj S3 Bucket]
 ```
 
 ### Module Architecture
@@ -105,17 +115,26 @@ graph TD
 │   Auth    │   User   │   Plant   │   Plant Care     │
 │  Module   │  Module  │  Module   │    Module        │
 ├──────────┴──────────┴───────────┴──────────────────┤
-│              Service Layer                          │
+│              Use Case Layer                         │
 ├──────────┬──────────┬───────────┬──────────────────┤
 │   Auth    │   User   │   Plant   │   Plant Care     │
-│  Service  │  Service │  Service  │   Services       │
+│ Use Case │ Use Case │ Use Case  │   Use Cases       │
 ├──────────┴──────────┴───────────┴──────────────────┤
+│              Entity Layer                           │
+├──────────────────┬─────────────────────────────────┤
+│   User Entity    │        Plant Entity              │
+├──────────────────┴─────────────────────────────────┤
 │              Engine (131 Rules)                     │
 │  global │ soil │ plantFamily │ growthStage │        │
 │  watering │ pestDisease │ light                      │
+├──────────────────┬─────────────────────────────────┤
+│           Infrastructure Layer                      │
 ├──────────┬──────────┬───────────┬──────────────────┤
-│  User    │  Plant   │PlantCare  │   S3 Cloud       │
+│  User    │  Plant   │PlantCare  │   Action Log     │
 │  Repo    │  Repo    │  Repo     │   Repo            │
+├──────────┴──────────┴───────────┴──────────────────┤
+│  Token   │  Pass    │  S3       │   LLM            │
+│  Service │  Hasher  │  Cloud    │   Service         │
 ├──────────┴──────────┴───────────┴──────────────────┤
 │              MongoDB (terra_db)                     │
 │   users │ plants │ plantcares │ actionlogs          │
@@ -201,95 +220,100 @@ graph TD
 
 ````
 Backend/
-├── app.js                          # Express application entry + server start
-├── config/
-│   ├── config.js                   # Central env config loader
-│   └── config.env                  # Environment variables (gitignored)
+├── app.js                 Express 5 entrypoint, middleware stack, route mounting
+├── config/                config.js + config.env
 │
-├── routes/                         # Route definitions
-│   ├── auth.route.js               # POST /signup, /login, /refresh, /logout
-│   ├── user.route.js               # GET/PUT/DELETE /:id, /email
-│   ├── plant.route.js              # CRUD + upload/detect
-│   └── plant-care.route.js         # Analyze, tasks, logs, AI insights
+├── routes/                4 route files
+│   ├── auth.route.js
+│   ├── user.route.js
+│   ├── plant.route.js
+│   └── plant-care.route.js
 │
-├── controller/                     # Request handlers (thin orchestration)
+├── controller/            4 controllers — parse input, call use case, format response
 │   ├── auth.controller.js
 │   ├── user.controller.js
 │   ├── plant.controller.js
 │   └── plant-care.controller.js
 │
-├── service/                        # Business logic
-│   ├── auth.service.js
-│   ├── user.service.js
-│   ├── plant.service.js
-│   ├── plant-analyser.service.js   # Analysis orchestrator
-│   ├── plant-care-state.service.js     # Care state CRUD
-│   ├── plant-care-task-generator.service.js  # LLM task generation
-│   ├── plant-care-task-manager.service.js   # Task lifecycle
-│   ├── plant-care-action-logger.service.js  # Action logging (17 types)
-│   ├── plant-care-ai-insights.service.js    # AI insights & Q&A
-│   ├── disease-detection.service.js# ML microservice client
-│   ├── s3Cloud.service.js          # S3 signed URL generation
-│   ├── weather.service.js          # OpenWeatherMap + WeatherDescriber
-│   ├── llm.service.js              # Google Gemini client
-│   ├── common/                     # Cross-cutting services
-│   │   ├── token.service.js        # JWT generation/verification
-│   │   ├── email.service.js        # Nodemailer
-│   │   └── passHash.service.js     # bcrypt
-│   └── engine/                     # Rule evaluation engine
-│       ├── index.js                # Layer ordering + evaluate()
-│       ├── engine.js               # Core engine (conditions, effects, scoring)
-│       ├── global.js               # Global weather rule loader
-│       ├── soil.js                 # Soil modifier rule loader
-│       ├── plantFamilies.js        # Family-specific rule loader
-│       ├── growthStages.js         # Growth stage rule loader
-│       ├── watering.js             # Watering history rule loader
-│       ├── pestDisease.js          # Pest/disease rule loader
-│       └── light.js                # Light modifier rule loader
+├── usecases/              7 use case files — all business logic, own dependencies
+│   ├── auth.usecases.js
+│   ├── user.usecases.js
+│   ├── plant.usecase.js
+│   ├── disease-detection.usecase.js
+│   ├── plant-analyser.usecase.js
+│   ├── plant-care-action.usecase.js
+│   └── plant-care.usecase.js
 │
-├── model/                          # Mongoose schemas
+├── entity/                2 entities (User, Plant) — private #data, delta-returning methods
+│   ├── User.entity.js
+│   └── Plant.entity.js
+│
+├── service/               plant.service.js (verifyPlantAccess), email, weather, engine/ (7 layers), vision
+│   ├── plant.service.js
+│   ├── email.service.js
+│   ├── weather.service.js
+│   ├── vision.service.js
+│   └── engine/
+│       ├── index.js
+│       ├── engine.js
+│       ├── global.js
+│       ├── soil.js
+│       ├── plantFamilies.js
+│       ├── growthStages.js
+│       ├── watering.js
+│       ├── pestDisease.js
+│       └── light.js
+│
+├── infrastructure/
+│   ├── repo/              5 repos — pure CRUD, return entities
+│   │   ├── user.repository.js
+│   │   ├── plant.repository.js
+│   │   ├── plant-care.repository.js
+│   │   ├── s3Cloud.repository.js
+│   │   └── action-log.repository.js
+│   └── service/           token, password hasher, S3 cloud, LLM
+│       ├── token.service.js
+│       ├── passHash.service.js
+│       ├── s3Cloud.service.js
+│       └── llm.service.js
+│
+├── model/                  4 Mongoose schemas + enums
 │   ├── user.model.js
 │   ├── plant.model.js
 │   ├── plant-care.model.js
 │   └── action-log.model.js
 │
-├── repositories/                   # Data access layer
-│   ├── user.repository.js
-│   ├── plant.repository.js
-│   ├── plant-care.repository.js
-│   ├── s3Cloud.repository.js
-│   └── action-log.repository.js
-│
-├── dto/                            # Zod validation schemas
+├── dto/                    Zod schemas (PlantDTO, UserDTO)
 │   ├── user.dto.js
 │   └── plant.dto.js
 │
-├── middlewares/                     # Express middleware
-│   ├── auth.middleware.js           # authenticate + authorize
-│   ├── error.middleware.js          # Global error handler
+├── middlewares/            auth (JWT), error handler, emailValidator
+│   ├── auth.middleware.js
+│   ├── error.middleware.js
 │   └── emailValidator.middleware.js
 │
-├── shared/                         # Shared infrastructure
-│   ├── container.js                # Dependency injection wiring
-│   ├── db.js                       # MongoDB connection
-│   ├── s3Client.cloud.js           # S3 client init
-│   ├── rules/                      # JSON rule files (7 files, 127 rules)
+├── shared/                 container.js (DI), db.js, s3Client, rules/ (7 JSON), util/
+│   ├── container.js
+│   ├── db.js
+│   ├── s3Client.cloud.js
+│   ├── rules/
 │   └── util/
-│       ├── RouteError.js           # Operational error class
-│       └── HttpStatusCodes.js      # Status code constants
 │
-└── test/                           # Test suites (~110 tests)
-    ├── auth.test.js
-    ├── user.test.js
-    ├── plant.test.js
-    ├── s3Cloud.test.js
-    ├── disease-detection.test.js
-    ├── weather.test.js
-    ├── token.test.js
-    ├── engine.test.js
-    ├── plant-care-state.test.js
-    ├── plant-care-ai-insights.test.js
-    └── route-plant-care.test.js
+└── test/
+    ├── service/            7 use case test files
+    │   ├── auth.test.js
+    │   ├── user.test.js
+    │   ├── plant.test.js
+    │   ├── disease-detection.test.js
+    │   ├── engine.test.js
+    │   ├── plant-care-state.test.js
+    │   └── plant-care-ai-insights.test.js
+    └── routes/
+        ├── helpers/
+        ├── route-auth.test.js
+        ├── route-plant.test.js
+        ├── route-plant-care.test.js
+        └── route-user.test.js
     ```
 
     ```

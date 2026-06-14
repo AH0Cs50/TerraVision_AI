@@ -4,7 +4,7 @@ Base URL: `http://localhost:5500/api/v1`
 
 All responses follow the format:
 ```json
-{ "success": true|false, "data": { ... }, "message": "..." }
+{ "success": true|false, "data": { ... }, "message": "...", "status": <http_code> }
 ```
 
 Authenticated endpoints require:
@@ -108,25 +108,35 @@ Content-Type: application/json
 
 {
   "success": true,
-  "message": "User created successfully",
+  "message": "User created",
   "data": {
-    "uuid": "550e8400-e29b-41d4-a716-446655440000",
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+    "user": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Farmer Joe",
+      "email": "joe@farm.com",
+      "role": "user",
+      "isverified": true,
+      "location": { "city": "Nairobi" },
+      "createdAt": "2026-03-15T12:00:00Z"
+    },
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+    }
   }
 }
 ```
 
 ### POST /auth/login
 
-Authenticates user by email+password. Verifies password against bcrypt hash, generates new JWT token pair, stores refresh token in DB. Returns user profile (uuid, email, role) + tokens.
+Authenticates user by email+password. Verifies password against bcrypt hash, generates new JWT token pair, stores refresh token in DB. Returns user profile (uuid, name, email, role, isverified, location) + tokens.
 
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
 
 {
-  "user_email": "joe@farm.com",
+  "email": "joe@farm.com",
   "password": "securePassword123"
 }
 ```
@@ -138,11 +148,19 @@ Content-Type: application/json
 {
   "success": true,
   "data": {
-    "uuid": "550e8400-e29b-41d4-a716-446655440000",
-    "email": "joe@farm.com",
-    "role": "user",
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+    "user": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Farmer Joe",
+      "email": "joe@farm.com",
+      "role": "user",
+      "isverified": true,
+      "location": { "city": "Nairobi" },
+      "createdAt": "2026-03-15T12:00:00Z"
+    },
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+    }
   }
 }
 ```
