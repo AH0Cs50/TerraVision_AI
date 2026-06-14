@@ -10,37 +10,6 @@ const httpClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-function simplifyMlResponse(data) {
-  const pred = data?.prediction;
-  if (!pred || !pred.class) {
-    return {
-      disease: "healthy",
-      plant: "unknown",
-      confidence: 1,
-      disease_type: "healthy",
-      topPredictions: [],
-    };
-  }
-
-  const result = {
-    disease: pred.class.disease || "healthy",
-    plant: pred.class.plant || "unknown",
-    confidence: pred.confidence ?? 1,
-    disease_type: pred.class.disease_type || "unknown",
-    topPredictions: (pred.top_k || []).map(p => ({
-      disease: p.class.disease,
-      plant: p.class.plant,
-      confidence: p.confidence,
-    })),
-  };
-
-  if (data.model) {
-    result.model = { name: data.model.name, version: data.model.version };
-  }
-
-  return result;
-}
-
 function transformMlResponse(mlResponse) {
   const prediction = mlResponse?.prediction;
   if (!prediction) {
@@ -53,14 +22,14 @@ function transformMlResponse(mlResponse) {
   };
 }
 
-async function detectDisease({ key, userId, plantId, expectedPlant }) {
+async function detectDisease({ key, userId, plantUUID, expectedPlant }) {
   s3CloudService.validatePlantImageKey(key);
 
   try {
     const response = await httpClient.post("/predict", {
       key,
       user_id: userId,
-      plant_id: plantId,
+      plant_uuid: plantUUID,
       expected_plant: expectedPlant,
     });
 
@@ -91,8 +60,72 @@ async function detectDisease({ key, userId, plantId, expectedPlant }) {
   }
 }
 
+function simplifyDetectionResponse(data) {
+  const pred = data?.prediction;
+  if (!pred || !pred.class) {
+    return {
+      disease: "healthy",
+      plant: "unknown",
+      confidence: 1,
+      disease_type: "healthy",
+      topPredictions: [],
+    };
+  }
+
+  const result = {
+    disease: pred.class.disease || "healthy",
+    plant: pred.class.plant || "unknown",
+    confidence: pred.confidence ?? 1,
+    disease_type: pred.class.disease_type || "unknown",
+    topPredictions: (pred.top_k || []).map(p => ({
+      disease: p.class.disease,
+      plant: p.class.plant,
+      confidence: p.confidence,
+    })),
+  };
+
+  if (data.model) {
+    result.model = { name: data.model.name, version: data.model.version };
+  }
+
+  return result;
+}
+
+export async function detectUserImageDisease({ key, userId }) {
+  s3CloudService.validateUserImageKey(key);
+
+  try {
+    const response = await httpClient.post("/predict", {
+      key,
+      user_id: userId,
+    });
+
+    if (response.data?.success === false) {
+      console.error("ML service returned error:", response.data.error);
+      return {
+        disease: "healthy",
+        plant: "unknown",
+        confidence: 1,
+        disease_type: "healthy",
+        topPredictions: [],
+      };
+    }
+
+    return simplifyDetectionResponse(response.data);
+  } catch (error) {
+    console.error("User image disease detection failed:", error.message);
+    return {
+      disease: "healthy",
+      plant: "unknown",
+      confidence: 1,
+      disease_type: "healthy",
+      topPredictions: [],
+    };
+  }
+}
+
 export async function detectAndSaveDisease({ key, userId, plantId, expectedPlant }) {
-  const mlResponse = await detectDisease({ key, userId, plantId, expectedPlant });
+  const mlResponse = await detectDisease({ key, userId, plantUUID: plantId, expectedPlant });
   const diseaseRecord = transformMlResponse(mlResponse);
 
   const plant = await plantRepo.findByUUID(plantId);
@@ -107,32 +140,4 @@ export async function detectAndSaveDisease({ key, userId, plantId, expectedPlant
   }
 
   return result;
-}
-
-export async function detectGeneralDisease({ key }) {
-  try {
-    const response = await httpClient.post("/predict/general", { key });
-
-    if (response.data?.success === false) {
-      console.error("ML service returned error:", response.data.error);
-      return {
-        disease: "healthy",
-        plant: "unknown",
-        confidence: 1,
-        disease_type: "healthy",
-        topPredictions: [],
-      };
-    }
-
-    return simplifyMlResponse(response.data);
-  } catch (error) {
-    console.error("General disease detection failed:", error.message);
-    return {
-      disease: "healthy",
-      plant: "unknown",
-      confidence: 1,
-      disease_type: "healthy",
-      topPredictions: [],
-    };
-  }
 }

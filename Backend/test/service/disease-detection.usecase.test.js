@@ -1,8 +1,5 @@
 import assert from "assert";
-import {
-  detectAndSaveDisease,
-  detectGeneralDisease,
-} from "../../usecases/disease-detection.usecase.js";
+import { detectAndSaveDisease } from "../../usecases/disease-detection.usecase.js";
 import { signup } from "../../usecases/auth.usecases.js";
 import { createPlant } from "../../usecases/plant.usecase.js";
 import { userRepo, plantRepo } from "../../shared/container.js";
@@ -86,28 +83,7 @@ async function runTests() {
   }
 
   // =========================
-  // Test 3: detectGeneralDisease fallback
-  // =========================
-  try {
-    const result = await detectGeneralDisease({
-      key: `general/images/${Date.now()}-test.jpg`,
-    });
-
-    assert(result.disease === "healthy", "General fallback should be healthy");
-    assert(result.confidence === 1, "General fallback confidence should be 1");
-    assert(result.plant === "unknown", "Plant should be unknown");
-    assert(
-      result.disease_type === "healthy",
-      "Disease type should be healthy",
-    );
-    assert(Array.isArray(result.topPredictions), "topPredictions should be array");
-    console.log("✅ Test 3 passed: detectGeneralDisease fallback returns healthy");
-  } catch (error) {
-    console.error("❌ Test 3 failed:", error.message);
-  }
-
-  // =========================
-  // Test 4: detectAndSaveDisease with nonexistent plant
+  // Test 3: detectAndSaveDisease with nonexistent plant
   // =========================
   try {
     const fakeUUID = "00000000-0000-0000-0000-000000000000";
@@ -135,7 +111,7 @@ async function runTests() {
     }
     const u = await userRepo.findByEmail(testEmail);
     if (u) await userRepo.deleteByUUID(u.uuid);
-  } catch {}
+  } catch { /* cleanup best-effort */ }
 
   console.log("\nDisease Detection UseCase tests completed\n");
 }

@@ -3,7 +3,7 @@ import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 import { fillPrompt } from "../infrastructure/service/llm.service.js";
 import { GROWTH_STAGES } from "../model/plant.model.js";
 import { userRepo, plantRepo, llmService, s3CloudService, plantCareActionLogger, actionLogRepo, plantCareStateService, plantVisionService, plantService } from "../shared/container.js";
-import { detectAndSaveDisease, detectGeneralDisease as detectGeneralDiseaseFromMl } from "./disease-detection.usecase.js";
+import { detectAndSaveDisease, detectUserImageDisease as detectUserImageDiseaseFromMl } from "./disease-detection.usecase.js";
 
 async function resolveUserInternalId(user) {
   if (user.internalId) return user.internalId;
@@ -141,6 +141,10 @@ export async function extractPlantDataFromImage(key) {
   return await plantVisionService.extractImageData(key);
 }
 
+export async function detectUserImageDisease(key, user) {
+  return await detectUserImageDiseaseFromMl({ key, userId: user.uuid });
+}
+
 export async function uploadUserImage(user, fileName, fileType) {
   return await s3CloudService.generateUserUploadUrl({
     userId: user.uuid,
@@ -149,13 +153,4 @@ export async function uploadUserImage(user, fileName, fileType) {
   });
 }
 
-export async function uploadGeneralImage(fileName, fileType) {
-  return await s3CloudService.generateGeneralUploadUrl({
-    fileName,
-    fileType,
-  });
-}
 
-export async function detectGeneralDisease(key) {
-  return await detectGeneralDiseaseFromMl({ key });
-}

@@ -8,49 +8,31 @@ FastAPI microservice for plant disease classification using a TensorFlow/Keras e
 
 ### `POST /predict`
 
-Plant-specific detection. Filters top-k predictions to only the user's plant type.
+Runs disease detection on a leaf image fetched from S3. `user_id` and `plant_uuid` are optional — when provided they are echoed back in the response. If `expected_plant` is set, predictions are filtered to matching plant types.
 
 **Request body:**
 
 ```json
 {
-  "user_id": "u123",
-  "plant_id": "p456",
   "key": "plants/user_uuid/plant_uuid/images/leaf.jpg",
+  "user_id": "u123",
+  "plant_uuid": "p456",
   "expected_plant": "Tomato"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `user_id` | `string` | User identifier |
-| `plant_id` | `string` | Plant identifier |
-| `key` | `string` | S3 object key (Storj) pointing to the plant image |
-| `expected_plant` | `string` | (optional) Plant name to narrow predictions |
+| `key` | `string` | **Required.** S3 object key (Storj) pointing to the plant image |
+| `user_id` | `string` | (optional) User identifier, echoed in response |
+| `plant_uuid` | `string` | (optional) Plant UUID, echoed in response |
+| `expected_plant` | `string` | (optional) Plant name to narrow top-k predictions |
 
-### `POST /predict/general`
-
-No-user detection. Returns global top-k across all 88 classes (no plant filtering).
-
-**Request body:**
-
-```json
-{
-  "key": "general/images/12345-leaf.jpg"
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `key` | `string` | S3 object key pointing to the uploaded image |
-
-**Response (both endpoints use the same format):**
+**Response:**
 
 ```json
 {
   "success": true,
-  "user_id": "u123",
-  "plant_id": "p456",
   "image_key": "plants/user_uuid/plant_uuid/images/leaf.jpg",
   "prediction": {
     "class": {

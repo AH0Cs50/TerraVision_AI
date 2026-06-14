@@ -14,41 +14,25 @@ A FastAPI microservice that classifies plant diseases from leaf images using a C
 
 ### `POST /predict`
 
-Plant-specific detection. Filters predictions to only the user's plant type.
+Runs disease detection on a leaf image fetched from S3. `user_id` and `plant_uuid` are optional — when provided they are echoed back in the response. If `expected_plant` is set, predictions are filtered to matching plant types.
 
 #### Request Body
 
 ```json
 {
-  "user_id": "u123",
-  "plant_id": "p456",
   "key": "plants/user_uuid/plant_uuid/images/leaf.png",
+  "user_id": "u123",
+  "plant_uuid": "p456",
   "expected_plant": "Tomato"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `user_id` | string | Unique identifier for the user |
-| `plant_id` | string | Unique identifier for the plant |
-| `key` | string | S3 object key pointing to the uploaded image |
+| `key` | string | **Required.** S3 object key pointing to the uploaded image |
+| `user_id` | string | (optional) User identifier, echoed in response |
+| `plant_uuid` | string | (optional) Plant UUID, echoed in response |
 | `expected_plant` | string | (optional) Plant name for narrowing top predictions |
-
-### `POST /predict/general`
-
-No-user detection. No plant filtering — returns top global predictions across all 88 classes.
-
-#### Request Body
-
-```json
-{
-  "key": "general/images/12345-leaf.png"
-}
-```
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `key` | string | S3 object key pointing to the uploaded image |
 
 The image is fetched from S3 (Storj) using the provided `key`, decoded, resized to 224×224 via **NEAREST-neighbor interpolation** (matching training pipeline), normalized to [0, 1] as float32, and passed to the model.
 
@@ -57,9 +41,7 @@ The image is fetched from S3 (Storj) using the provided `key`, decoded, resized 
 ```json
 {
   "success": true,
-  "user_id": "u123",
-  "plant_id": "p456",
-  "image_key": "plant/user_u123_plant_p456/images/leaf.png",
+  "image_key": "plants/user_uuid/plant_uuid/images/leaf.png",
   "prediction": {
     "class": {
       "plant": "Potato",

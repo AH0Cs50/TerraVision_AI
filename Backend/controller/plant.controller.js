@@ -137,6 +137,31 @@ export async function extractPlantDataFromImage(req, res, next) {
   }
 }
 
+export async function detectUserImageDisease(req, res, next) {
+  try {
+    const { key } = req.body;
+
+    if (!key) {
+      return res
+        .status(HttpStatusCodes.BAD_REQUEST)
+        .json(
+          HttpResponse.error(
+            "Image key is required",
+            HttpStatusCodes.BAD_REQUEST,
+          ),
+        );
+    }
+
+    const result = await PlantUseCases.detectUserImageDisease(key, req.user);
+
+    return res
+      .status(HttpStatusCodes.OK)
+      .json(HttpResponse.success("Disease detection completed", result));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function uploadUserImage(req, res, next) {
   try {
     const { fileName, fileType } = req.body;
@@ -166,55 +191,7 @@ export async function uploadUserImage(req, res, next) {
   }
 }
 
-export async function uploadGeneralImage(req, res, next) {
-  try {
-    const { fileName, fileType } = req.body;
 
-    if (!fileName || !fileType) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .json(
-          HttpResponse.error(
-            "fileName and fileType are required",
-            HttpStatusCodes.BAD_REQUEST,
-          ),
-        );
-    }
-
-    const result = await PlantUseCases.uploadGeneralImage(fileName, fileType);
-
-    return res
-      .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Upload form generated", result));
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function detectGeneralDisease(req, res, next) {
-  try {
-    const { key } = req.body;
-
-    if (!key) {
-      return res
-        .status(HttpStatusCodes.BAD_REQUEST)
-        .json(
-          HttpResponse.error(
-            "Image key is required",
-            HttpStatusCodes.BAD_REQUEST,
-          ),
-        );
-    }
-
-    const result = await PlantUseCases.detectGeneralDisease(key);
-
-    return res
-      .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Disease detection completed", result));
-  } catch (error) {
-    next(error);
-  }
-}
 
 export async function removePlantImage(req, res, next) {
   try {

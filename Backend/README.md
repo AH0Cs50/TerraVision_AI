@@ -28,7 +28,7 @@ User Devices (Web/Mobile)
 └───────┬───────────┘     └──────────────────┘
         │
         ├── MongoDB (terra_db) ──── User profiles, plants, care state
-        ├── Storj S3 (Plant) ────── Plant images, general uploads
+        ├── Storj S3 (Plant) ────── Plant images
         ├── OpenWeatherMap ──────── Live weather conditions
         └── Google Gemini API ───── AI insights & task generation
 ```

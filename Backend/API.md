@@ -327,10 +327,9 @@ All mounted under `/api/v1/plants`.
 | GET | `/:id` | ✓ | Retrieves a single plant by UUID. Returns full plant document (all fields). |
 | PUT | `/:id` | ✓ | Updates a plant's fields (name, growthStage, soil, watering, etc.). Partial updates supported. |
 | DELETE | `/:id` | ✓ | Permanently deletes a plant and its associated S3 images. |
-| POST | `/image/upload` | ✗ | Returns a signed S3 upload URL for public/general images. Path: `general/images/{ts}-{fileName}`. |
 | POST | `/user/image/upload` | ✓ | Returns a signed S3 upload URL scoped to the authenticated user. Path: `users/{userId}/images/{ts}-{fileName}`. |
+| POST | `/user/image/detect` | ✓ | Runs disease detection on a user-scoped S3 image via ML microservice. Returns prediction without persisting to a plant. |
 | POST | `/image/extract` | ✓ | Uses Google Gemini Vision to extract structured plant data (family, growthStage, health) from an uploaded image. No plant doc created — caller persists. |
-| POST | `/detect` | ✗ | Runs disease detection on a general image via the CNN ensemble ML microservice. Returns prediction with top-k classes. |
 | POST | `/:id/image/upload` | ✓ | Returns a signed S3 upload URL scoped to a specific plant. Path: `plants/{userId}/{plantId}/images/{ts}-{fileName}`. |
 | POST | `/:id/detect` | ✓ | Detects disease on a stored plant image via ML microservice. Updates the plant's disease field and returns detection + history. |
 | DELETE | `/:id/images` | ✓ | Removes a plant's image from S3 using its key. Does not delete the plant document. |
@@ -428,34 +427,6 @@ DELETE /api/v1/plants/660e8400-e29b-41d4-a716-446655440001
 Authorization: Bearer <access_token>
 ```
 
-### POST /plants/image/upload (Public — General)
-
-Returns a signed S3 upload URL for public (unauthenticated) image uploads. Accepts fileName + fileType. Path format: `general/images/{timestamp}-{fileName}`. URL expires in 1 hour. Used in Flow 3 (quick disease detection).
-
-```http
-POST /api/v1/plants/image/upload
-Content-Type: application/json
-
-{
-  "fileName": "unknown_leaf.jpg",
-  "fileType": "image/jpeg"
-}
-```
-
-```http
-HTTP/1.1 200 OK
-{
-  "success": true,
-  "data": {
-    "uploadUrl": "https://gateway.storjshare.io/plant/general/images/1712345679-unknown_leaf.jpg?...",
-    "key": "general/images/1712345679-unknown_leaf.jpg",
-    "expiresIn": 3600
-  }
-}
-```
-
-> S3 path: `general/images/{timestamp}-{fileName}`
-
 ### POST /plants/user/image/upload (Auth — User-Scoped)
 
 Returns a signed S3 upload URL scoped to the authenticated user. Path: `users/{userId}/images/{timestamp}-{fileName}`. Used in Flow 1 (onboarding a new plant) before image extraction.
@@ -485,6 +456,42 @@ HTTP/1.1 200 OK
 
 > S3 path: `users/{userId}/images/{timestamp}-{fileName}`
 
+### POST /plants/user/image/detect (Auth — User-Scoped Detection)
+
+Runs disease detection on a user-scoped S3 image via the ML microservice (CNN ensemble, 88 classes). Does NOT persist to any plant — returns the raw prediction result. Useful for quick one-off scans.
+
+```http
+POST /api/v1/plants/user/image/detect
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "key": "users/user-uuid/images/1712345679-leaf.jpg"
+}
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "disease": "early blight",
+    "plant": "Tomato",
+    "confidence": 0.87,
+    "disease_type": "fungal",
+    "topPredictions": [
+      { "disease": "early blight", "plant": "Tomato", "confidence": 0.87 },
+      { "disease": "late blight", "plant": "Tomato", "confidence": 0.06 },
+      { "disease": "healthy", "plant": "Tomato", "confidence": 0.03 }
+    ]
+  }
+}
+```
+
+> **Fallback:** If the ML microservice is unreachable or returns an error, the response defaults to `{ disease: "healthy", plant: "unknown", confidence: 1, disease_type: "healthy" }`.
+
+The key must match the pattern `users/{userId}/images/{timestamp}-{fileName}` and should come from a prior `POST /user/image/upload` call.
+
 ### POST /plants/image/extract (Auth — Pre-Plant Extraction)
 
 Uses **Google Gemini Vision** to extract structured plant data (family, growth stage, health, etc.) from an uploaded S3 image. Takes the S3 key from a prior upload. No plant document required — pure extraction, caller persists the data.
@@ -509,37 +516,6 @@ HTTP/1.1 200 OK
     "growthStage": "vegetative",
     "health": "diseased",
     "summary": "This appears to be a tomato plant in vegetative stage showing signs of early blight."
-  }
-}
-```
-
-### POST /plants/detect (Public — General Detection)
-
-Runs disease detection on a general (unauthenticated) S3 image via the Python ML microservice (CNN ensemble with 88 disease classes). Returns prediction with class, confidence, and top-k alternatives.
-
-```http
-POST /api/v1/plants/detect
-Content-Type: application/json
-
-{
-  "key": "general/images/1712345679-unknown_leaf.jpg"
-}
-```
-
-```http
-HTTP/1.1 200 OK
-{
-  "success": true,
-  "data": {
-    "image_key": "general/images/1712345679-unknown_leaf.jpg",
-    "prediction": {
-      "class": { "plant": "Apple", "disease": "scab", "disease_type": "fungal" },
-      "confidence": 0.87,
-      "top_k": [
-        { "class": { "plant": "Apple", "disease": "scab", "disease_type": "fungal" }, "confidence": 0.87 },
-        { "class": { "plant": "Apple", "disease": "rust", "disease_type": "fungal" }, "confidence": 0.05 }
-      ]
-    }
   }
 }
 ```
@@ -1049,19 +1025,21 @@ Step 3: Detect disease
   → { disease: { name, confidence }, diseaseHistory }
 ```
 
-### Flow 3: Quick Disease Detection (No Auth, No Plant Context)
+### Flow 3: Quick Disease Detection (User-Scoped, No Plant Required)
+
+Quickly detect disease on any image without creating a plant. Useful for scouting or one-off checks.
 
 ```
-Step 1: Upload general image
-  POST /api/v1/plants/image/upload       { fileName, fileType }
-  → { uploadUrl, key }                    # key: "general/images/..."
+Step 1: Upload user image → get signed S3 URL (user-scoped)
+  POST /api/v1/plants/user/image/upload   { fileName, fileType }
+  → { uploadUrl, key }                     # key: "users/{userId}/images/..."
 
 Step 2: Upload binary image to S3
   PUT <uploadUrl>
 
-Step 3: Detect disease
-  POST /api/v1/plants/detect             { key }
-  → { prediction: { class, confidence, top_k } }
+Step 3: Detect disease (no plant persistence)
+  POST /api/v1/plants/user/image/detect   { key }
+  → { disease, plant, confidence, disease_type, topPredictions }
 ```
 
 ### Flow 4: Full Care Cycle
@@ -1120,6 +1098,5 @@ Step 5: Log out
 
 | Pattern | Endpoint | Example |
 |---------|----------|---------|
-| `general/images/{timestamp}-{fileName}` | `POST /image/upload` (public) | `general/images/1712345679-unknown_leaf.jpg` |
 | `users/{userId}/images/{timestamp}-{fileName}` | `POST /user/image/upload` (auth) | `users/abc123/images/1712345679-my_plant.jpg` |
 | `plants/{userId}/{plantId}/images/{timestamp}-{fileName}` | `POST /:id/image/upload` (auth) | `plants/abc123/plant456/images/1712345678-tomato_leaf.jpg` |

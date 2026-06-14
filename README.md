@@ -25,6 +25,7 @@ Requires MongoDB running locally or remotely.
 |-----------|----------|
 | [`Backend/`](Backend/) | Node.js/Express API — architecture, setup, deployment ([README](Backend/README.md)), full API reference ([API.md](Backend/API.md)) |
 | [`Ml-service/`](Ml-service/) | Python CNN ensemble model — architecture, endpoints, training ([README](Ml-service/README.md), [DOCS.md](Ml-service/DOCS.md)) |
+| [`Frontend/`](Frontend/) | React 18 + Vite static prototype (Zustand, React Query) — UI mockups only, no API integration |
 | [`Backend/service/engine/`](Backend/service/engine/) | Rule engine — 7-layer scoring system for water, fertilizer, pest, light ([README](Backend/service/engine/README.md)) |
 
 ## Usage
@@ -40,7 +41,12 @@ PUT  <uploadUrl>                         # upload image binary directly to S3
 POST /api/v1/plants/image/extract        {"key": "..."}        # extract plant data via Gemini
 POST /api/v1/plants                      {"name": "Tomato", "category": "crop", ...}  # create plant
 
-# 3. Analyze and manage
+# 3. Quick disease detection (no plant required)
+POST /api/v1/plants/user/image/upload    {"fileName": "leaf.jpg", "fileType": "image/jpeg"}
+PUT  <uploadUrl>                         # upload image binary directly to S3
+POST /api/v1/plants/user/image/detect    {"key": "..."}   # returns { disease, plant, confidence, ... }
+
+# 4. Analyze and manage
 POST /api/v1/plants/:id/analyze          # run rule engine
 POST /api/v1/plants/:id/ai-insights      # get AI recommendations
 ```

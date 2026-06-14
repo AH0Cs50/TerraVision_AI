@@ -64,6 +64,17 @@ class S3CloudService {
     return keyPattern.test(key);
   }
 
+  validateUserImageKey(key) {
+    if (!key || typeof key !== "string") {
+      return false;
+    }
+
+    const keyPattern =
+      /^users\/[a-zA-Z0-9-]+\/images\/\d+-[a-zA-Z0-9._-]+$/;
+
+    return keyPattern.test(key);
+  }
+
   /**
    * @description Constructs an S3 key for a user-scoped (pre-plant) image
    * with the format `users/{userId}/images/{timestamp}-{safeName}`.
@@ -79,38 +90,6 @@ class S3CloudService {
       .replace(/^-|-$/g, "")
       .toLowerCase();
     return `users/${userId}/images/${Date.now()}-${safeName}`;
-  }
-
-  /**
-   * @description Constructs an S3 key for a general (non-plant) image with
-   * the format `general/images/{timestamp}-{safeName}`.
-   * @param {Object} params
-   * @param {string} params.fileName - Original file name (sanitised)
-   * @returns {string} S3 object key
-   */
-  buildGeneralImagePath({ fileName }) {
-    const safeName = fileName
-      .replace(/[^a-zA-Z0-9.-]/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-      .toLowerCase();
-    return `general/images/${Date.now()}-${safeName}`;
-  }
-
-  /**
-   * @description Validates that a general image key matches the expected
-   * pattern for non-plant-scoped images.
-   * @param {string} key - S3 object key to validate
-   * @returns {boolean} True if the key format is valid
-   */
-  validateGeneralImageKey(key) {
-    if (!key || typeof key !== "string") {
-      return false;
-    }
-
-    const keyPattern = /^general\/images\/\d+-[a-zA-Z0-9._-]+$/;
-
-    return keyPattern.test(key);
   }
 
   /**
@@ -195,38 +174,6 @@ class S3CloudService {
     this.#throwIfInvalidMime(fileType);
 
     const key = this.buildUserImagePath({ userId, fileName });
-
-    const command = new PutObjectCommand({
-      Bucket: s3Config.bucketName,
-      Key: key,
-      ContentType: fileType,
-    });
-
-    const uploadUrl = await getSignedUrl(this.s3Repo.getS3Client(), command, {
-      expiresIn: s3Config.signedUrlExpiresIn,
-    });
-
-    return {
-      uploadUrl,
-      key,
-      expiresIn: s3Config.signedUrlExpiresIn,
-    };
-  }
-
-  /**
-   * @description Generates a pre-signed PUT URL for uploading a general
-   * (non-plant) image directly to S3.
-   * @param {Object} params
-   * @param {string} params.fileName - Original file name
-   * @param {string} params.fileType - MIME type of the file
-   * @returns {Promise<{uploadUrl: string, key: string, expiresIn: number}>}
-   * @throws {RouteError} BAD_REQUEST if MIME type is invalid
-   */
-  async generateGeneralUploadUrl({ fileName, fileType }) {
-    await this.ensureConnected();
-    this.#throwIfInvalidMime(fileType);
-
-    const key = this.buildGeneralImagePath({ fileName });
 
     const command = new PutObjectCommand({
       Bucket: s3Config.bucketName,

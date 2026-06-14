@@ -1,37 +1,42 @@
 import { Router } from "express";
 import {
+  uploadUserImage,
+  detectUserImageDisease,
+  extractPlantDataFromImage,
   getUserPlants,
   getPlant,
   createPlant,
   uploadPlantPhoto,
   detectPlantDisease,
-  extractPlantDataFromImage,
-  uploadGeneralImage,
-  uploadUserImage,
-  detectGeneralDisease,
   updatePlant,
-  deletePlant,
   removePlantImage,
+  deletePlant,
 } from "../controller/plant.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Image routes — literal routes before /:id routes (Express 5 precedence)
-router.post("/image/upload", uploadGeneralImage);           // public — general/images/...
-router.post("/user/image/upload", authenticate, uploadUserImage); // auth — users/{userId}/images/...
-router.post("/image/extract", authenticate, extractPlantDataFromImage); // auth — pre-plant extraction
-router.post("/detect", detectGeneralDisease);               // public — general detection
+// ── Literal routes (before :id to avoid param capture) ──────────────
+router.post("/user/image/upload", authenticate, uploadUserImage);
+router.post("/user/image/detect", authenticate, detectUserImageDisease);
+router.post("/image/extract", authenticate, extractPlantDataFromImage);
 
+// ── Read ────────────────────────────────────────────────────────────
 router.get("", authenticate, getUserPlants);
 router.get("/:id", authenticate, getPlant);
 
+// ── Create ──────────────────────────────────────────────────────────
 router.post("", authenticate, createPlant);
+
+// ── Plant-scoped image + detection ──────────────────────────────────
 router.post("/:id/image/upload", authenticate, uploadPlantPhoto);
 router.post("/:id/detect", authenticate, detectPlantDisease);
 
+// ── Update ──────────────────────────────────────────────────────────
 router.put("/:id", authenticate, updatePlant);
+
+// ── Delete ──────────────────────────────────────────────────────────
 router.delete("/:id/images", authenticate, removePlantImage);
 router.delete("/:id", authenticate, deletePlant);
 
