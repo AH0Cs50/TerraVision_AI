@@ -1,0 +1,105 @@
+/* ===== FEATURES ===== */
+.features {
+  background: var(--clr-green-deep);
+  padding: var(--space-3xl) 0;
+}
+
+.features__header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.features__header h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 600;
+  color: var(--clr-white);
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.features__header p {
+  font-size: 0.95rem;
+  color: var(--clr-text-muted);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Grid */
+.features__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+/* Card */
+.feature-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+  cursor: default;
+}
+
+.feature-card:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(82,183,136,0.2);
+  transform: translateY(-3px);
+}
+
+.feature-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.feature-card__icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(82,183,136,0.12);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--clr-lime);
+  font-size: 1.1rem;
+}
+
+.feature-card__arrow {
+  color: var(--clr-text-muted);
+  font-size: 0.85rem;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+
+.feature-card:hover .feature-card__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.feature-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--clr-white);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.feature-card p {
+  font-size: 0.83rem;
+  color: var(--clr-text-muted);
+  line-height: 1.65;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .features__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .features__grid { grid-template-columns: 1fr; }
+}

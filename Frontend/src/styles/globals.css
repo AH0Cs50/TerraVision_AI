@@ -1,0 +1,177 @@
+/* ===== TERRAVISION AI — GLOBAL STYLES ===== */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  /*    Coolors   */
+  --clr-dark: #0d1f1a;
+  --clr-dark-mid: #122b23;
+  --clr-green-deep: #1a3a2e;
+  --clr-green-mid: #1f4d3a;
+  --clr-green: #2d6a4f;
+  --clr-green-btn: #2d6a4f;
+  --clr-accent: #3a8c61;
+  --clr-lime: #52b788;
+  --clr-white: #ffffff;
+  --clr-off-white: #f4f7f4;
+  --clr-text-light: #d8ede3;
+  --clr-text-muted: #8aab97;
+  --clr-border: rgba(255, 255, 255, 0.08);
+  --clr-card-bg: rgba(255, 255, 255, 0.04);
+
+  /*    Font Type   */
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  /*  Spacing   */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+  --space-3xl: 8rem;
+
+  /*   Radius   */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+
+  /*   Transitions   */
+  --transition: 0.3s ease;
+  --transition-slow: 0.6s ease;
+
+  /*  Max-width   */
+  --max-w: 1200px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--clr-dark);
+  color: var(--clr-white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+}
+
+/*   Container   */
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+ .section {
+  padding: var(--space-3xl) 0;
+}
+
+/*  Utility classes   */
+.text-accent {
+  color: var(--clr-lime);
+}
+
+.text-muted {
+  color: var(--clr-text-muted);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/*   Scrollbar   */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--clr-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--clr-green);
+  border-radius: 3px;
+}
+
+/*  Fade in animation   */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-up {
+  animation: fadeUp 0.7s ease forwards;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+
+
+/* === RESPONSIVE BREAKPOINTS ===
+  sm:  640px
+  md:  768px
+  lg:  1024px
+  xl:  1280px
+*/
