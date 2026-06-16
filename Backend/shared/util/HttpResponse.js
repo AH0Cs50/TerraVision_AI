@@ -5,6 +5,8 @@ class HttpResponse {
       if (obj._bsontype === "ObjectId" || obj.constructor?.name === "ObjectId")
         return obj.toString();
       if (Buffer.isBuffer(obj)) return undefined;
+      if (typeof obj.toJSON === "function") obj = obj.toJSON();
+      if (obj == null) return null;
       const sensitive = new Set([
         "internalId",
         "plantInternalId",

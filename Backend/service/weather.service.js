@@ -193,29 +193,38 @@ export class WeatherDescriber {
     const icon = transformed.weather?.icon;
 
     const tempCategory =
-      temp.current >= 35 ? "extreme_heat"
-        : temp.current >= 30 ? "hot"
-          : temp.current >= 20 ? "warm"
-            : temp.current >= 10 ? "cool"
-              : temp.current >= 5 ? "cold"
+      temp.current >= 35
+        ? "extreme_heat"
+        : temp.current >= 30
+          ? "hot"
+          : temp.current >= 20
+            ? "warm"
+            : temp.current >= 10
+              ? "cool"
+              : temp.current >= 5
+                ? "cold"
                 : "freezing";
 
     const humidityCategory =
-      humidity >= 80 ? "very_humid"
-        : humidity >= 60 ? "humid"
-          : humidity >= 40 ? "moderate"
+      humidity >= 80
+        ? "very_humid"
+        : humidity >= 60
+          ? "humid"
+          : humidity >= 40
+            ? "moderate"
             : "dry";
 
     const visibilityCategory =
-      visibility >= 10000 ? "excellent"
-        : visibility >= 5000 ? "good"
-          : visibility >= 1000 ? "poor"
+      visibility >= 10000
+        ? "excellent"
+        : visibility >= 5000
+          ? "good"
+          : visibility >= 1000
+            ? "poor"
             : "very_poor";
 
     const windCategory =
-      wind.speed >= 10 ? "strong"
-        : wind.speed >= 5 ? "moderate"
-          : "light";
+      wind.speed >= 10 ? "strong" : wind.speed >= 5 ? "moderate" : "light";
 
     return {
       location: transformed.location,
