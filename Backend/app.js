@@ -5,6 +5,7 @@ import authRouter from "./routes/auth.route.js";
 import plantsRouter from "./routes/plant.route.js";
 import userRouter from "./routes/user.route.js";
 import plantCareRouter from "./routes/plant-care.route.js";
+import dashboardRouter from "./routes/dashboard.route.js";
 //middlewares
 import { authenticate } from "./middlewares/auth.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
@@ -25,6 +26,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/plants", plantsRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/plants", authenticate, plantCareRouter);
+app.use("/api/v1/dashboard", authenticate, dashboardRouter);
 
 // error middleware
 app.use(errorHandler);

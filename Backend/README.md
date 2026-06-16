@@ -109,36 +109,36 @@ graph TD
 ### Module Architecture
 
 ```
-┌────────────────────────────────────────────────────┐
-│                   Express App                      │
-├──────────┬──────────┬───────────┬──────────────────┤
-│   Auth    │   User   │   Plant   │   Plant Care     │
-│  Module   │  Module  │  Module   │    Module        │
-├──────────┴──────────┴───────────┴──────────────────┤
-│              Use Case Layer                         │
-├──────────┬──────────┬───────────┬──────────────────┤
-│   Auth    │   User   │   Plant   │   Plant Care     │
-│ Use Case │ Use Case │ Use Case  │   Use Cases       │
-├──────────┴──────────┴───────────┴──────────────────┤
-│              Entity Layer                           │
-├──────────────────┬─────────────────────────────────┤
-│   User Entity    │        Plant Entity              │
-├──────────────────┴─────────────────────────────────┤
-│              Engine (131 Rules)                     │
-│  global │ soil │ plantFamily │ growthStage │        │
-│  watering │ pestDisease │ light                      │
-├──────────────────┬─────────────────────────────────┤
-│           Infrastructure Layer                      │
-├──────────┬──────────┬───────────┬──────────────────┤
-│  User    │  Plant   │PlantCare  │   Action Log     │
-│  Repo    │  Repo    │  Repo     │   Repo            │
-├──────────┴──────────┴───────────┴──────────────────┤
-│  Token   │  Pass    │  S3       │   LLM            │
-│  Service │  Hasher  │  Cloud    │   Service         │
-├──────────┴──────────┴───────────┴──────────────────┤
-│              MongoDB (terra_db)                     │
-│   users │ plants │ plantcares │ actionlogs          │
-└────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                           Express App                            │
+├──────────┬──────────┬───────────┬──────────────────┬──────────────┤
+│   Auth    │   User   │   Plant   │   Plant Care     │  Dashboard   │
+│  Module   │  Module  │  Module   │    Module        │   Module     │
+├──────────┴──────────┴───────────┴──────────────────┴──────────────┤
+│                           Use Case Layer                          │
+├──────────┬──────────┬───────────┬──────────────────┬──────────────┤
+│   Auth    │   User   │   Plant   │   Plant Care     │  Dashboard   │
+│ Use Case │ Use Case │ Use Case  │   Use Cases       │   Use Case   │
+├──────────┴──────────┴───────────┴──────────────────┴──────────────┤
+│                           Entity Layer                            │
+├──────────────────┬────────────────────────────────────────────────┤
+│   User Entity    │                  Plant Entity                  │
+├──────────────────┴────────────────────────────────────────────────┤
+│                       Engine (131 Rules)                          │
+│  global │ soil │ plantFamily │ growthStage │                      │
+│  watering │ pestDisease │ light                                   │
+├──────────────────┬────────────────────────────────────────────────┤
+│                    Infrastructure Layer                            │
+├──────────┬──────────┬───────────┬──────────────────┬──────────────┤
+│  User    │  Plant   │PlantCare  │   Action Log     │              │
+│  Repo    │  Repo    │  Repo     │   Repo            │              │
+├──────────┴──────────┴───────────┴──────────────────┴──────────────┤
+│  Token   │  Pass    │  S3       │   LLM            │              │
+│  Service │  Hasher  │  Cloud    │   Service         │              │
+├──────────┴──────────┴───────────┴──────────────────┴──────────────┤
+│                    MongoDB (terra_db)                              │
+│   users │ plants │ plantcares │ actionlogs                        │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -212,7 +212,7 @@ graph TD
 
 | Tool             | Purpose                                                    |
 | ---------------- | ---------------------------------------------------------- |
-| Node.js `assert` | Unit & integration tests (~110 test cases across 11 files) |
+| Node.js `assert` | Unit & integration tests (~120 test cases across 12 files) |
 
 ---
 
@@ -223,20 +223,23 @@ Backend/
 ├── app.js                 Express 5 entrypoint, middleware stack, route mounting
 ├── config/                config.js + config.env
 │
-├── routes/                4 route files
+├── routes/                5 route files
 │   ├── auth.route.js
+│   ├── dashboard.route.js
 │   ├── user.route.js
 │   ├── plant.route.js
 │   └── plant-care.route.js
 │
-├── controller/            4 controllers — parse input, call use case, format response
+├── controller/            5 controllers — parse input, call use case, format response
 │   ├── auth.controller.js
+│   ├── dashboard.controller.js
 │   ├── user.controller.js
 │   ├── plant.controller.js
 │   └── plant-care.controller.js
 │
-├── usecases/              7 use case files — all business logic, own dependencies
+├── usecases/              8 use case files — all business logic, own dependencies
 │   ├── auth.usecases.js
+│   ├── dashboard.usecase.js
 │   ├── user.usecases.js
 │   ├── plant.usecase.js
 │   ├── disease-detection.usecase.js
@@ -248,8 +251,9 @@ Backend/
 │   ├── User.entity.js
 │   └── Plant.entity.js
 │
-├── service/               plant.service.js (verifyPlantAccess), email, weather, engine/ (7 layers), vision
+├── service/               plant.service.js (verifyPlantAccess), dashboard.service.js (aggregation), email, weather, engine/ (7 layers), vision
 │   ├── plant.service.js
+│   ├── dashboard.service.js
 │   ├── email.service.js
 │   ├── weather.service.js
 │   ├── vision.service.js
@@ -300,8 +304,9 @@ Backend/
 │   └── util/
 │
 └── test/
-    ├── service/            7 use case test files
+    ├── service/            8 use case test files
     │   ├── auth.test.js
+    │   ├── dashboard.usecase.test.js
     │   ├── user.test.js
     │   ├── plant.test.js
     │   ├── disease-detection.test.js

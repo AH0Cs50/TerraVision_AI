@@ -85,6 +85,15 @@ class PlantCareRepository {
   }
 
   /**
+   * @description Batch-fetches care states for multiple plant UUIDs.
+   * @param {string[]} plantUUIDs - Array of plant UUIDs
+   * @returns {Promise<Object[]>}
+   */
+  async findByPlantUUIDs(plantUUIDs) {
+    return await PlantCareModel.find({ plantUUID: { $in: plantUUIDs } }).lean();
+  }
+
+  /**
    * @description Updates a care state by its UUID. Sets updatedAt automatically.
    * @param {string} uuid - Care state UUID
    * @param {Object} updateData - Fields to update

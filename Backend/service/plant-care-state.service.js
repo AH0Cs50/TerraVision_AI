@@ -29,6 +29,10 @@ class PlantCareStateService {
     return await this.repo.findByPlantUUID(plantUUID);
   }
 
+  async getByPlantUUIDs(plantUUIDs) {
+    return await this.repo.findByPlantUUIDs(plantUUIDs);
+  }
+
   async updateByUUID(uuid, data) {
     return await this.repo.updateByUUID(uuid, data);
   }

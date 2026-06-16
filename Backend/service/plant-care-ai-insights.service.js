@@ -39,6 +39,46 @@ export class PlantCareAiInsights {
   }
 
   /**
+   * Generates an executive farm-level report from aggregated dashboard stats.
+   */
+  async generateFarmReport(dashboardStats) {
+    try {
+      const prompt = this.#buildFarmReportPrompt(dashboardStats);
+      const response = await this.llmService.generateResponse(prompt);
+      return this.#parseInsights(response);
+    } catch (error) {
+      console.error("Farm report generation failed:", error?.message || "unknown");
+      return { summary: "", recommendations: [], generatedAt: new Date() };
+    }
+  }
+
+  /**
+   * @private
+   */
+  #buildFarmReportPrompt(stats) {
+    const text = fillPrompt("FARM_REPORT", {
+      totalPlants: stats.totalPlants ?? 0,
+      healthyPlants: stats.healthyPlants ?? 0,
+      diseasedPlants: stats.diseasedPlants ?? 0,
+      healthPercentages: JSON.stringify(stats.healthPercentages || {}),
+      waterStatus: JSON.stringify(stats.careStatusDistribution?.water || {}),
+      nutrientStatus: JSON.stringify(stats.careStatusDistribution?.nutrients || {}),
+      lightStatus: JSON.stringify(stats.careStatusDistribution?.light || {}),
+      efficiency: stats.taskEfficiency?.efficiency ?? 100,
+      thirstyCount: stats.resourceDemand?.thirsty ?? 0,
+      needsFeedCount: stats.resourceDemand?.needsFeed ?? 0,
+      lowLightCount: stats.resourceDemand?.lowLight ?? 0,
+      upcomingHarvests: JSON.stringify(stats.upcomingHarvests || []),
+      plantsByCategory: JSON.stringify(stats.plantsByCategory || {}),
+      plantsByGrowthStage: JSON.stringify(stats.plantsByGrowthStage || {}),
+    });
+
+    return {
+      contents: [{ role: "user", parts: [{ text }] }],
+    };
+  }
+
+  /**
    * @private
    * @description Builds a prompt for the LLM to generate care insights
    * from current status and recent action logs.

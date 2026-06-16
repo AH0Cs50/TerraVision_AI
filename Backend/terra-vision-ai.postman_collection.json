@@ -703,35 +703,6 @@
           }
         },
         {
-          "name": "Upload General Image (Public)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fileName\": \"unknown_leaf.jpg\",\n  \"fileType\": \"image/jpeg\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/plants/image/upload",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "plants",
-                "image",
-                "upload"
-              ]
-            }
-          }
-        },
-        {
           "name": "Upload User Image",
           "request": {
             "method": "POST",
@@ -766,13 +737,17 @@
           }
         },
         {
-          "name": "General Disease Detection (Public)",
+          "name": "Detect User Image",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -780,7 +755,7 @@
               "raw": "{\n  \"key\": \"s3-object-key-from-upload\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/plants/detect",
+              "raw": "{{base_url}}/api/v1/plants/user/image/detect",
               "host": [
                 "{{base_url}}"
               ],
@@ -788,6 +763,8 @@
                 "api",
                 "v1",
                 "plants",
+                "user",
+                "image",
                 "detect"
               ]
             }
@@ -1235,6 +1212,84 @@
                   ]
                 }
               }
+            },
+            {
+              "name": "Treat Disease",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/treat-disease",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "treat-disease"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Prune Plant",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/plants/:id/prune",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "plants",
+                    ":id",
+                    "prune"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "{{plantUUID}}"
+                    }
+                  ]
+                }
+              }
             }
           ]
         },
@@ -1272,165 +1327,6 @@
                       "key": "limit",
                       "value": "20"
                     }
-                  ],
-                  "variable": [
-                    {
-                      "key": "id",
-                      "value": "{{plantUUID}}"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "name": "Add Task",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"type\": \"watering\",\n  \"title\": \"Water the plant\",\n  \"priority\": \"high\"\n}"
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/v1/plants/:id/tasks",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "plants",
-                    ":id",
-                    "tasks"
-                  ],
-                  "variable": [
-                    {
-                      "key": "id",
-                      "value": "{{plantUUID}}"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "name": "Generate Tasks from Status",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": ""
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/generate",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "plants",
-                    ":id",
-                    "tasks",
-                    "generate"
-                  ],
-                  "variable": [
-                    {
-                      "key": "id",
-                      "value": "{{plantUUID}}"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "name": "Complete Task",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"taskId\": \"{{taskUUID}}\"\n}"
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/complete",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "plants",
-                    ":id",
-                    "tasks",
-                    "complete"
-                  ],
-                  "variable": [
-                    {
-                      "key": "id",
-                      "value": "{{plantUUID}}"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "name": "Remove Completed Tasks",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": ""
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/completed",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "plants",
-                    ":id",
-                    "tasks",
-                    "completed"
                   ],
                   "variable": [
                     {
@@ -1536,96 +1432,6 @@
                   ]
                 }
               }
-            },
-            {
-              "name": "Cancel Task",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": ""
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/:taskId/cancel",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "plants",
-                    ":id",
-                    "tasks",
-                    ":taskId",
-                    "cancel"
-                  ],
-                  "variable": [
-                    {
-                      "key": "id",
-                      "value": "{{plantUUID}}"
-                    },
-                    {
-                      "key": "taskId",
-                      "value": "{{taskUUID}}"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "name": "Reopen Task",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": ""
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/v1/plants/:id/tasks/:taskId/reopen",
-                  "host": [
-                    "{{base_url}}"
-                  ],
-                  "path": [
-                    "api",
-                    "v1",
-                    "plants",
-                    ":id",
-                    "tasks",
-                    ":taskId",
-                    "reopen"
-                  ],
-                  "variable": [
-                    {
-                      "key": "id",
-                      "value": "{{plantUUID}}"
-                    },
-                    {
-                      "key": "taskId",
-                      "value": "{{taskUUID}}"
-                    }
-                  ]
-                }
-              }
             }
           ]
         },
@@ -1712,6 +1518,129 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Full Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Care Distribution",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/care",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "care"]
+            }
+          }
+        },
+        {
+          "name": "Get Resource Demand",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/resource-demand",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "resource-demand"]
+            }
+          }
+        },
+        {
+          "name": "Get Task Efficiency",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/task-efficiency",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "task-efficiency"]
+            }
+          }
+        },
+        {
+          "name": "Get Upcoming Harvests",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/harvests?limit=3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "harvests"],
+              "query": [
+                { "key": "limit", "value": "3" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get AI Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/ai-report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "ai-report"]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/activity?last=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "activity"],
+              "query": [
+                { "key": "last", "value": "10" }
+              ]
+            }
+          }
         }
       ]
     }

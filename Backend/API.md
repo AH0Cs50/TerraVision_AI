@@ -911,6 +911,14 @@ Several endpoints return only a subset of the full resource:
 | `PATCH /:id/light` | `{ status, aiInsights, activeTasks }` |
 | `POST /:id/treat-disease` | `{ status, aiInsights, activeTasks }` |
 | `POST /:id/prune` | `{ status, aiInsights, activeTasks }` |
+| `GET /dashboard` | Full aggregated dashboard object |
+| `GET /dashboard/stats` | `{ totalPlants, diseasedPlants, healthyPlants, plantsByCategory, plantsByGrowthStage }` |
+| `GET /dashboard/care` | `{ careStatusDistribution, healthPercentages }` |
+| `GET /dashboard/resource-demand` | `{ resourceDemand }` |
+| `GET /dashboard/task-efficiency` | `{ taskEfficiency }` |
+| `GET /dashboard/harvests` | `{ upcomingHarvests }` — array sorted by date |
+| `GET /dashboard/ai-report` | `{ aiReport: { summary, recommendations } }` |
+| `GET /dashboard/activity` | `{ logs }` — array of action log objects |
 
 ---
 
@@ -1090,6 +1098,274 @@ Step 4: When access token expires (401)
 
 Step 5: Log out
   POST /api/v1/auth/logout                # clears refresh token from DB
+```
+
+---
+
+## Dashboard Endpoints
+
+All mounted under `/api/v1/dashboard`. Authentication is required.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/` | Full aggregated dashboard (all sections combined) |
+| GET | `/stats` | `{ totalPlants, diseasedPlants, healthyPlants, plantsByCategory, plantsByGrowthStage }` |
+| GET | `/care` | `{ careStatusDistribution, healthPercentages }` |
+| GET | `/resource-demand` | `{ resourceDemand: { thirsty, needsFeed, lowLight } }` |
+| GET | `/task-efficiency` | `{ taskEfficiency: { activeTasks, completedTasks, totalTasks, efficiency } }` |
+| GET | `/harvests` | `{ upcomingHarvests: [...] }` — supports `?limit=N` (default 3, max 20) |
+| GET | `/ai-report` | `{ aiReport: { summary, recommendations } }` |
+| GET | `/activity` | `{ logs: [...] }` — supports `?last=N` (default 10, max 100) |
+
+### GET /dashboard
+
+Returns a comprehensive dashboard for the authenticated user, aggregating data across all their plants. Includes plant statistics, care status distribution (pie chart from 100%), resource demand counts, task efficiency ratio, upcoming harvest dates, an AI-generated executive farm report, and recent activity logs.
+
+```http
+GET /api/v1/dashboard
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "message": "Dashboard data retrieved successfully",
+  "data": {
+    "totalPlants": 12,
+    "diseasedPlants": 2,
+    "healthyPlants": 10,
+    "plantsByCategory": {
+      "crop": 5,
+      "tree": 3,
+      "flower": 4
+    },
+    "plantsByGrowthStage": {
+      "germination": 1,
+      "seedling": 2,
+      "vegetative": 4,
+      "flowering": 3,
+      "fruiting": 1,
+      "mature": 1
+    },
+    "careStatusDistribution": {
+      "water": { "thirsty": 1, "low": 2, "satisfied": 7, "overwatered": 0 },
+      "nutrients": { "needs_feed": 1, "low": 2, "optimal": 7, "excess": 0 },
+      "health": { "healthy": 8, "warning": 1, "diseased": 2, "critical": 0 },
+      "light": { "low": 1, "optimal": 9, "high": 0, "burn_risk": 0 }
+    },
+    "healthPercentages": {
+      "healthy": 72.7,
+      "warning": 9.1,
+      "diseased": 18.2
+    },
+    "resourceDemand": {
+      "thirsty": 1,
+      "needsFeed": 1,
+      "lowLight": 1
+    },
+    "taskEfficiency": {
+      "activeTasks": 8,
+      "completedTasks": 24,
+      "totalTasks": 32,
+      "efficiency": 75.0
+    },
+    "upcomingHarvests": [
+      { "uuid": "plant-uuid-1", "name": "Tomato", "expectedHarvestDate": "2026-06-20T00:00:00.000Z", "daysUntilHarvest": 4 },
+      { "uuid": "plant-uuid-2", "name": "Lettuce", "expectedHarvestDate": "2026-06-25T00:00:00.000Z", "daysUntilHarvest": 9 },
+      { "uuid": "plant-uuid-3", "name": "Basil", "expectedHarvestDate": "2026-07-01T00:00:00.000Z", "daysUntilHarvest": 15 }
+    ],
+    "aiReport": {
+      "summary": "Overall farm state is highly optimized. The 7-layer engine has cross-referenced 131 environmental factors with live weather data. Nightshade families show ideal metabolic rates, though pest-risk vigilance is advised due to current 58% ambient moisture triggers.",
+      "recommendations": [
+        "Adjust irrigation for thirsty plants by +15% to compensate for increased UV intensity",
+        "Schedule fertilization for plants flagged as needs_feed",
+        "Monitor low-light plants — consider repositioning or supplemental lighting"
+      ]
+    },
+    "recentActivity": [
+      {
+        "logId": "log-uuid",
+        "actionType": "watered",
+        "description": "Plant watered",
+        "plantUUID": "plant-uuid-1",
+        "createdAt": "2026-06-15T12:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### GET /dashboard/activity
+
+Returns the most recent action logs across all plants belonging to the authenticated user. Logs are sorted by creation date (newest first). Supports the `?last` query parameter to control how many logs to return (default 10, max 100).
+
+```http
+GET /api/v1/dashboard/activity?last=5
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "message": "Recent activity retrieved successfully",
+  "data": {
+    "logs": [
+      {
+        "logId": "log-uuid-1",
+        "actionType": "watered",
+        "description": "Plant watered",
+        "plantUUID": "plant-uuid-1",
+        "userUUID": "user-uuid",
+        "createdAt": "2026-06-15T12:00:00.000Z"
+      },
+      {
+        "logId": "log-uuid-2",
+        "actionType": "fertilized",
+        "description": "Plant fertilized",
+        "plantUUID": "plant-uuid-2",
+        "userUUID": "user-uuid",
+        "createdAt": "2026-06-15T10:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### GET /dashboard/stats
+
+Returns lightweight plant statistics. Does not fetch care states or action logs — only hits the plant repository.
+
+```http
+GET /api/v1/dashboard/stats
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "totalPlants": 12,
+    "diseasedPlants": 2,
+    "healthyPlants": 10,
+    "plantsByCategory": { "crop": 5, "tree": 3, "flower": 4 },
+    "plantsByGrowthStage": { "germination": 1, "seedling": 2, "vegetative": 4, "flowering": 3, "fruiting": 1, "mature": 1 }
+  }
+}
+```
+
+### GET /dashboard/care
+
+Returns care status distribution across all the user's plants and the health percentages pie chart. Fetches both plants and their care states.
+
+```http
+GET /api/v1/dashboard/care
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "careStatusDistribution": {
+      "water": { "thirsty": 1, "low": 2, "satisfied": 7, "overwatered": 0 },
+      "nutrients": { "needs_feed": 1, "low": 2, "optimal": 7, "excess": 0 },
+      "health": { "healthy": 8, "warning": 1, "diseased": 2, "critical": 0 },
+      "light": { "low": 1, "optimal": 9, "high": 0, "burn_risk": 0 }
+    },
+    "healthPercentages": { "healthy": 72.7, "warning": 9.1, "diseased": 18.2 }
+  }
+}
+```
+
+### GET /dashboard/resource-demand
+
+Returns counts of plants requiring immediate attention: thirsty, needs feed, and low light.
+
+```http
+GET /api/v1/dashboard/resource-demand
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "resourceDemand": { "thirsty": 1, "needsFeed": 1, "lowLight": 1 }
+  }
+}
+```
+
+### GET /dashboard/task-efficiency
+
+Returns task efficiency metrics across all plants: active task count, completed task count, and the efficiency percentage (completed / total × 100).
+
+```http
+GET /api/v1/dashboard/task-efficiency
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "taskEfficiency": { "activeTasks": 8, "completedTasks": 24, "totalTasks": 32, "efficiency": 75.0 }
+  }
+}
+```
+
+### GET /dashboard/harvests
+
+Returns upcoming harvest dates sorted by date ascending. Supports `?limit=N` to control how many to return (default 3, max 20).
+
+```http
+GET /api/v1/dashboard/harvests?limit=3
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "upcomingHarvests": [
+      { "uuid": "plant-uuid-1", "name": "Tomato", "expectedHarvestDate": "2026-06-20T00:00:00.000Z", "daysUntilHarvest": 4 },
+      { "uuid": "plant-uuid-2", "name": "Lettuce", "expectedHarvestDate": "2026-06-25T00:00:00.000Z", "daysUntilHarvest": 9 },
+      { "uuid": "plant-uuid-3", "name": "Basil", "expectedHarvestDate": "2026-07-01T00:00:00.000Z", "daysUntilHarvest": 15 }
+    ]
+  }
+}
+```
+
+### GET /dashboard/ai-report
+
+Generates an AI-powered Executive Farm Report using Google Gemini. Takes the current dashboard statistics and produces a natural-language system evaluation with critical recommendations. Falls back to empty summary + recommendations if the LLM is unavailable.
+
+```http
+GET /api/v1/dashboard/ai-report
+Authorization: Bearer <access_token>
+```
+
+```http
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "aiReport": {
+      "summary": "Overall farm state is highly optimized. The 7-layer engine has cross-referenced 131 environmental factors with live weather data. Nightshade families show ideal metabolic rates, though pest-risk vigilance is advised due to current 58% ambient moisture triggers.",
+      "recommendations": [
+        "Adjust irrigation for thirsty plants by +15% to compensate for increased UV intensity",
+        "Schedule fertilization for plants flagged as needs_feed",
+        "Monitor low-light plants — consider repositioning or supplemental lighting"
+      ]
+    }
+  }
+}
 ```
 
 ---
