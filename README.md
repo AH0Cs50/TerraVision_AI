@@ -23,7 +23,7 @@ Requires MongoDB running locally or remotely.
 
 | Directory | Contents |
 |-----------|----------|
-| [`Backend/`](Backend/) | Node.js/Express API — architecture, setup, deployment ([README](Backend/README.md)), full API reference ([API.md](Backend/API.md)) |
+| [`Backend/`](Backend/) | Node.js/Express API — architecture, setup, deployment ([README](Backend/README.md)), architecture & API docs ([docs/](Backend/docs/)) |
 | [`Ml-service/`](Ml-service/) | Python CNN ensemble model — architecture, endpoints, training ([README](Ml-service/README.md), [DOCS.md](Ml-service/DOCS.md)) |
 | [`Frontend/`](Frontend/) | React 18 + Vite static prototype (Zustand, React Query) — UI mockups only, no API integration |
 | [`Backend/service/engine/`](Backend/service/engine/) | Rule engine — 7-layer scoring system for water, fertilizer, pest, light ([README](Backend/service/engine/README.md)) |
