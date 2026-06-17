@@ -144,7 +144,7 @@ flowchart TB
     subgraph MLService["ML Service (Container)"]
         HealthEP[GET / health]
         PredictEP[POST /predict\nPOST /predict/general]
-        Preprocessor["Preprocessor\nRGB 224x224 LANCZOS\nNormalize [0,1]"]
+        Preprocessor[Preprocessor\nRGB 224x224 LANCZOS\nNormalize 0..1]
         Ensemble[CNN Ensemble\nEfficientNetV2B0 × 0.2\nResNet101V2 × 0.3\nMobileNetV2 × 0.5\nweighted sum → T=2.0]
         Classifier[Disease Classifier\nkeyword-based\nfungal/bacterial/viral/\npest/physiological/\nhealthy/unknown]
         S3Client[boto3 S3 Client]
@@ -183,10 +183,10 @@ flowchart TB
 flowchart LR
     subgraph AuthUC["auth.usecases.js"]
         direction TB
-        signup["signup\n{name,email,password,location}\n→ {user, tokens}"]
-        login["login\n{email,password}\n→ {user, tokens}"]
-        logout["logout\nuserUUID\n→ {message}"]
-        refresh["refresh\nrefreshToken\n→ {accessToken, refreshToken}"]
+        signup[signup\n(name,email,password,location)\n→ (user, tokens)]
+        login[login\n(email,password)\n→ (user, tokens)]
+        logout[logout\nuserUUID\n→ message]
+        refresh[refresh\nrefreshToken\n→ (accessToken, refreshToken)]
 
         signup --> UserRepo
         login --> UserRepo
@@ -221,9 +221,9 @@ flowchart LR
         getUser[getUser\nuuid, user\n→ User safe object]
         updateUser[updateUser\nuuid, data, user\n→ Updated user]
         deleteUser[deleteUser\nuuid, user\n→ void]
-        sendVerification["sendVerificationEmail\nuuid\n→ {message}"]
-        verifyEmail["verifyEmail\ntoken\n→ {message}"]
-        getEmailStatus["getEmailStatus\nuuid\n→ {email, isVerified}"]
+        sendVerification[sendVerificationEmail\nuuid\n→ message]
+        verifyEmail[verifyEmail\ntoken\n→ message]
+        getEmailStatus[getEmailStatus\nuuid\n→ (email, isVerified)]
 
         getUser --> URepo[userRepo]
         updateUser --> URepo
@@ -242,17 +242,17 @@ flowchart LR
 flowchart LR
     subgraph PlantUC["plant.usecase.js"]
         direction TB
-        getUserPlants["getUserPlants\nuser\n→ Plant[]"]
+        getUserPlants[getUserPlants\nuser\n→ plants]
         getPlant[getPlant\nplantUUID, user\n→ Plant]
         createPlant[createPlant\ndata, user\n→ Plant]
         updatePlant[updatePlant\nplantUUID, user, updateData\n→ Plant]
         deletePlant[deletePlant\nplantUUID, user\n→ void]
-        uploadPhoto["uploadPlantPhoto\nplantUUID, user, fileName, fileType\n→ {uploadUrl, key}"]
-        detectDisease["detectPlantDisease\nplantUUID, user, key\n→ {disease, diseaseHistory}"]
+        uploadPhoto[uploadPlantPhoto\nplantUUID, user, fileName, fileType\n→ (uploadUrl, key)]
+        detectDisease[detectPlantDisease\nplantUUID, user, key\n→ (disease, diseaseHistory)]
         removeImage[removePlantImage\nplantUUID, user, key\n→ void]
         extractData[extractPlantDataFromImage\nkey\n→ extracted plant data]
         detectUserImg[detectUserImageDisease\nkey, user\n→ simplified disease result]
-        uploadUserImg["uploadUserImage\nuser, fileName, fileType\n→ {uploadUrl, key}"]
+        uploadUserImg[uploadUserImage\nuser, fileName, fileType\n→ (uploadUrl, key)]
     end
 
     subgraph PlantDeps["Dependencies"]
@@ -293,13 +293,13 @@ flowchart LR
     subgraph PlantCareUC["plant-care.usecase.js (facade)"]
         direction TB
         getCareState[getCareState\nplantUUID\n→ care state]
-        getLogs["getLogs\nplantUUID, {type, page, limit, last}\n→ Log[]"]
-        addActionLog["addActionLog\nplantUUID, user, {actionType, desc, metadata}\n→ void"]
+        getLogs[getLogs\nplantUUID, (type, page, limit, last)\n→ logs]
+        addActionLog[addActionLog\nplantUUID, user, (actionType, desc, metadata)\n→ void]
         clearOldLogs[clearOldLogs\nplantUUID, before\n→ result]
-        getTasks["getTasks\nplantUUID, page, limit\n→ Task[]"]
-        getOverdueTasks["getOverdueTasks\nplantUUID\n→ Task[]"]
-        getPendingTasks["getPendingTasks\nplantUUID\n→ Task[]"]
-        getPrioritized["getPrioritizedTasks\nplantUUID\n→ Task[]"]
+        getTasks[getTasks\nplantUUID, page, limit\n→ tasks]
+        getOverdueTasks[getOverdueTasks\nplantUUID\n→ tasks]
+        getPendingTasks[getPendingTasks\nplantUUID\n→ tasks]
+        getPrioritized[getPrioritizedTasks\nplantUUID\n→ tasks]
         generateInsights[generateAiInsights\nplantUUID, user\n→ insights]
         askQuestion[askQuestion\nplantUUID, question\n→ answer]
     end
@@ -352,7 +352,7 @@ flowchart LR
             G[Check Optimal\ncareStateService]
             H[Generate Tasks\ntaskCareManager.generateTasks]
             I[AI Insights\nplantCareAiInsights.generate]
-            J["Return\n{status, aiInsights, activeTasks}"]
+            J[Return\n(status, aiInsights, activeTasks)]
         end
     end
 
@@ -398,12 +398,12 @@ flowchart LR
 flowchart LR
     subgraph AnalyserUC["plant-analyser.usecase.js"]
         direction TB
-        analyze["analyzeAndSavePlant\nplantUUID, user\n→ {status, activeTasks, scores}"]
+        analyze[analyzeAndSavePlant\nplantUUID, user\n→ (status, activeTasks, scores)]
 
         analyze --> A1[Fetch user + plant\nuserRepo + plantService]
         analyze --> A2[Get weather\nweatherService]
         analyze --> A3[Describe weather\nweatherDescriber]
-        analyze --> A4["Evaluate engine\nevaluate({weather, plant})\n→ waterScore, fertilizerScore,\npestRiskScore, lightScore"]
+        analyze --> A4[Evaluate engine\nevaluate(weather, plant)\n→ waterScore, fertilizerScore,\npestRiskScore, lightScore]
         analyze --> A5[Save care state\nplantCareStateService]
         analyze --> A6[Log analysis\nplantCareActionLogger]
         analyze --> A7[Generate tasks\nplantCareTaskGenerator]
@@ -436,8 +436,8 @@ flowchart LR
 flowchart LR
     subgraph DiseaseUC["disease-detection.usecase.js"]
         direction TB
-        detectUserImg["detectUserImageDisease\n{key, userId}\n→ {disease, plant, confidence,\ndisease_type, topPredictions}"]
-        detectAndSave["detectAndSaveDisease\n{key, userId, plantId, expectedPlant}\n→ {disease, diseaseHistory}"]
+        detectUserImg[detectUserImageDisease\n(key, userId)\n→ (disease, plant, confidence,\ndisease_type, topPredictions)]
+        detectAndSave[detectAndSaveDisease\n(key, userId, plantId, expectedPlant)\n→ (disease, diseaseHistory)]
 
         detectUserImg --> S3[s3CloudService\ngetSignedUrl]
         detectUserImg --> ML[axios → ML Service\nPOST /predict]
@@ -458,14 +458,14 @@ flowchart LR
 flowchart LR
     subgraph DashUC["dashboard.usecase.js"]
         direction TB
-        getDashboard["getUserDashboard\nuser\n→ {stats, aiReport, recentActivity}"]
+        getDashboard[getUserDashboard\nuser\n→ (stats, aiReport, recentActivity)]
         getStats[getUserStats\nuser\n→ plant stats]
         getCareDist[getUserCareDistribution\nuser\n→ care distribution]
         getResourceDemand[getUserResourceDemand\nuser\n→ resource demand]
         getTaskEfficiency[getUserTaskEfficiency\nuser\n→ task efficiency]
         getUpcomingHarvests[getUserUpcomingHarvests\nuser, last\n→ harvests]
-        getAiReport["getUserAiReport\nuser\n→ {aiReport}"]
-        getRecentActivity["getUserRecentActivity\nuser, last\n→ {logs}"]
+        getAiReport[getUserAiReport\nuser\n→ aiReport]
+        getRecentActivity[getUserRecentActivity\nuser, last\n→ logs]
     end
 
     subgraph DDeps["Dependencies"]
@@ -495,7 +495,7 @@ flowchart LR
 flowchart LR
     subgraph PlantEntity["Plant Entity"]
         direction TB
-        PrivateData["#data\n{ uuid, internalId, userInternalId, name,\n  commonName, category, family, growthStage,\n  soil, watering, disease, diseaseHistory,\n  stress, cdn, hasDisease }"]
+        PrivateData["#data\n( uuid, internalId, userInternalId, name,\n  commonName, category, family, growthStage,\n  soil, watering, disease, diseaseHistory,\n  stress, cdn, hasDisease )"]
         Getters["Getters\nfor all fields"]
         DeltaMethods["Delta Methods (return MongoDB dot-notation)"]
         AW[applyWatering\nhoursSinceLastWatering]
@@ -508,12 +508,12 @@ flowchart LR
         RI[removeImage\nfileName]
         SBP[setBasePath\npath]
         RDD[recordDiseaseDetection\nprediction object]
-        EGI["getEnginePlantInput\n→ {category, family, growthStage,\n  soilType, soilMoisture, hoursSinceLastWatering,\n  hasDisease, diseaseType, diseaseSeverity,\n  lightCondition}"]
+        EGI[getEnginePlantInput\n→ (category, family, growthStage,\n  soilType, soilMoisture, hoursSinceLastWatering,\n  hasDisease, diseaseType, diseaseSeverity,\n  lightCondition)]
     end
 
     subgraph UserEntity["User Entity"]
         direction TB
-        UPrivate["#data\n{ uuid, internalId, email, password,\n  role, isVerified, refreshToken, location }"]
+        UPrivate["#data\n( uuid, internalId, email, password,\n  role, isVerified, refreshToken, location )"]
         UGetters["Getters\nfor all fields"]
         UMutate["Mutation Methods"]
         CP[changePassword\nnewPasswordHash → bcrypt]
@@ -562,11 +562,11 @@ flowchart LR
 flowchart LR
     subgraph MiddlewareChain["Middleware Pipeline"]
         direction LR
-        Req[HTTP Request] --> Auth["authenticate\nJWT Bearer token\nverifyAccessToken\n→ req.user = {uuid, email, role}"]
+        Req[HTTP Request] --> Auth[authenticate\nJWT Bearer token\nverifyAccessToken\n→ req.user = (uuid, email, role)]
         Auth --> Role[authorize\n...roles\n403 if not authorized]
         Role --> EmailVal[emailValidator\nZod schema\n400 if invalid]
         EmailVal --> Route[Route Handler]
-        Route -->|on error| Err["errorHandler\ncatches RouteError\n→ {success:false, message, status}\ncatches Mongoose/JWT errors\n→ 400/401/500"]
+        Route -->|on error| Err[errorHandler\ncatches RouteError\n→ (success:false, message, status)\ncatches Mongoose/JWT errors\n→ 400/401/500]
     end
 ```
 
@@ -578,14 +578,14 @@ flowchart LR
         direction TB
 
         subgraph Endpoints
-            Health["GET /\n→ {status: healthy}"]
-            Predict["POST /predict\nmultipart image\n→ {disease, confidence,\n  disease_type, plant,\n  top_predictions}"]
-            PredictGeneral["POST /predict/general\nmultipart image\n→ {disease, confidence,\n  disease_type, plant,\n  top_predictions}"]
+            Health[GET /\n→ status: healthy]
+            Predict[POST /predict\nmultipart image\n→ (disease, confidence,\n  disease_type, plant,\n  top_predictions)]
+            PredictGeneral[POST /predict/general\nmultipart image\n→ (disease, confidence,\n  disease_type, plant,\n  top_predictions)]
         end
 
         subgraph Pipeline["Inference Pipeline"]
             Load[Load image\nfrom upload / S3]
-            Preprocess["Preprocess\nRGB conversion\n224×224 LANCZOS resize\nNormalize pixel [0,1]"]
+            Preprocess[Preprocess\nRGB conversion\n224×224 LANCZOS resize\nNormalize pixel 0..1]
             Ensemble[CNN Ensemble\nWeighted Average]
             E0[EfficientNetV2B0\nweight 0.2]
             R101[ResNet101V2\nweight 0.3]
@@ -833,7 +833,7 @@ flowchart LR
         Repo --> DB[(MongoDB)]
         UC -->|on failure| Err[throw RouteError\nstatusCode + message]
         Err --> ErrHandler[errorHandler middleware\ncatches all errors]
-        ErrHandler --> JSON['{"success":false,\n"message", "status"}']
+        ErrHandler --> JSON[(success:false,\nmessage, status)]
         Repo --> Ctrl
         Ctrl --> OK[HttpResponse.success\nstrips _id, __v,\ninternalId, password,\nplantInternalId, userInternalId]
         OK --> Response[JSON Response]
@@ -859,7 +859,7 @@ flowchart LR
         EP --> Load[Load image\nfrom upload or S3]
         Load --> Convert[Convert to RGB\ndrop alpha channel]
         Convert --> Resize[Resize to 224×224\nLANCZOS interpolation]
-        Resize --> Normalize["Normalize pixel values\nto [0, 1] float32"]
+        Resize --> Normalize[Normalize pixel values\nto 0..1 float32]
         Normalize --> Ensemble[CNN Ensemble Inference]
         Ensemble --> W1[EfficientNetV2B0\nweight 0.2]
         Ensemble --> W2[ResNet101V2\nweight 0.3]
@@ -870,7 +870,7 @@ flowchart LR
         Sum --> Temp[Temperature Scaling\nT = 2.0]
         Temp --> Argmax[Argmax → class index]
         Argmax --> Classify[Classify disease type\nkeyword matching]
-        Classify --> Result["{disease, confidence,\ndisease_type, plant,\ntop_predictions}"]
+        Classify --> Result[(disease, confidence,\ndisease_type, plant,\ntop_predictions)]
         Result --> Response[JSON Response]
     end
 
