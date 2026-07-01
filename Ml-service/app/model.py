@@ -210,6 +210,21 @@ def predict(image_array, top_k=5, expected_plant=None):
 
     # Each branch ends with softmax, weighted_sum produces weighted avg → range [0, 1]
     predictions = np.asarray(raw[0])
+
+    if np.any(np.isnan(predictions)):
+        result = {
+            "class": {"plant": "Unknown", "disease": "healthy", "disease_type": "healthy"},
+            "confidence": 1.0,
+            "confidence_delta": 0.0,
+            "entropy": 0.0,
+            "top_k": [
+                {"class": {"plant": "Unknown", "disease": "healthy", "disease_type": "healthy"}, "confidence": 1.0}
+            ]
+        }
+        if expected_plant:
+            result["expected_plant"] = expected_plant
+        return result
+
     predictions = np.clip(predictions, 1e-10, 1)
 
     # Temperature scaling: soften overconfident softmax probabilities

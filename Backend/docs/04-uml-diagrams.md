@@ -524,7 +524,7 @@ flowchart TD
 
   T6 --> AI[9. Generate AI insights<br/>via Gemini]
   AI --> PER[10. Persist insights<br/>to care state]
-  PER --> RET[Return (status, aiInsights, activeTasks)]
+  PER --> RET[Return status aiInsights activeTasks]
 
   RET --> END([End])
 
@@ -541,26 +541,26 @@ flowchart TD
 ```mermaid
 flowchart LR
   subgraph Auth_Module["Auth Module"]
-    A_ROUTES[/api/v1/auth]
+    A_ROUTES[api-v1-auth]
     A_CTRL[auth.controller]
     A_UC[auth.usecases]
   end
 
   subgraph User_Module["User Module"]
-    U_ROUTES[/api/v1/users]
+    U_ROUTES[api-v1-users]
     U_CTRL[user.controller]
     U_UC[user.usecases]
   end
 
   subgraph Plant_Module["Plant Module"]
-    P_ROUTES[/api/v1/plants]
+    P_ROUTES[api-v1-plants]
     P_CTRL[plant.controller]
     P_UC[plant.usecase]
     P_DD[disease-detection.usecase]
   end
 
   subgraph Plant_Care_Module["Plant Care Module"]
-    PC_ROUTES[/api/v1/plants/:id/*]
+    PC_ROUTES[api-v1-plants-id-star]
     PC_CTRL[plant-care.controller]
     PC_UC[plant-care.usecase]
     PCA_UC[plant-care-action.usecase]
@@ -573,7 +573,7 @@ flowchart LR
   end
 
   subgraph Dashboard_Module["Dashboard Module"]
-    D_ROUTES[/api/v1/dashboard]
+    D_ROUTES[api-v1-dashboard]
     D_CTRL[dashboard.controller]
     D_UC[dashboard.usecase]
     D_SVC[dashboardService]
@@ -657,7 +657,7 @@ classDiagram
     +Boolean isVerified
     +String refreshToken
     +String emailToken
-    +Object location: {city} XOR {coordinates: {lat, lon}}
+    +String location
     +Date createdAt
     +Date updatedAt
     +getPassword()
@@ -678,12 +678,12 @@ classDiagram
     +String growthStage: germination | seedling | vegetative | flowering | fruiting | mature
     +Date plantedAt
     +Date expectedHarvestDate
-    +Object soil: {type, moisture, lastFertilized, lastPruned}
-    +Object watering: {hoursSinceLastWatering}
+    +Object soil
+    +Object watering
     +Object disease (DiseaseSubSchema)
     +Array diseaseHistory (DiseaseSubSchema[])
-    +Object stress: {diseaseType: bacterial|fungal|none, severity: high|medium|none}
-    +Object cdn: {basePath, images[]}
+    +Object stress
+    +Object cdn
     +Number ageDays
     +Boolean hasDisease (auto-calculated)
     +Date createdAt
@@ -711,11 +711,11 @@ classDiagram
     +String uuid
     +Number internalId
     +String plantUUID (FK → Plant.uuid)
-    +Object status: StatusSubSchema {water, nutrients, health, light}
-    +Object engineScores: EngineScoresSubSchema {waterScore, fertilizerScore, pestRiskScore, lightScore, appliedRules[]}
+    +Object status: StatusSubSchema
+    +Object engineScores: EngineScoresSubSchema
     +Array activeTasks (PlantTaskSubSchema[])
     +Array completedTasks (PlantTaskSubSchema[])
-    +Object aiInsights: AiInsightsSubSchema {summary, recommendations[], generatedAt}
+    +Object aiInsights: AiInsightsSubSchema
     +Date createdAt
     +Date updatedAt
   }

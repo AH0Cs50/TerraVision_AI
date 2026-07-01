@@ -53,6 +53,18 @@
       "explanation": "Recently watered within 12 hours reduces irrigation need; slight increase in surface moisture pest risk"
     },
     {
+      "id": "watering_normal_range",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "gte": 12, "lt": 24 }
+      },
+      "effects": {
+        "waterScore": 0.0
+      },
+      "weight": 0.2,
+      "explanation": "12-24 hours without water is within normal range for most plants"
+    },
+    {
       "id": "watering_drought_recovery_imbalance",
       "factor": "weather",
       "condition": {

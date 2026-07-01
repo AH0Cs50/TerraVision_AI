@@ -12,6 +12,9 @@ import HttpStatusCodes from "../../shared/util/HttpStatusCodes.js";
  * general-purpose image paths.
  */
 class S3CloudService {
+  /**
+   * @param {Object} S3Repository - S3 repository instance for low-level ops
+   */
   constructor(S3Repository) {
     this.s3Repo = S3Repository;
   }
@@ -49,11 +52,13 @@ class S3CloudService {
 
   /**
    * @description Validates that a plant image key matches the expected
-   * pattern for plant-scoped images.
+   * pattern for plant-scoped images and optionally verifies the embedded
+   * plant UUID matches the expected plant.
    * @param {string} key - S3 object key to validate
-   * @returns {boolean} True if the key format is valid
+   * @param {string} [expectedPlantUUID] - Expected plant UUID embedded in key
+   * @returns {boolean} True if the key format is valid and UUID matches
    */
-  validatePlantImageKey(key) {
+  validatePlantImageKey(key, expectedPlantUUID) {
     if (!key || typeof key !== "string") {
       return false;
     }
@@ -61,9 +66,22 @@ class S3CloudService {
     const keyPattern =
       /^plants\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+\/images\/\d+-[a-zA-Z0-9._-]+$/;
 
-    return keyPattern.test(key);
+    if (!keyPattern.test(key)) return false;
+
+    if (expectedPlantUUID) {
+      const keyPlantUUID = key.split("/")[2];
+      return keyPlantUUID === expectedPlantUUID;
+    }
+
+    return true;
   }
 
+  /**
+   * Validates that a user image key matches the expected pattern for
+   * user-scoped images (`users/{userId}/images/{timestamp}-{safeName}`).
+   * @param {string} key - S3 object key to validate
+   * @returns {boolean} True if the key format is valid
+   */
   validateUserImageKey(key) {
     if (!key || typeof key !== "string") {
       return false;

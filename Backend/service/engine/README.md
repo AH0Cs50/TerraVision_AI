@@ -2,6 +2,43 @@
 
 Deterministic scoring engine for agricultural intelligence. Evaluates environmental, soil, plant, light, and pest inputs to compute four intensity scores: **waterScore**, **fertilizerScore**, **pestRiskScore**, and **lightScore**.
 
+```mermaid
+flowchart LR
+    subgraph Input[Input Data]
+        direction TB
+        W[weather\ntemp humidity\ncondition light]
+        P[plant\ncategory family\ngrowthStage ageDays]
+        S[soil\ntype moisture]
+        H[watering\nhoursSince\nLastWatering]
+        R[stress\ndiseaseType\nseverity]
+    end
+
+    subgraph Engine[7-Layer Rule Engine]
+        direction TB
+        L1[Global\n17 rules] --> L2[Soil\n20 rules]
+        L2 --> L3[Plant Family\n38 rules]
+        L3 --> L4[Growth Stage\n18 rules]
+        L4 --> L5[Watering\n7 rules]
+        L5 --> L6[Pest - Disease\n9 rules]
+        L6 --> L7[Light\n22 rules]
+    end
+
+    subgraph Aggregate[Score Aggregation]
+        A[1.0 base\n+ sum of additives\nx product of multipliers\nclamp 0.5 to 2.0]
+    end
+
+    subgraph Output[Final Scores]
+        O1[waterScore\n0.5 - 2.0]
+        O2[fertilizerScore\n0.5 - 2.0]
+        O3[pestRiskScore\n0.5 - 2.0]
+        O4[lightScore\n0.5 - 2.0]
+    end
+
+    Input --> Engine
+    Engine --> Aggregate
+    Aggregate --> Output
+```
+
 ---
 
 ## Engine Structure
@@ -78,6 +115,20 @@ Rules are evaluated in a fixed **7-layer order**:
 → Aggregation
 ```
 
+```mermaid
+flowchart TD
+    R[Rule loaded from layer]
+    C{All conditions\nmatch input?}
+    R --> C
+    C -- Yes --> Apply[Apply effects]
+    Apply --> AD[Additives\nwaterScore +0.3\nfertilizerScore -0.2\npestRiskScore +0.5\nlightScore +0.1]
+    AD --> ML[Multipliers\nwaterMultiplier x1.2\npestMultiplier x0.8]
+    ML --> ST[Update state\nrecord applied rule]
+    C -- No --> SK[Skip rule\nstate unchanged]
+    ST --> Next[Next rule in layer]
+    SK --> Next
+```
+
 This ordering reflects the dependency chain from broad environment → soil → plant → stress.
 
 ### Condition Evaluation
@@ -97,6 +148,32 @@ Each rule has a `condition` object with nested path keys (e.g. `weather.temperat
 - Multiple keys in a condition = AND
 - All conditions must pass for a rule to apply
 
+```mermaid
+flowchart LR
+    subgraph Cond[Rule Conditions AND logic]
+        K1[weather.temperature\ngte 30]
+        K2[weather.humidity\ngte 70]
+        K3[soil.type\neq sandy]
+    end
+
+    subgraph In[Input Values]
+        I1[temperature 32]
+        I2[humidity 75]
+        I3[soil type sandy]
+    end
+
+    K1 --> C1[32 >= 30\npass]
+    K2 --> C2[75 >= 70\npass]
+    K3 --> C3[sandy eq sandy\npass]
+
+    C1 --> AND{All pass?}
+    C2 --> AND
+    C3 --> AND
+
+    AND -- Yes --> Match[Rule fires\neffects applied]
+    AND -- No --> NoMatch[Rule skipped]
+```
+
 ### Rule Application
 
 When a rule's condition passes, its `effects` are merged into the scoring state:
@@ -112,6 +189,24 @@ When a rule's condition passes, its `effects` are merged into the scoring state:
 
 ```
 finalScore = clamp((1.0 + sum(additives)) × product(multipliers), 0.5, 2.0)
+```
+
+```mermaid
+flowchart LR
+    B[Base State\nall scores 1.0\nall multipliers 1.0]
+    B --> E[Evaluate 131 rules\nacross 7 layers]
+
+    E --> A[Accumulate additives\nwaterScore +0.3\nfertilizerScore -0.2\npestRiskScore +0.5\nlightScore +0.1]
+
+    A --> M[Apply multipliers\nwaterMultiplier x 1.2\nfertilizerMultiplier x 0.9\npestMultiplier x 1.1\nlightMultiplier x 0.8]
+
+    M --> CF[Compute:\n1.0 + sum additives\nx product multipliers]
+    CF --> CL[Clamp to 0.5 - 2.0]
+
+    CL --> F1[waterScore]
+    CL --> F2[fertilizerScore]
+    CL --> F3[pestRiskScore]
+    CL --> F4[lightScore]
 ```
 
 ### Base State

@@ -21,3 +21,11 @@ changes.md
 architecture-plan.md
 # SQA prompt files
 SQA*
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Dotfile configs (but keep essential git files)
+.*
+!.gitignore
