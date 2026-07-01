@@ -5,6 +5,11 @@ const require = createRequire(import.meta.url);
 
 const raw = require("../../shared/rules/weather_light_modifiers.json");
 
+/**
+ * Infers the factor category from a rule's effects object
+ * @param {object} effects - The effects object from a rule
+ * @returns {string} The inferred factor: "light", "pestRisk", "fertilizer", or "water"
+ */
 function inferFactor(effects) {
   if (effects.lightScore !== undefined || effects.lightMultiplier !== undefined)
     return "light";

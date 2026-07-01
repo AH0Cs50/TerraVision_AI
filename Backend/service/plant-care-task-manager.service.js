@@ -6,6 +6,11 @@ import { createPlantTaskModel } from "../model/plant-care.model.js";
  * prioritization, pagination, and AI-driven task generation from status.
  */
 export class PlantTaskCareManager {
+  /**
+   * @param {object} plantCareStateRepo - Repository for plant care state persistence
+   * @param {object} taskGenerator - Task generator service (LLM-based)
+   * @param {object} actionLogger - Action logger service
+   */
   constructor(plantCareStateRepo, taskGenerator, actionLogger) {
     this.repo = plantCareStateRepo;
     this.taskGenerator = taskGenerator;

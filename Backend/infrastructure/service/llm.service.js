@@ -35,6 +35,9 @@ const MODEL_PRIORITY = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flas
  * response parsing (JSON / plain text), and error wrapping.
  */
 export default class LLMService {
+  /**
+   * Initialises the Google GenAI client with the configured API key
+   */
   constructor() {
     this.ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   }

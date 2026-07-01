@@ -7,6 +7,10 @@ import { fillPrompt } from "../infrastructure/service/llm.service.js";
  * on plant documents — callers are responsible for persisting.
  */
 export default class PlantVisionService {
+  /**
+   * @param {object} s3CloudService - S3 cloud storage service
+   * @param {object} llmService - LLM service for vision-based plant data extraction
+   */
   constructor(s3CloudService, llmService) {
     this.s3CloudService = s3CloudService;
     this.llmService = llmService;

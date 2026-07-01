@@ -1,4 +1,14 @@
+/**
+ * Standard JSON response builder. All controller responses use these static methods
+ * to produce a consistent envelope: { success, message, data?, status }.
+ */
 class HttpResponse {
+  /**
+   * Recursively strips sensitive fields (_id, __v, internalId, plantInternalId, userInternalId, password)
+   * and converts ObjectId / Date / Buffer instances to their string representations.
+   * @param {*} obj - The value to sanitize
+   * @returns {*} Sanitized value
+   */
   static #sanitize(obj) {
     if (Array.isArray(obj)) return obj.map(HttpResponse.#sanitize);
     if (obj && typeof obj === "object" && !(obj instanceof Date)) {
@@ -24,6 +34,13 @@ class HttpResponse {
     return obj;
   }
 
+  /**
+   * Builds a success response envelope
+   * @param {string} message - Success message
+   * @param {*} [data=null] - Response payload (will be sanitized)
+   * @param {number} [statusCode=200] - HTTP status code
+   * @returns {{ success: boolean, message: string, data: *|null, status: number }}
+   */
   static success(message, data = null, statusCode = 200) {
     return {
       success: true,
@@ -33,6 +50,12 @@ class HttpResponse {
     };
   }
 
+  /**
+   * Builds an error response envelope
+   * @param {string} message - Error message
+   * @param {number} [statusCode=500] - HTTP status code
+   * @returns {{ success: boolean, message: string, status: number }}
+   */
   static error(message, statusCode = 500) {
     return {
       success: false,

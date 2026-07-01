@@ -15,6 +15,9 @@ import {
  * and score values, then parses the model's JSON response into task objects.
  */
 export class PlantCareTaskGenerator {
+  /**
+   * @param {object} llmService - LLM service for generating task suggestions
+   */
   constructor(llmService) {
     this.llmService = llmService;
   }

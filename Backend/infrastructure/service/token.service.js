@@ -5,6 +5,11 @@ import { jwtConfig } from "../../config/config.js";
  * @description Value object representing the claims embedded in a JWT.
  */
 export class TokenPayload {
+  /**
+   * @param {string} uuid - User UUID
+   * @param {string} email - User email
+   * @param {string} role - User role (e.g. "user", "admin")
+   */
   constructor(uuid, email, role) {
     this.uuid = uuid;
     this.email = email;
@@ -17,6 +22,9 @@ export class TokenPayload {
  * secret keys and expiration durations from the application config.
  */
 class TokenService {
+  /**
+   * Injects JWT secrets and expiration durations from application config
+   */
   constructor() {
     this.accessSecret = jwtConfig.ACCESS_TOKEN_SECRET;
     this.refreshSecret = jwtConfig.REFRESH_TOKEN_SECRET;

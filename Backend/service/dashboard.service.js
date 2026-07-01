@@ -1,13 +1,29 @@
 class DashboardService {
+  /**
+   * @param {object} plantRepo - Repository for plant persistence
+   * @param {object} plantCareRepo - Repository for plant care state persistence
+   */
   constructor(plantRepo, plantCareRepo) {
     this.plantRepo = plantRepo;
     this.plantCareRepo = plantCareRepo;
   }
 
+  /**
+   * @private
+   * @description Fetches all plants belonging to a user
+   * @param {object} userDoc - The authenticated user document
+   * @returns {Promise<object[]>} Array of plant entities
+   */
   async #getPlants(userDoc) {
     return this.plantRepo.findByUserInternalId(userDoc.internalId);
   }
 
+  /**
+   * @private
+   * @description Fetches care states for a set of plants
+   * @param {object[]} plants - Array of plant entities
+   * @returns {Promise<object[]>} Array of care state documents
+   */
   async #getCareStates(plants) {
     const plantUUIDs = plants.map((p) => p.uuid);
     return plantUUIDs.length
@@ -15,6 +31,12 @@ class DashboardService {
       : [];
   }
 
+  /**
+   * Returns aggregated plant statistics for the user
+   * @param {object} userDoc - The authenticated user document
+   * @returns {Promise<object>} Object with totalPlants, diseasedPlants, healthyPlants,
+   * plantsByCategory, and plantsByGrowthStage
+   */
   async getPlantStats(userDoc) {
     const plants = await this.#getPlants(userDoc);
     return {
@@ -26,6 +48,11 @@ class DashboardService {
     };
   }
 
+  /**
+   * Returns the care status distribution and health percentages across the user's plants
+   * @param {object} userDoc - The authenticated user document
+   * @returns {Promise<object>} Object with careStatusDistribution and healthPercentages
+   */
   async getCareDistribution(userDoc) {
     const plants = await this.#getPlants(userDoc);
     const careStates = await this.#getCareStates(plants);
@@ -35,23 +62,46 @@ class DashboardService {
     };
   }
 
+  /**
+   * Returns counts of plants needing water, fertilizer, or more light
+   * @param {object} userDoc - The authenticated user document
+   * @returns {Promise<object>} Object with resourceDemand breakdown
+   */
   async getResourceDemand(userDoc) {
     const plants = await this.#getPlants(userDoc);
     const careStates = await this.#getCareStates(plants);
     return { resourceDemand: this.#computeResourceDemand(careStates) };
   }
 
+  /**
+   * Returns task efficiency metrics across the user's plants
+   * @param {object} userDoc - The authenticated user document
+   * @returns {Promise<object>} Object with taskEfficiency including activeTasks,
+   * completedTasks, totalTasks, and efficiency percentage
+   */
   async getTaskEfficiency(userDoc) {
     const plants = await this.#getPlants(userDoc);
     const careStates = await this.#getCareStates(plants);
     return { taskEfficiency: this.#computeTaskEfficiency(careStates) };
   }
 
+  /**
+   * Returns the next upcoming harvests for the user's plants
+   * @param {object} userDoc - The authenticated user document
+   * @param {number} [limit=3] - Maximum number of harvests to return
+   * @returns {Promise<object>} Object with upcomingHarvests array
+   */
   async getUpcomingHarvests(userDoc, limit = 3) {
     const plants = await this.#getPlants(userDoc);
     return { upcomingHarvests: this.#computeUpcomingHarvests(plants, limit) };
   }
 
+  /**
+   * Returns a comprehensive dashboard merging plant stats, care distribution,
+   * resource demand, task efficiency, and upcoming harvests
+   * @param {object} userDoc - The authenticated user document
+   * @returns {Promise<object>} Aggregated dashboard data
+   */
   async getUserStats(userDoc) {
     const [stats, careDist, resourceDemand, taskEff, harvests] =
       await Promise.all([
@@ -71,6 +121,13 @@ class DashboardService {
     };
   }
 
+  /**
+   * @private
+   * @description Groups items by a given key and returns counts
+   * @param {object[]} items - Array of objects
+   * @param {string} key - The property key to group by
+   * @returns {object} Object mapping each value to its count
+   */
   #countBy(items, key) {
     const counts = {};
     for (const item of items) {
@@ -80,6 +137,12 @@ class DashboardService {
     return counts;
   }
 
+  /**
+   * @private
+   * @description Computes the distribution of water, nutrients, health, and light statuses
+   * @param {object[]} careStates - Array of care state documents
+   * @returns {object} Distribution object with counts per status per category
+   */
   #computeCareDistribution(careStates) {
     const dist = { water: {}, nutrients: {}, health: {}, light: {} };
     for (const cs of careStates) {
@@ -92,6 +155,12 @@ class DashboardService {
     return dist;
   }
 
+  /**
+   * @private
+   * @description Computes the percentage breakdown of health statuses
+   * @param {object[]} careStates - Array of care state documents
+   * @returns {object} Object mapping health status to percentage
+   */
   #computeHealthPercentages(careStates) {
     const healthCounts = {};
     for (const cs of careStates) {
@@ -106,6 +175,12 @@ class DashboardService {
     return percentages;
   }
 
+  /**
+   * @private
+   * @description Counts plants needing water, fertilizer, or more light
+   * @param {object[]} careStates - Array of care state documents
+   * @returns {object} Object with thirsty, needsFeed, and lowLight counts
+   */
   #computeResourceDemand(careStates) {
     let thirsty = 0;
     let needsFeed = 0;
@@ -118,6 +193,12 @@ class DashboardService {
     return { thirsty, needsFeed, lowLight };
   }
 
+  /**
+   * @private
+   * @description Computes task efficiency from active/completed task counts
+   * @param {object[]} careStates - Array of care state documents
+   * @returns {object} Object with activeTasks, completedTasks, totalTasks, and efficiency percentage
+   */
   #computeTaskEfficiency(careStates) {
     let activeTasks = 0;
     let completedTasks = 0;
@@ -130,6 +211,13 @@ class DashboardService {
     return { activeTasks, completedTasks, totalTasks, efficiency };
   }
 
+  /**
+   * @private
+   * @description Finds the closest upcoming harvest dates for plants
+   * @param {object[]} plants - Array of plant entities
+   * @param {number} limit - Maximum number of harvests to return
+   * @returns {object[]} Sorted array of upcoming harvest info with daysUntilHarvest
+   */
   #computeUpcomingHarvests(plants, limit) {
     return plants
       .filter((p) => p.expectedHarvestDate)

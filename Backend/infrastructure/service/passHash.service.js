@@ -5,6 +5,9 @@ import bcrypt from "bcrypt";
  * with a configurable salt round count (default 12).
  */
 class PasswordHasher {
+  /**
+   * Initialises with bcrypt salt rounds (default 12)
+   */
   constructor() {
     this.saltRounds = 12; // good balance between security and performance
   }

@@ -21,10 +21,20 @@ const LAYER_ORDER = [
 
 const allRules = LAYER_ORDER.flatMap((l) => l.rules);
 
+/**
+ * Evaluates all rules against the input and returns aggregated scores
+ * @param {object} input - The engine input data (weather + plant)
+ * @returns {{ waterScore: number, fertilizerScore: number, pestRiskScore: number, lightScore: number }} The computed scores
+ */
 function evaluate(input) {
   return engine.evaluateRules(input, allRules);
 }
 
+/**
+ * Evaluates rules layer-by-layer and returns per-layer results plus a final aggregate
+ * @param {object} input - The engine input data (weather + plant)
+ * @returns {{ layers: object, final: { waterScore: number, fertilizerScore: number, pestRiskScore: number, lightScore: number } }} Per-layer and final scores
+ */
 function evaluateByLayer(input) {
   const results = {};
   for (const l of LAYER_ORDER) {
@@ -33,6 +43,10 @@ function evaluateByLayer(input) {
   return { layers: results, final: engine.evaluateRules(input, allRules) };
 }
 
+/**
+ * Returns the rule count per layer and total
+ * @returns {object} Object mapping layer names to rule counts, with a `total` property
+ */
 function getRuleCount() {
   const counts = {};
   for (const l of LAYER_ORDER) {

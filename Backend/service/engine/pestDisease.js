@@ -5,6 +5,11 @@ const require = createRequire(import.meta.url);
 
 const raw = require("../../shared/rules/weather_pest_disease_modifiers.json");
 
+/**
+ * Infers the factor category from a rule's effects object
+ * @param {object} effects - The effects object from a rule
+ * @returns {string} The inferred factor: "pestRisk", "water", or "fertilizer"
+ */
 function inferFactor(effects) {
   if (effects.pestRiskScore !== undefined) return "pestRisk";
   if (effects.waterScore !== undefined || effects.waterMultiplier !== undefined)

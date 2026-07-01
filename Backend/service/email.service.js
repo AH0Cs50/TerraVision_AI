@@ -7,6 +7,9 @@ import emailConfig from "../config/config.js";
  * using Nodemailer with pre-configured SMTP transport from config.
  */
 class EmailService {
+  /**
+   * @description Creates the Nodemailer transporter using SMTP config from config file
+   */
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: emailConfig.host,

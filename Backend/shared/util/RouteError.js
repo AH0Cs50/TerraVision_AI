@@ -1,5 +1,13 @@
-// throw inside controller and services
+/**
+ * Operational error class for controller and service layers.
+ * Thrown by use cases and caught by the error middleware to produce a JSON error response.
+ */
 class RouteError extends Error {
+  /**
+   * @param {number} statusCode - HTTP status code (e.g. 404, 400, 500)
+   * @param {string} message - Human-readable error message
+   * @param {object|null} [details=null] - Optional additional error details
+   */
   constructor(statusCode, message, details = null) {
     super(message);
 

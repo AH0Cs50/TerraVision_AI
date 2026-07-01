@@ -6,6 +6,9 @@ import { fillPrompt } from "../infrastructure/service/llm.service.js";
  * and action history.
  */
 export class PlantCareAiInsights {
+  /**
+   * @param {object} llmService - LLM service for generating insights and answers
+   */
   constructor(llmService) {
     this.llmService = llmService;
   }
