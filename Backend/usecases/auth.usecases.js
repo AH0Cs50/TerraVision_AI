@@ -103,6 +103,37 @@ export async function logout(userUUID) {
  * @returns {{ accessToken: string, refreshToken: string }} New JWT token pair
  * @throws {RouteError} 401 if refresh token is invalid or mismatched
  */
+/**
+ * Changes a user's password after verifying the current password
+ * @param {string} userUUID - User's UUID (from auth middleware)
+ * @param {string} currentPassword - The user's current password
+ * @param {string} newPassword - The new password to set
+ * @returns {{ message: string }} Success message
+ * @throws {RouteError} 404 if user not found
+ * @throws {RouteError} 401 if current password is incorrect
+ */
+export async function changePassword(userUUID, currentPassword, newPassword) {
+  const rawUser = await userRepo.findByUUID(userUUID);
+  if (!rawUser) {
+    throw new RouteError(HttpStatusCodes.NOT_FOUND, "User not found");
+  }
+
+  const user = new User(rawUser);
+  const isValid = await passHasher.compare(currentPassword, user.getPassword());
+  if (!isValid) {
+    throw new RouteError(HttpStatusCodes.UNAUTHORIZED, "Current password is incorrect");
+  }
+
+  const hashed = await passHasher.hash(newPassword);
+  user.changePassword(hashed);
+  await userRepo.updateByUUID(user.uuid, { password: user.getPassword() });
+
+  user.clearRefreshToken();
+  await userRepo.updateRefreshToken(user.internalId, user.getRefreshToken());
+
+  return { message: "Password changed successfully" };
+}
+
 export async function refresh(refreshToken) {
   // 1. Verify refresh token and lookup user
   const decoded = tokenService.verifyRefreshToken(refreshToken);

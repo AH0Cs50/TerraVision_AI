@@ -1,5 +1,5 @@
 import assert from "assert";
-import { signup, login, logout, refresh } from "../../usecases/auth.usecases.js";
+import { signup, login, logout, changePassword, refresh } from "../../usecases/auth.usecases.js";
 import { userRepo } from "../../shared/container.js";
 import RouteError from "../../shared/util/RouteError.js";
 import HttpStatusCodes from "../../shared/util/HttpStatusCodes.js";
@@ -83,7 +83,66 @@ async function runTests() {
     console.error("❌ Test 5 failed:", error.message);
   }
 
-  // Test 6: Logout
+  // Test 6: Change password with wrong current password -> 401
+  try {
+    await changePassword(signupResult.user.uuid, "WrongPass123!", "NewPass123!");
+    console.log("❌ Test 6 failed: Should have thrown for wrong current password");
+  } catch (error) {
+    try {
+      assert(error instanceof RouteError, "Should throw RouteError");
+      assert(error.statusCode === HttpStatusCodes.UNAUTHORIZED, "Should be 401");
+      console.log("✅ Test 6 passed: Wrong current password correctly rejected");
+    } catch (assertError) {
+      console.error("❌ Test 6 failed:", assertError.message);
+    }
+  }
+
+  // Test 7: Change password successfully
+  try {
+    const result = await changePassword(signupResult.user.uuid, "TestPass123!", "NewPass123!");
+    assert(result.message === "Password changed successfully", `Wrong message: ${result.message}`);
+    console.log("✅ Test 7 passed: Change password successful");
+  } catch (error) {
+    console.error("❌ Test 7 failed:", error.message);
+  }
+
+  // Test 8: Login with new password (old should fail, new should work)
+  try {
+    await login({ email: testEmail, password: "TestPass123!" });
+    console.log("❌ Test 8 failed: Old password should no longer work");
+  } catch (error) {
+    try {
+      assert(error instanceof RouteError, "Should throw RouteError");
+      assert(error.statusCode === HttpStatusCodes.UNAUTHORIZED, "Should be 401");
+      console.log("✅ Test 8 passed: Old password correctly rejected after change");
+    } catch (assertError) {
+      console.error("❌ Test 8 failed:", assertError.message);
+    }
+  }
+
+  try {
+    const newLogin = await login({ email: testEmail, password: "NewPass123!" });
+    assert(newLogin.tokens.accessToken, "Access token not returned");
+    console.log("✅ Test 8b passed: New password works for login");
+  } catch (error) {
+    console.error("❌ Test 8b failed:", error.message);
+  }
+
+  // Test 9: Change password with non-existent user -> 404
+  try {
+    await changePassword("nonexistent-uuid", "SomePass123!", "NewPass123!");
+    console.log("❌ Test 9 failed: Should have thrown for non-existent user");
+  } catch (error) {
+    try {
+      assert(error instanceof RouteError, "Should throw RouteError");
+      assert(error.statusCode === HttpStatusCodes.NOT_FOUND, "Should be 404");
+      console.log("✅ Test 9 passed: Non-existent user correctly rejected");
+    } catch (assertError) {
+      console.error("❌ Test 9 failed:", assertError.message);
+    }
+  }
+
+  // Test 10: Logout
   try {
     const logoutResult = await logout(signupResult.user.uuid);
     assert(logoutResult.message === "Logged out successfully", `Wrong logout message: ${logoutResult.message}`);
@@ -97,7 +156,7 @@ async function runTests() {
     const user = await userRepo.findByEmail(testEmail);
     if (user) await userRepo.deleteByUUID(user.uuid);
     console.log("🧹 Cleanup complete");
-  } catch {}
+  } catch { /* cleanup is best-effort */ }
 
   console.log("\n🎉 Auth UseCase tests completed\n");
 }

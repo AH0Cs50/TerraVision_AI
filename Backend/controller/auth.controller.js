@@ -1,5 +1,5 @@
 import * as AuthUseCases from "../usecases/auth.usecases.js";
-import { UserDTO } from "../dto/user.dto.js";
+import { UserDTO, ChangePasswordDTO } from "../dto/user.dto.js";
 import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 import HttpResponse from "../shared/util/HttpResponse.js";
 
@@ -28,6 +28,16 @@ export async function logout(req, res, next) {
   try {
     const result = await AuthUseCases.logout(req.user.uuid);
     return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Logged out successfully", result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = ChangePasswordDTO.parse(req.body);
+    const result = await AuthUseCases.changePassword(req.user.uuid, currentPassword, newPassword);
+    return res.status(HttpStatusCodes.OK).json(HttpResponse.success("Password changed", result));
   } catch (error) {
     next(error);
   }
