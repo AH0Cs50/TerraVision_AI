@@ -3,6 +3,8 @@ import {
   dashboardService,
   plantCareAiInsights,
   actionLogRepo,
+  weatherService,
+  weatherDescriber,
 } from "../shared/container.js";
 
 /**
@@ -94,6 +96,26 @@ export async function getUserAiReport(user) {
   const stats = await dashboardService.getUserStats(userDoc);
   const report = await plantCareAiInsights.generateFarmReport(stats);
   return { aiReport: report };
+}
+
+/**
+ * Fetches current weather with UV Index for the authenticated user's saved location
+ * @param {{ uuid: string }} user - Authenticated user
+ * @returns {Promise<{ weather: object|null, message?: string }>} Weather data or null with message
+ */
+export async function getUserWeather(user) {
+  const userDoc = await userRepo.findByUUID(user.uuid);
+  const location = userDoc?.location;
+
+  if (!location || (!location.city && !location.coordinates)) {
+    return { weather: null, message: "No location set on profile" };
+  }
+
+  const rawWithUV = await weatherService.getWeatherWithUV(location);
+  const described = await weatherDescriber.weatherApiDescribe(rawWithUV);
+  described.uvIndex = rawWithUV.uvi;
+
+  return { weather: described };
 }
 
 /**

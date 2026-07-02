@@ -220,8 +220,13 @@ async function runTests() {
       "plantsByGrowthStage",
       "careStatusDistribution",
       "healthPercentages",
-      "resourceDemand",
-      "taskEfficiency",
+      "thirsty",
+      "needsFeed",
+      "lowLight",
+      "activeTasks",
+      "completedTasks",
+      "totalTasks",
+      "efficiency",
       "upcomingHarvests",
       "aiReport",
       "recentActivity",
@@ -275,11 +280,10 @@ async function runTests() {
   // =========================
   try {
     const result = await getUserDashboard(user);
-    const demand = result.resourceDemand;
 
-    assert(demand.thirsty === 1, `Expected thirsty=1, got ${demand.thirsty}`);
-    assert(demand.needsFeed === 1, `Expected needsFeed=1, got ${demand.needsFeed}`);
-    assert(demand.lowLight === 1, `Expected lowLight=1, got ${demand.lowLight}`);
+    assert(result.thirsty === 1, `Expected thirsty=1, got ${result.thirsty}`);
+    assert(result.needsFeed === 1, `Expected needsFeed=1, got ${result.needsFeed}`);
+    assert(result.lowLight === 1, `Expected lowLight=1, got ${result.lowLight}`);
 
     console.log("✅ Test 4 passed: Resource demand correct");
   } catch (error) {
@@ -291,12 +295,11 @@ async function runTests() {
   // =========================
   try {
     const result = await getUserDashboard(user);
-    const te = result.taskEfficiency;
 
-    assert(te.activeTasks === 2, `Expected activeTasks=2, got ${te.activeTasks}`);
-    assert(te.completedTasks === 3, `Expected completedTasks=3, got ${te.completedTasks}`);
-    assert(te.totalTasks === 5, `Expected totalTasks=5, got ${te.totalTasks}`);
-    assert(te.efficiency === 60.0, `Expected efficiency=60.0, got ${te.efficiency}`);
+    assert(result.activeTasks === 2, `Expected activeTasks=2, got ${result.activeTasks}`);
+    assert(result.completedTasks === 3, `Expected completedTasks=3, got ${result.completedTasks}`);
+    assert(result.totalTasks === 5, `Expected totalTasks=5, got ${result.totalTasks}`);
+    assert(result.efficiency === 60.0, `Expected efficiency=60.0, got ${result.efficiency}`);
 
     console.log("✅ Test 5 passed: Task efficiency correct");
   } catch (error) {

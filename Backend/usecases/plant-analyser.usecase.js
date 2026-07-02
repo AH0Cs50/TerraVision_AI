@@ -1,14 +1,14 @@
 import { evaluate } from "../service/engine/index.js";
-import { detectAndSaveDisease } from "./disease-detection.usecase.js";
 import {
-  userRepo,
-  weatherService,
-  weatherDescriber,
-  plantService,
-  plantCareStateService,
   plantCareActionLogger,
+  plantCareStateService,
+  plantService,
   plantTaskCareManager,
+  userRepo,
+  weatherDescriber,
+  weatherService,
 } from "../shared/container.js";
+import { detectAndSaveDisease } from "./disease-detection.usecase.js";
 
 /**
  * Fetches weather data for a location and transforms it into the engine's expected format
@@ -48,7 +48,11 @@ export async function analyzeAndSavePlant(plantUUID, user) {
       plantId: plantUUID,
       expectedPlant: plant.commonName || plant.name,
     });
-    plant = await plantService.verifyPlantAccess(plantUUID, user.uuid, user.role);
+    plant = await plantService.verifyPlantAccess(
+      plantUUID,
+      user.uuid,
+      user.role,
+    );
   }
 
   // 3. Build engine inputs (plant data + weather)
@@ -67,10 +71,6 @@ export async function analyzeAndSavePlant(plantUUID, user) {
       console.warn(weatherWarning);
     }
   }
-  console.log("Engine input for plant analysis:", {
-    weather: weatherInput,
-    ...plantInput,
-  });
 
   // 4. Run engine evaluation
   const engineResult = evaluate({ weather: weatherInput, ...plantInput });

@@ -193,6 +193,18 @@ export async function uploadUserImage(req, res, next) {
 
 
 
+export async function getPlantImage(req, res, next) {
+  try {
+    const { id, imageName } = req.params;
+    const url = await PlantUseCases.getPlantImageUrl(id, req.user, imageName);
+    return res
+      .status(HttpStatusCodes.OK)
+      .json(HttpResponse.success("Image URL generated", { url }));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function removePlantImage(req, res, next) {
   try {
     const { id } = req.params;

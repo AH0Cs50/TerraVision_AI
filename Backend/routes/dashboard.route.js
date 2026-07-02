@@ -7,6 +7,7 @@ import {
   getUserTaskEfficiencyHandler,
   getUserUpcomingHarvestsHandler,
   getUserAiReportHandler,
+  getUserWeatherHandler,
   getUserRecentActivity,
 } from "../controller/dashboard.controller.js";
 
@@ -19,6 +20,7 @@ router.get("/resource-demand", getUserResourceDemandHandler);
 router.get("/task-efficiency", getUserTaskEfficiencyHandler);
 router.get("/harvests", getUserUpcomingHarvestsHandler);
 router.get("/ai-report", getUserAiReportHandler);
+router.get("/weather", getUserWeatherHandler);
 router.get("/activity", getUserRecentActivity);
 
 export default router;

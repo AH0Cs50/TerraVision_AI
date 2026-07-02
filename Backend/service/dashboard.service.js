@@ -70,7 +70,7 @@ class DashboardService {
   async getResourceDemand(userDoc) {
     const plants = await this.#getPlants(userDoc);
     const careStates = await this.#getCareStates(plants);
-    return { resourceDemand: this.#computeResourceDemand(careStates) };
+    return this.#computeResourceDemand(careStates);
   }
 
   /**
@@ -82,7 +82,7 @@ class DashboardService {
   async getTaskEfficiency(userDoc) {
     const plants = await this.#getPlants(userDoc);
     const careStates = await this.#getCareStates(plants);
-    return { taskEfficiency: this.#computeTaskEfficiency(careStates) };
+    return this.#computeTaskEfficiency(careStates);
   }
 
   /**
@@ -93,7 +93,7 @@ class DashboardService {
    */
   async getUpcomingHarvests(userDoc, limit = 3) {
     const plants = await this.#getPlants(userDoc);
-    return { upcomingHarvests: this.#computeUpcomingHarvests(plants, limit) };
+    return this.#computeUpcomingHarvests(plants, limit);
   }
 
   /**
@@ -117,7 +117,7 @@ class DashboardService {
       ...careDist,
       ...resourceDemand,
       ...taskEff,
-      ...harvests,
+      upcomingHarvests: harvests,
     };
   }
 

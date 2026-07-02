@@ -273,4 +273,21 @@ export async function uploadUserImage(user, fileName, fileType) {
   });
 }
 
+/**
+ * Generates a pre-signed GET URL for a single plant image
+ * @param {string} plantUUID - Plant's UUID
+ * @param {{ uuid: string, role: string }} user - Authenticated user
+ * @param {string} imageName - Image filename (from cdn.images)
+ * @returns {Promise<string>} Pre-signed download URL
+ * @throws {RouteError} 404 if image not found on plant
+ */
+export async function getPlantImageUrl(plantUUID, user, imageName) {
+  const plant = await plantService.verifyPlantAccess(plantUUID, user.uuid, user.role);
+  if (!plant.cdn?.images?.includes(imageName)) {
+    throw new RouteError(HttpStatusCodes.NOT_FOUND, "Image not found on plant");
+  }
+  const fullKey = (plant.cdn.basePath || "") + imageName;
+  return await s3CloudService.generateGetUrl(fullKey);
+}
+
 

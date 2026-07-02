@@ -81,6 +81,17 @@ export async function getUserAiReportHandler(req, res, next) {
   }
 }
 
+export async function getUserWeatherHandler(req, res, next) {
+  try {
+    const data = await DashboardUseCases.getUserWeather(req.user);
+    return res
+      .status(HttpStatusCodes.OK)
+      .json(HttpResponse.success("Weather data retrieved successfully", data));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getUserRecentActivity(req, res, next) {
   try {
     const { last } = req.query;
@@ -88,7 +99,7 @@ export async function getUserRecentActivity(req, res, next) {
 
     return res
       .status(HttpStatusCodes.OK)
-      .json(HttpResponse.success("Recent activity retrieved successfully", { logs }));
+      .json(HttpResponse.success("Recent activity retrieved successfully", logs));
   } catch (error) {
     next(error);
   }

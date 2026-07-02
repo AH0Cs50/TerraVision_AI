@@ -8,6 +8,7 @@ import {
   createPlant,
   uploadPlantPhoto,
   detectPlantDisease,
+  getPlantImage,
   updatePlant,
   removePlantImage,
   deletePlant,
@@ -24,6 +25,7 @@ router.post("/image/extract", authenticate, extractPlantDataFromImage);
 
 // ── Read ────────────────────────────────────────────────────────────
 router.get("", authenticate, getUserPlants);
+router.get("/:id/image/:imageName", authenticate, getPlantImage);
 router.get("/:id", authenticate, getPlant);
 
 // ── Create ──────────────────────────────────────────────────────────

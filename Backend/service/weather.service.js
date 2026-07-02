@@ -115,6 +115,46 @@ export default class WeatherService {
   }
 
   /**
+   * @description Fetches the current UV Index for a given coordinate pair.
+   * Falls back gracefully if the endpoint isn't available on the user's plan.
+   * @param {number} lat - Latitude
+   * @param {number} lon - Longitude
+   * @returns {Promise<number|null>} UV index value, or null on failure
+   */
+  static async fetchUVIndex(lat, lon) {
+    try {
+      const response = await axios.get("https://api.openweathermap.org/data/2.5/uvi", {
+        params: { lat, lon, appid: WEATHER_API_KEY },
+      });
+      return response.data?.value ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * @description Fetches current weather + UV Index in a single call flow.
+   * Resolves location, calls the base weather endpoint, then enriches the
+   * raw response with a `uvi` field from the UV Index endpoint.
+   * @param {Object} location - Location object with `city` or `coordinates`
+   * @returns {Promise<Object>} Raw API response with merged `uvi` field
+   */
+  async getWeatherWithUV(location) {
+    const request = this.resolveLocation(location);
+    const rawData = await this.fetchWeather(request);
+
+    let lat = rawData.coord?.lat;
+    let lon = rawData.coord?.lon;
+    if (request.type === "coordinates") {
+      lat = request.value.lat;
+      lon = request.value.lon;
+    }
+
+    rawData.uvi = await WeatherService.fetchUVIndex(lat, lon);
+    return rawData;
+  }
+
+  /**
    * @description Converts a temperature from Kelvin to Celsius, rounded
    * to two decimal places.
    * @param {number|null} k - Temperature in Kelvin
