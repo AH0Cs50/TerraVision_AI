@@ -79,6 +79,7 @@ const plantMongooseSchema = new mongoose.Schema({
     basePath: String,
     images: [String],
   },
+  coverImage: { type: String },
   ageDays: Number,
   hasDisease: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },

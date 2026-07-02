@@ -123,6 +123,7 @@ class Plant {
    * The plant's age in days (computed field)
    * @returns {number}
    */
+  get coverImage() { return this.#data.coverImage; }
   get ageDays() { return this.#data.ageDays; }
   /**
    * Whether the plant has an active disease

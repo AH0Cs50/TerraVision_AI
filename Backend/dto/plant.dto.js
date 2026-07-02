@@ -34,6 +34,8 @@ export const PlantDTO = z.object({
     moisture: z.number().min(0).max(100).nullable().optional(),
   }),
 
+  coverImage: z.string().optional(),
+
   watering: z
     .object({
       hoursSinceLastWatering: z.number().min(0),

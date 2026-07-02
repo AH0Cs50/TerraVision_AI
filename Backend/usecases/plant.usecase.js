@@ -97,7 +97,12 @@ export async function getUserPlants(user) {
  * @throws {RouteError} 404 if plant not found or access denied
  */
 export async function getPlant(plantUUID, user) {
-  return await plantService.verifyPlantAccess(plantUUID, user.uuid, user.role);
+  const plant = await plantService.verifyPlantAccess(plantUUID, user.uuid, user.role);
+  const data = plant.toJSON();
+  if (data.coverImage) {
+    data.coverImageUrl = await s3CloudService.generateGetUrl(data.coverImage);
+  }
+  return data;
 }
 
 /**
@@ -116,7 +121,7 @@ export async function createPlant(data, user) {
   const growthStage = data.growthStage || (await deriveGrowthStage(dataWithAge));
   const expectedHarvestDate = data.expectedHarvestDate || (await deriveExpectedHarvestDate({ ...dataWithAge, growthStage }));
   // 4. Persist plant to database
-  const plant = await plantRepo.create({ ...dataWithAge, growthStage, expectedHarvestDate, userInternalId: userDoc.internalId });
+  const plant = await plantRepo.create({ ...dataWithAge, coverImage: data.coverImage, growthStage, expectedHarvestDate, userInternalId: userDoc.internalId });
   // 5. Log creation action
   await plantCareActionLogger.logPlantCreated(plant.uuid, userDoc.uuid, userDoc.internalId, plant.internalId, "Plant created", { plantName: plant.name });
   return plant;
