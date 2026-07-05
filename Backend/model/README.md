@@ -42,6 +42,7 @@
   "watering": {
     "hoursSinceLastWatering": 12           // >= 0
   },
+  "coverImage": "users/{uuid}/images/1740000000-tomato.jpg",  // S3 key for plant cover photo (optional)
   "disease": {
     "name": "healthy",                     // string (default "healthy")
     "confidence": 1,                       // 0–1
@@ -65,7 +66,7 @@
 }
 ```
 
-### Computed fields (added by `createPlantModel`)
+### Computed fields (added by Mongoose schema)
 
 ```json
 {

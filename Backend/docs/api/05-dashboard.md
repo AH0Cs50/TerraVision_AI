@@ -236,6 +236,43 @@ Auth: All endpoints require `Authorization: Bearer <accessToken>`.
 
 ---
 
+### GET `/weather`
+
+**Purpose:** Get current weather for the user's location, including UV index. Resolves location from `user.location` (either `city` or `coordinates`).
+
+**Use Case:** `DashboardUseCases.getUserWeather(user)` → `weatherService.getWeatherWithUV()`
+
+**Flow:**
+1. Resolve user location from `userRepo.findByUUID(uuid)`
+2. Fetch current weather via OpenWeatherMap `weather` endpoint
+3. Fetch UV index via OpenWeatherMap `uvi` endpoint (separate call, non-blocking — returns `null` on failure)
+4. Return merged result
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Weather retrieved successfully",
+  "data": {
+    "location": { "city": "Cairo", "lat": 30.0444, "lon": 31.2357 },
+    "temperature": 32.5,
+    "feelsLike": 34.1,
+    "humidity": 45,
+    "pressure": 1013,
+    "description": "clear sky",
+    "icon": "01d",
+    "windSpeed": 3.6,
+    "clouds": 5,
+    "uvIndex": 7.2,
+    "lastUpdated": "2026-07-02T10:00:00.000Z"
+  }
+}
+```
+
+UV index falls back to `null` if the API plan doesn't support it.
+
+---
+
 ### GET `/activity`
 
 **Purpose:** Most recent action logs across all user's plants, sorted by creation date (newest first).
@@ -290,4 +327,5 @@ Auth: All endpoints require `Authorization: Bearer <accessToken>`.
 | `GET /task-efficiency` | `{ taskEfficiency }` |
 | `GET /harvests` | `{ upcomingHarvests }` |
 | `GET /ai-report` | `{ aiReport: { summary, recommendations } }` |
+| `GET /weather` | `{ location, temperature, feelsLike, humidity, pressure, description, icon, windSpeed, clouds, uvIndex, lastUpdated }` |
 | `GET /activity` | `{ logs }` |

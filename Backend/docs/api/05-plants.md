@@ -75,7 +75,8 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 | POST | `/image/extract` | ✓ | Extract plant data from image via Gemini LLM |
 | GET | `/` | ✓ | List current user's plants |
 | POST | `/` | ✓ | Create a new plant |
-| GET | `/:id` | ✓ | Get single plant by UUID |
+| GET | `/:id` | ✓ | Get single plant by UUID (includes `coverImageUrl` if cover set) |
+| GET | `/:id/image/:imageName` | ✓ | Get pre-signed GET URL for a specific plant image |
 | PUT | `/:id` | ✓ | Update plant fields (partial) |
 | DELETE | `/:id` | ✓ | Delete plant and all associated data |
 | POST | `/:id/image/upload` | ✓ | Generate pre-signed S3 URL for plant-specific image |
@@ -251,14 +252,16 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 | `commonName` | | string | 2–100 chars |
 | `ageDays` | | number | Optional, auto-computed from `plantedAt` if missing |
 | `watering.hoursSinceLastWatering` | | number | ≥ 0 |
+| `coverImage` | | string | S3 key from a prior `/user/image/upload` — set as plant's cover photo |
 
 **Flow:**
 1. Resolve user `internalId` via `userRepo.findByUUID(uuid)`
 2. Compute `ageDays` from `plantedAt` (or provided `ageDays`)
 3. If `growthStage` is missing, derive via LLM (`deriveGrowthStage`): sends prompt with plant name, family, category, ageDays; falls back to `"vegetative"`
 4. Derive `expectedHarvestDate` via LLM (`deriveExpectedHarvestDate`): sends prompt with plant details; fallback: crop=90d, flower=60d, tree=365d from `plantedAt`
-5. Create plant in DB
-6. Log `plant_created` via `plantCareActionLogger`
+5. Pass `coverImage` through to repo (if provided)
+6. Create plant in DB
+7. Log `plant_created` via `plantCareActionLogger`
 
 **Success Response (201):**
 ```json
@@ -319,7 +322,24 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 }
 ```
 
-**Use Case:** `getPlant(plantUUID, user)` → `plantService.verifyPlantAccess()`
+**Response now includes `coverImage` and `coverImageUrl`:**
+```json
+{
+  "success": true,
+  "data": {
+    "uuid": "660e8400-e29b-41d4-a716-446655440001",
+    "name": "Tomato Plant 1",
+    "coverImage": "users/{uuid}/images/1740000000-tomato.jpg",
+    "coverImageUrl": "https://gateway.storjshare.io/plant/users/{uuid}/images/1740000000-tomato.jpg?...signed...",
+    ...rest of plant fields...
+  }
+}
+```
+
+- `coverImage` — raw S3 key (always present if set on create/update)
+- `coverImageUrl` — pre-signed GET URL auto-generated on every `GET /:id` call (expires per `s3Config.signedUrlExpiresIn`)
+
+**Use Case:** `getPlant(plantUUID, user)` → `plantService.verifyPlantAccess()` → `s3CloudService.generateGetUrl(coverImage)`
 
 ---
 
@@ -1011,6 +1031,7 @@ Several endpoints return only a subset of the full resource:
 | Pattern | Endpoint | Example |
 |---------|----------|---------|
 | `users/{userId}/images/{timestamp}-{fileName}` | `POST /user/image/upload` | `users/abc123/images/1712345679-my_plant.jpg` |
+| `users/{userId}/images/{timestamp}-{fileName}` | `POST /` (as `coverImage`) | `users/abc123/images/1712345679-my_plant.jpg` |
 | `plants/{userId}/{plantId}/images/{timestamp}-{fileName}` | `POST /:id/image/upload` | `plants/abc123/plant456/images/1712345678-tomato_leaf.jpg` |
 
 ---
@@ -1033,9 +1054,9 @@ Step 3: Extract plant data from the uploaded image via LLM Vision
   POST /api/v1/plants/image/extract       { key }
   → { category, family, growthStage, health, summary }
 
-Step 4: Create the plant using extracted data
-  POST /api/v1/plants                     { name, category, family, ... }
-  → { uuid, ... }                         # plant UUID for subsequent operations
+Step 4: Create the plant using extracted data + set the uploaded image as cover
+  POST /api/v1/plants                     { name, category, family, coverImage: key, ... }
+  → { uuid, coverImage, ... }             # GET /:id returns coverImage + coverImageUrl
 ```
 
 **Diagram:**
@@ -1054,8 +1075,8 @@ User Device                    API Server                    Storj S3
     │                              ├── Gemini Vision ──────►    │
     │◄── { category, family, ... }─┤                            │
     │                              │                            │
-    ├── POST /plants ─────────────►│                            │
-    │◄── { uuid, ... } ───────────┤                            │
+    ├── POST /plants { coverImage: key } ──►│                    │
+    │◄── { uuid, coverImage, ... } ─────────┤                    │
 ```
 
 ### Flow 2: Disease Detection on an Existing Plant

@@ -93,14 +93,14 @@ graph TB
 
 | File | Responsibility |
 |------|---------------|
-| `auth.usecases.js` | Signup, login, token refresh, logout, email verification |
+| `auth.usecases.js` | Signup, login, token refresh, logout, email verification, change password |
 | `user.usecases.js` | User profile CRUD, admin operations |
 | `plant.usecase.js` | Plant CRUD, search, image management |
 | `disease-detection.usecase.js` | Orchestrates ML service calls for disease classification |
 | `plant-care.usecase.js` | Facade that delegates to analyser and action use cases |
 | `plant-analyser.usecase.js` | Weather + engine analysis, LLM insights |
 | `plant-care-action.usecase.js` | Water, fertilize, prune, treat, harvest, task management |
-| `dashboard.usecase.js` | Aggregated stats, reports, activity feed |
+| `dashboard.usecase.js` | Aggregated stats, reports, activity feed, weather + UV index |
 
 ### `entity/`
 2 classes — `User` and `Plant`. Entities wrap raw database documents in a class with private `#data` fields and accessor getters. Plant entity exposes 10 mutation methods that return MongoDB dot-notation delta objects:
@@ -117,6 +117,7 @@ graph TB
 | `removeImage()` | `cdn.images` |
 | `setBasePath()` | `cdn.basePath` |
 | `recordDiseaseDetection()` | `disease`, `diseaseHistory`, `hasDisease`, `stress` |
+| `coverImage` (getter) | Returns raw S3 key string |
 
 ### `service/`
 11 service files plus the rule engine directory.
@@ -170,7 +171,7 @@ Repository implementations and service wrappers.
 | Schema | Key Fields |
 |--------|-----------|
 | User | uuid, internalId, email, password, role, isVerified, refreshToken, location |
-| Plant | uuid, internalId, userInternalId, name, commonName, category, family, growthStage, soil, watering, disease, diseaseHistory, stress, cdn, hasDisease |
+| Plant | uuid, internalId, userInternalId, name, commonName, category, family, growthStage, soil, watering, coverImage, disease, diseaseHistory, stress, cdn, hasDisease |
 | ActionLog | plantInternalId, userInternalId, action, description, metadata, timestamp |
 | Counter | name, seq (used for internal ID generation if applicable) |
 

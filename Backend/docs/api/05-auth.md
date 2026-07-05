@@ -179,6 +179,45 @@
 
 ---
 
+### POST `/change-password` (authenticated)
+
+**Purpose:** Change account password. Verifies current password, hashes the new one, and clears the stored refresh token (forces re-login on all devices).
+
+**Headers:** `Authorization: Bearer <accessToken>`
+
+**Request Body (validated via ChangePasswordDTO Zod schema):**
+```json
+{
+  "currentPassword": "string",
+  "newPassword": "string (8-64 chars, must contain uppercase, lowercase, number)"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully",
+  "data": { "message": "Password changed successfully" }
+}
+```
+
+**Flow:**
+1. Verify `currentPassword` via `passHasher.compare()` against stored bcrypt hash
+2. Hash `newPassword` with bcrypt (12 rounds)
+3. Persist new hash via `userRepo.updateByUUID()`
+4. Clear stored refresh token (set to null) — terminates all active sessions
+
+**Errors:**
+| Status | Condition |
+|--------|-----------|
+| 400 | Validation failed (Zod) or current password is incorrect |
+| 401 | Missing or invalid access token |
+
+**Use Case:** `AuthUseCases.changePassword(uuid, { currentPassword, newPassword })`
+
+---
+
 ### POST `/logout` (authenticated)
 **Purpose:** Invalidate refresh token — terminates the session by clearing stored token hash from DB.
 

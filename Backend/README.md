@@ -42,8 +42,10 @@ User Devices (Web/Mobile)
 | Real-time Weather       | OpenWeatherMap integration with location-based queries      |
 | AI Plant Care           | Gemini-powered task generation, insights, Q&A               |
 | Secure Storage          | Storj S3-compatible storage with pre-signed URLs            |
-| JWT Auth                | Access + refresh token rotation with role-based access      |
+| JWT Auth                | Access + refresh token rotation, change password with session invalidation |
 | Email Verification      | Nodemailer-based email verification flow                    |
+| Dashboard Weather       | OpenWeatherMap integration with UV index, location-based    |
+| Plant Cover Image       | S3 key → pre-signed URL auto-generated on plant retrieval   |
 
 ---
 
@@ -537,6 +539,18 @@ Authorization is enforced via the `authorize(...roles)` middleware factory:
 router.delete("/:id", authenticate, authorize("admin"), deleteUser);
 ```
 
+### Change Password
+
+`POST /api/v1/auth/change-password` (authenticated): Verifies current password via `passHasher.compare()`, hashes the new password (12 rounds), persists via `userRepo.updateByUUID()`, then clears the refresh token (forces re-login on all devices). Request body: `{ currentPassword, newPassword }`.
+
+### Dashboard Weather
+
+`GET /api/v1/dashboard/weather` (authenticated): Returns current weather with UV index for the user's stored location (city or coordinates). UV index fetched via a separate OpenWeatherMap `uvi` endpoint — returns `null` on failure (non-blocking). Engine pipeline in `plant-analyser.usecase.js` is completely unaffected.
+
+### Plant Cover Image
+
+On `POST /api/v1/plants` (create), an optional `coverImage` field accepts an S3 key from a prior `/user/image/upload`. On `GET /:id`, the response includes both the raw `coverImage` key and a pre-signed `coverImageUrl` for direct download. No new endpoint required.
+
 ---
 
 ## Rule Engine (Scoring System)
@@ -688,17 +702,15 @@ graph LR
 
 ```
 test/
-├── auth.test.js                 # 6 tests: signup, login, refresh, logout
-├── user.test.js                 # 11 tests: CRUD, findBy, token/email
-├── plant.test.js                # 9 tests: CRUD, pagination, access control
-├── s3Cloud.test.js              # 16 tests: MIME, paths, keys, signed URLs
-├── disease-detection.test.js    # 7 tests: detect, history, error handling
-├── weather.test.js              # 3 tests: city, coords, invalid input
-├── token.test.js                # 7 tests: generate, verify, invalid token
-├── engine.test.js               # 12 tests: all rule layers
-├── plant-care-state.test.js     # ~15 tests: tasks, logs, manager
-├── plant-care-ai-insights.test.js # ~15 tests: insights, Q&A
-└── route-plant-care.test.js     # 18 tests: action pipeline, task views
+├── auth.usecase.test.js              # 10 tests: signup, login, refresh, logout, change-password
+├── dashboard.usecase.test.js         # 10 tests: stats, care, tasks, harvests, weather
+├── user.usecase.test.js              # 11 tests: CRUD, findBy, token/email
+├── plant.usecase.test.js             # 9 tests: CRUD, pagination, access control, coverImage
+├── disease-detection.usecase.test.js # 7 tests: detect, history, error handling
+├── engine.test.js                    # 12 tests: all rule layers
+├── plant-care.usecase.test.js        # ~15 tests: actions, tasks, logs
+├── plant-care-ai-insights.test.js    # ~15 tests: insights, Q&A
+└── route-plant-care.test.js          # 18 tests: action pipeline, task views
 ```
 
 ### Running Tests
@@ -846,7 +858,7 @@ function errorHandler(err, req, res, next) {
 
 ### Response Sanitization
 
-All API responses are automatically sanitized by the `HttpResponse` helper. Internal-only fields (`_id`, `__v`, `internalId`, `plantInternalId`, `userInternalId`, `password`) are stripped from every response. BSON ObjectIds are converted to strings, and Buffer types are excluded.
+All API responses are automatically sanitized by the `HttpResponse` helper. Internal-only fields (`_id`, `__v`, `internalId`, `plantInternalId`, `userInternalId`, `password`) are stripped from every response. BSON ObjectIds are converted to strings, and Buffer types are excluded. The `coverImageUrl` field (pre-signed GET URL) passes through untouched.
 
 ### Error Response Format
 
@@ -924,6 +936,7 @@ erDiagram
         date plantedAt
         object soil
         object watering
+        string coverImage
         object stress
         array diseaseHistory
         object cdn

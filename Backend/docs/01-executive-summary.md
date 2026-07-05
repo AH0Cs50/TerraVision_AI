@@ -13,9 +13,9 @@ TerraVision AI is an AI-powered farming assistant that helps users monitor, anal
 
 **Core Capabilities:**
 
-1. **User Management & Auth** — JWT-based authentication with access (15m) and refresh (7d, rotated on use) tokens. Email verification, role-based authorization (user/admin), bcrypt 12 password hashing.
+1. **User Management & Auth** — JWT-based authentication with access (15m) and refresh (7d, rotated on use) tokens. Email verification, role-based authorization (user/admin), bcrypt 12 password hashing, change-password with session invalidation.
 
-2. **Plant Management** — Full CRUD with growth stage classification (germination, seedling, vegetative, flowering, fruiting, mature), harvest date derivation via LLM, and plant family categorization across 12 families.
+2. **Plant Management** — Full CRUD with growth stage classification (germination, seedling, vegetative, flowering, fruiting, mature), harvest date derivation via LLM, plant family categorization across 12 families, and optional cover image (S3 key → pre-signed URL on retrieval).
 
 3. **Disease Detection** — Three-model CNN ensemble (EfficientNetV2B0 0.2 + ResNet101V2 0.3 + MobileNetV2 0.5) classifying 88 plant-disease classes. Fallback to "healthy" with 1.0 confidence on any failure. Accessed via `POST /predict` endpoints.
 
@@ -27,7 +27,7 @@ TerraVision AI is an AI-powered farming assistant that helps users monitor, anal
 
 7. **AI Insights & Q&A** — Gemini-powered chat and analytics, with markdown fences stripped from JSON responses.
 
-8. **Dashboard** — Statistics, care distribution charts, task efficiency metrics, and harvest tracking.
+8. **Dashboard** — Statistics, care distribution charts, task efficiency metrics, harvest tracking, and weather data (temperature, humidity, UV index) based on user location.
 
 **Architecture:** Modular monolith (Backend) communicating with an ML microservice via HTTP. The backend follows a use case–driven design: controllers delegate to use cases, which contain all business logic and throw `RouteError` on failure. A dependency injection container (`shared/container.js`) wires repositories, services, and entities. All Plant data mutations go through entity methods that produce deltas (e.g., `plant.applyWatering(0)` → `{ "watering.hoursSinceLastWatering": 0 }`), which are persisted via `plantRepo.updateByUUID()`.
 

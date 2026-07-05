@@ -62,6 +62,7 @@
 | soil.lastFertilized | Date | No | No | — | |
 | soil.lastPruned | Date | No | No | — | |
 | watering.hoursSinceLastWatering | Number | No | No | `0` | |
+| coverImage | String | No | No | — | S3 key for plant's cover photo |
 | disease | diseaseSubSchema | No | No | `{name:"healthy", confidence:1}` | Embedded subdocument |
 | stress.diseaseType | String | No | No | — | `bacterial` / `fungal` / `none` |
 | stress.severity | String | No | No | — | `high` / `medium` / `none` |
@@ -235,6 +236,7 @@ Each accepts parameters and returns a plain object suitable for `plantRepo.updat
 8. `removeImage(filename)` — pulls from `cdn.images[]`
 9. `setBasePath(basePath)` — sets `cdn.basePath`
 10. `recordDiseaseDetection(diseaseData)` — pushes to `diseaseHistory[]`, updates `disease`
+11. `coverImage` (getter) — returns raw S3 key string |
 
 ---
 
@@ -263,6 +265,7 @@ Each accepts parameters and returns a plain object suitable for `plantRepo.updat
 | `soil.type` | Enum from 6 `SOIL_TYPES`, **required** (inside `soil` object) |
 | `soil.moisture` | 0–100, nullable, optional |
 | `watering` | Optional — `hoursSinceLastWatering` ≥ 0 |
+| `coverImage` | Optional — string, S3 key from a user image upload |
 
 ---
 
@@ -333,9 +336,10 @@ classDiagram
         +Object disease
         +Object stress
         +Array~Object~ diseaseHistory
-        +Object cdn
-        +Number ageDays
-        +Boolean hasDisease
+    +String coverImage
+    +Object cdn
+    +Number ageDays
+    +Boolean hasDisease
         +Date createdAt
         +Date updatedAt
     }

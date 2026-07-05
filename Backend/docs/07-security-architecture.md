@@ -96,6 +96,24 @@ if (user.uuid !== uuid && user.role !== "admin") {
 - Admin sees any plant
 - Non-owner/non-admin gets 404 "Plant not found" (deliberately vague — avoids information leakage)
 
+### Change Password Flow
+
+```
+Client → POST /auth/change-password { currentPassword, newPassword } [authenticated]
+  → passHasher.compare(currentPassword, storedHash) — bcrypt 12 rounds
+  → passHasher.hash(newPassword, 12 rounds)
+  → userRepo.updateByUUID(uuid, { password: newHash })
+  → userRepo.updateByUUID(uuid, { refreshToken: null }) — force re-login
+```
+
+**Key security properties:**
+- Current password must match before allowing change
+- New password must meet same Zod validation (8–64 chars, uppercase + lowercase + digit)
+- Refresh token cleared on password change — all active sessions invalidated
+- Uses `passHasher` and `userRepo` from DI container (same as signup flow)
+
+---
+
 ## 7.6 Password Security
 
 | Property | Value |

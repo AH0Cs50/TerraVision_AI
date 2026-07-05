@@ -14,8 +14,9 @@ flowchart TD
     A2[Login]
     A3[Logout]
     A4[Refresh token]
-    A5[Send verification email]
-    A6[Verify email]
+    A5[Change password]
+    A6[Send verification email]
+    A7[Verify email]
   end
 
   subgraph User_Module["User Module — /api/v1/users"]
@@ -69,8 +70,9 @@ flowchart TD
     D4[View resource demand]
     D5[View task efficiency]
     D6[View upcoming harvests]
-    D7[View AI farm report]
-    D8[View recent activity]
+    D7[View weather + UV index]
+    D8[View AI farm report]
+    D9[View recent activity]
   end
 
   subgraph ML_Service_Sub["ML Service — port 8000"]
@@ -82,6 +84,9 @@ flowchart TD
   User --> A2
   User --> A3
   User --> A4
+  User --> A5
+  User --> A6
+  User --> A7
   User --> U1
   User --> U2
   User --> U3
@@ -122,12 +127,13 @@ flowchart TD
   User --> D6
   User --> D7
   User --> D8
+  User --> D9
 
   Admin --> User
   Admin -.->|access any| U7
   Admin -.->|access any| P11
 
-  A5 -.->|send email| External_APIs
+  A6 -.->|send email| External_APIs
   U5 -.->|verify| User_Module
 
   P3 -.->|<<extend>> LLM derivation| P3
@@ -683,6 +689,7 @@ classDiagram
     +Object disease (DiseaseSubSchema)
     +Array diseaseHistory (DiseaseSubSchema[])
     +Object stress
+    +String coverImage
     +Object cdn
     +Number ageDays
     +Boolean hasDisease (auto-calculated)
