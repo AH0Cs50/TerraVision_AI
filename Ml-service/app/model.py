@@ -8,7 +8,6 @@ MODEL_PATH = Path(__file__).resolve().parent.parent / 'models' / 'plant.keras'
 
 
 ENSEMBLE_WEIGHTS = [0.2, 0.3, 0.5]  # EfficientNet, ResNet, MobileNet — matches training
-TEMPERATURE = 2.0  # Softmax temperature scaling for calibrated confidence values
 
 def weighted_sum(inputs):
     return tf.add_n([w * t for w, t in zip(ENSEMBLE_WEIGHTS, inputs)])
@@ -226,11 +225,6 @@ def predict(image_array, top_k=5, expected_plant=None):
         return result
 
     predictions = np.clip(predictions, 1e-10, 1)
-
-    # Temperature scaling: soften overconfident softmax probabilities
-    logits = np.log(predictions)
-    scaled = np.exp(logits / TEMPERATURE)
-    predictions = scaled / np.sum(scaled)
 
     all_indices = list(range(len(CLASS_NAMES)))
     global_top_list = _format_ranked_predictions(predictions, all_indices, top_k)

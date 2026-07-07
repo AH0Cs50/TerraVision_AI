@@ -12,7 +12,8 @@ s3_client = boto3.client(
     aws_secret_access_key=cloudConfig['S3_SECRET_KEY'],
     region_name=cloudConfig['S3_REGION'],
     endpoint_url=cloudConfig['S3_ENDPOINT'],
-    config=s3_config
+    config=s3_config,
+    verify=False
 )
 
 BUCKET_NAME = cloudConfig['S3_BUCKET_NAME']

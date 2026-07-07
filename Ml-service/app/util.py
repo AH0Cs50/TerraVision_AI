@@ -12,7 +12,7 @@ def preprocess_image(image):
         image = load_image_from_bytes(image)
 
     image = image.convert("RGB")  # ensure 3 channels
-    image = image.resize(IMG_SIZE, Image.LANCZOS)  # LANCZOS preserves features during downscale; NEAREST aliases pixels
+    image = image.resize(IMG_SIZE, Image.NEAREST)  # NEAREST matches training interpolation
 
     image = np.array(image, dtype=np.float32) / 255.0  # normalize, match training dtype
     image = np.expand_dims(image, axis=0)
