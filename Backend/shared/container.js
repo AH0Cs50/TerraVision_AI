@@ -52,6 +52,8 @@ export const plantCareTaskGenerator = new PlantCareTaskGenerator(llmService);
 
 export const plantCareActionLogger = new PlantCareActionLogger(
   actionLogRepo,
+  userRepo,
+  plantService,
 );
 
 export const plantTaskCareManager = new PlantTaskCareManager(

@@ -56,9 +56,9 @@ export class PlantTaskCareManager {
       await this.repo.pushToCompleted(plantUUID, completedTask);
     }
 
-    await this.actionLogger.logTaskCompleted(
+    await this.actionLogger.logTaskAction(
       plantUUID,
-      user,
+      user.uuid,
       `Task "${completedTask.title}" completed`,
       { taskId, taskType: completedTask.type, archived: archive },
     );
@@ -80,9 +80,9 @@ export class PlantTaskCareManager {
 
     await this.repo.removeFromActive(plantUUID, taskId);
 
-    await this.actionLogger.logTaskCompleted(
+    await this.actionLogger.logTaskAction(
       plantUUID,
-      user,
+      user.uuid,
       `Task "${found.task.title}" cancelled`,
       { taskId, taskType: found.task.type, cancelled: true },
     );
@@ -112,9 +112,9 @@ export class PlantTaskCareManager {
 
     await this.repo.pushToActive(plantUUID, reopenedTask);
 
-    await this.actionLogger.logTaskCompleted(
+    await this.actionLogger.logTaskAction(
       plantUUID,
-      user,
+      user.uuid,
       `Task "${reopenedTask.title}" reopened`,
       { taskId, taskType: reopenedTask.type, reopened: true },
     );
@@ -138,19 +138,34 @@ export class PlantTaskCareManager {
       careState.engineScores,
     );
 
+    const existing = careState.activeTasks || [];
+    const addedTasks = [];
+    let skipped = 0;
+
     for (const task of tasks) {
-      await this.repo.pushToActive(plantUUID, task);
+      // dedupe by type + generatedBy to avoid duplicates
+      const isDuplicate = existing.some((t) => t.type === task.type)
+        || addedTasks.some((t) => t.type === task.type);
+      if (isDuplicate) {
+        skipped++;
+        continue;
+      }
+
+      const pushed = await this.repo.pushToActive(plantUUID, task);
+      if (pushed) {
+        addedTasks.push(task);
+      }
     }
 
-    await this.actionLogger.logTaskCompleted(
+    await this.actionLogger.logTaskAction(
       plantUUID,
-      user,
-      `${tasks.length} task(s) generated from status`,
-      { count: tasks.length, generatedBy: "ai" },
+      user.uuid,
+      `${tasks.length} task(s) processed from status: ${addedTasks.length} added, ${skipped} skipped`,
+      { count: tasks.length, added: addedTasks.length, skipped, generatedBy: "ai" },
     );
 
     const updated = await this.repo.findByPlantUUID(plantUUID);
-    return { tasks, status: updated.status };
+    return { tasks: addedTasks, status: updated.status };
   }
 
   /**
@@ -229,9 +244,9 @@ export class PlantTaskCareManager {
     }
 
     if (completedInActive.length) {
-      await this.actionLogger.logTaskCompleted(
+      await this.actionLogger.logTaskAction(
         plantUUID,
-        user,
+        user.uuid,
         `${completedInActive.length} completed task(s) moved to archive`,
         { count: completedInActive.length },
       );

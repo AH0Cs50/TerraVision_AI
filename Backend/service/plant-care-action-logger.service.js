@@ -2,8 +2,10 @@ export class PlantCareActionLogger {
   /**
    * @param {object} actionLogRepo - Repository for action log persistence
    */
-  constructor(actionLogRepo) {
+  constructor(actionLogRepo, userRepo, plantService) {
     this.actionLogRepo = actionLogRepo;
+    this.userRepo = userRepo;
+    this.plantService = plantService;
   }
 
   /**
@@ -41,6 +43,19 @@ export class PlantCareActionLogger {
    */
   async addActionLog(plantUUID, userUUID, userInternalId, plantInternalId, { actionType, description, metadata } = {}) {
     await this.#log(plantUUID, userUUID, userInternalId, plantInternalId, actionType, description, metadata);
+  }
+
+  /**
+   * Convenience wrapper for task manager: resolves internal IDs internally
+   * @param {string} plantUUID - UUID of the plant
+   * @param {string} userUUID - UUID of the user
+   * @param {string} description - Description of the action
+   * @param {object} [metadata] - Optional metadata
+   */
+  async logTaskAction(plantUUID, userUUID, description, metadata) {
+    const user = await this.userRepo.findByUUID(userUUID);
+    const plantInternalId = await this.plantService.getInternalId(plantUUID);
+    await this.#log(plantUUID, userUUID, user.internalId, plantInternalId, "task_completed", description, metadata);
   }
 
   /**
