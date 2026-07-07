@@ -120,8 +120,10 @@ export async function createPlant(data, user) {
   // 3. Derive growth stage and harvest date via LLM
   const growthStage = data.growthStage || (await deriveGrowthStage(dataWithAge));
   const expectedHarvestDate = data.expectedHarvestDate || (await deriveExpectedHarvestDate({ ...dataWithAge, growthStage }));
-  // 4. Persist plant to database
-  const plant = await plantRepo.create({ ...dataWithAge, coverImage: data.coverImage, growthStage, expectedHarvestDate, userInternalId: userDoc.internalId });
+  // 4. Auto-set hasDisease based on stress severity
+  const hasDisease = data.stress?.severity && data.stress.severity !== "healthy" ? true : (data.hasDisease ?? false);
+  // 5. Persist plant to database
+  const plant = await plantRepo.create({ ...dataWithAge, coverImage: data.coverImage, growthStage, expectedHarvestDate, hasDisease, userInternalId: userDoc.internalId });
   // 5. Log creation action
   await plantCareActionLogger.logPlantCreated(plant.uuid, userDoc.uuid, userDoc.internalId, plant.internalId, "Plant created", { plantName: plant.name });
   return plant;

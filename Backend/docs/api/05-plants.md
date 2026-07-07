@@ -9,6 +9,7 @@ Base URL: `/api/v1/plants`
 All Plant routes require `Authorization: Bearer <accessToken>`. Authentication is applied per-route via the `authenticate` middleware.
 
 ### Common Response Envelope:
+
 ```json
 { "success": true, "message": "...", "data": {...}, "status": 200 }
 ```
@@ -29,6 +30,12 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 
 ### Extended Enums
 
+**Stress Fields (plant stress / disease assessment):**
+| Field | Values |
+|-------|--------|
+| `stress.diseaseType` | `bacterial`, `fungal`, `viral`, `none` |
+| `stress.severity` | `healthy`, `medium`, `critical` |
+
 **User Role:**
 | Field | Values |
 |-------|--------|
@@ -45,21 +52,21 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 
 **Care Status Values (output only, from engine scoring):**
 
-| Field | Values |
-|-------|--------|
-| `status.water` | `thirsty`, `low`, `satisfied`, `overwatered` |
-| `status.nutrients` | `needs_feed`, `low`, `optimal`, `excess` |
-| `status.health` | `healthy`, `warning`, `diseased`, `critical` |
-| `status.light` | `low`, `optimal`, `high`, `burn_risk` |
+| Field              | Values                                       |
+| ------------------ | -------------------------------------------- |
+| `status.water`     | `thirsty`, `low`, `satisfied`, `overwatered` |
+| `status.nutrients` | `needs_feed`, `low`, `optimal`, `excess`     |
+| `status.health`    | `healthy`, `warning`, `diseased`, `critical` |
+| `status.light`     | `low`, `optimal`, `high`, `burn_risk`        |
 
 **Task Fields:**
 
-| Field | Values |
-|-------|--------|
-| `type` | `watering`, `fertilizing`, `pruning`, `disease_treatment`, `move_light`, `harvest` |
-| `priority` | `low`, `medium`, `high` |
-| `status` | `pending`, `in_progress`, `completed`, `cancelled` |
-| `generatedBy` | `ai`, `system`, `user` |
+| Field         | Values                                                                             |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `type`        | `watering`, `fertilizing`, `pruning`, `disease_treatment`, `move_light`, `harvest` |
+| `priority`    | `low`, `medium`, `high`                                                            |
+| `status`      | `pending`, `in_progress`, `completed`, `cancelled`                                 |
+| `generatedBy` | `ai`, `system`, `user`                                                             |
 
 **Action Log Types (18):**
 `watered`, `fertilized`, `disease_scan`, `disease_detected`, `task_completed`, `task_added`, `task_updated`, `task_cancelled`, `light_changed`, `harvested`, `plant_analysis`, `plant_created`, `plant_updated`, `plant_deleted`, `image_uploaded`, `image_removed`, `plant_data_extracted`, `insight_generated`
@@ -68,20 +75,20 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 
 ## Plant Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/user/image/upload` | ✓ | Generate pre-signed S3 PUT URL for user-scoped image upload |
-| POST | `/user/image/detect` | ✓ | Detect disease on a user-uploaded image (no plant yet) |
-| POST | `/image/extract` | ✓ | Extract plant data from image via Gemini LLM |
-| GET | `/` | ✓ | List current user's plants |
-| POST | `/` | ✓ | Create a new plant |
-| GET | `/:id` | ✓ | Get single plant by UUID (includes `coverImageUrl` if cover set) |
-| GET | `/:id/image/:imageName` | ✓ | Get pre-signed GET URL for a specific plant image |
-| PUT | `/:id` | ✓ | Update plant fields (partial) |
-| DELETE | `/:id` | ✓ | Delete plant and all associated data |
-| POST | `/:id/image/upload` | ✓ | Generate pre-signed S3 URL for plant-specific image |
-| POST | `/:id/detect` | ✓ | Detect disease on a plant image |
-| DELETE | `/:id/images` | ✓ | Remove an image from plant |
+| Method | Path                    | Auth | Description                                                      |
+| ------ | ----------------------- | ---- | ---------------------------------------------------------------- |
+| POST   | `/user/image/upload`    | ✓    | Generate pre-signed S3 PUT URL for user-scoped image upload      |
+| POST   | `/user/image/detect`    | ✓    | Detect disease on a user-uploaded image (no plant yet)           |
+| POST   | `/image/extract`        | ✓    | Extract plant data from image via Gemini LLM                     |
+| GET    | `/`                     | ✓    | List current user's plants                                       |
+| POST   | `/`                     | ✓    | Create a new plant                                               |
+| GET    | `/:id`                  | ✓    | Get single plant by UUID (includes `coverImageUrl` if cover set) |
+| GET    | `/:id/image/:imageName` | ✓    | Get pre-signed GET URL for a specific plant image                |
+| PUT    | `/:id`                  | ✓    | Update plant fields (partial)                                    |
+| DELETE | `/:id`                  | ✓    | Delete plant and all associated data                             |
+| POST   | `/:id/image/upload`     | ✓    | Generate pre-signed S3 URL for plant-specific image              |
+| PUT    | `/:id/detect`           | ✓    | Detect disease on a plant image                                  |
+| DELETE | `/:id/images`           | ✓    | Remove an image from plant                                       |
 
 ---
 
@@ -90,6 +97,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Generate a pre-signed S3 PUT URL for uploading a user-scoped image (before a plant is created). The client uploads directly to S3 using this URL.
 
 **Request:**
+
 ```json
 {
   "fileName": "my_plant.jpg",
@@ -98,12 +106,14 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 ```
 
 **Flow:**
+
 1. Health check S3 connection
 2. Validate MIME type (throws `BAD_REQUEST` if invalid)
 3. Build key path: `users/{userId}/images/{timestamp}-{fileName}`
 4. Sign PUT URL with `s3Config.signedUrlExpiresIn` (5 minutes)
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -124,6 +134,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Run disease detection on a user-scoped S3 image via the ML microservice. Does NOT persist to any plant — returns the simplified prediction. Useful for quick one-off scans before plant creation.
 
 **Request:**
+
 ```json
 {
   "key": "users/{userId}/images/{timestamp}-{fileName}"
@@ -131,6 +142,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -162,6 +174,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Extract structured plant data from an uploaded S3 image using Google Gemini Vision. No plant document is created — the caller persists the extracted data.
 
 **Request:**
+
 ```json
 {
   "key": "users/{userId}/images/{timestamp}-{fileName}"
@@ -169,15 +182,21 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
   "data": {
+    "name": "Tomato",
     "category": "crop",
     "family": "fruiting_nightshade",
     "growthStage": "vegetative",
-    "health": "diseased",
-    "summary": "This appears to be a tomato plant in vegetative stage showing signs of early blight."
+    "hasDisease": true,
+    "soil": { "type": null, "moisture": null },
+    "stress": {
+      "diseaseType": "fungal",
+      "severity": "medium"
+    }
   }
 }
 ```
@@ -191,6 +210,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** List all plants belonging to the authenticated user.
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -222,6 +242,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Create a new plant for the authenticated user.
 
 **Request Body (validated via Zod PlantDTO):**
+
 ```json
 {
   "name": "Tomato Plant 1",
@@ -236,25 +257,29 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
   },
   "watering": {
     "hoursSinceLastWatering": 5
-  }
+  },
+  "coverImage": "users/{userUuid}/images/1740000000-tomato.jpg"
 }
 ```
 
-| Field | Required | Type | Constraints |
-|-------|----------|------|-------------|
-| `name` | ✓ | string | 2–100 chars |
-| `category` | ✓ | enum | `crop`, `tree`, `flower` |
-| `family` | ✓ | enum | One of 12 families |
-| `plantedAt` | ✓ | date | ISO date string or Date |
-| `soil.type` | ✓ | enum | One of 6 soil types |
-| `soil.moisture` | | number | 0–100, nullable |
-| `growthStage` | | enum | Optional, auto-derived via LLM if missing |
-| `commonName` | | string | 2–100 chars |
-| `ageDays` | | number | Optional, auto-computed from `plantedAt` if missing |
-| `watering.hoursSinceLastWatering` | | number | ≥ 0 |
-| `coverImage` | | string | S3 key from a prior `/user/image/upload` — set as plant's cover photo |
+| Field                             | Required | Type   | Constraints                                                           |
+| --------------------------------- | -------- | ------ | --------------------------------------------------------------------- |
+| `name`                            | ✓        | string | 2–100 chars                                                           |
+| `category`                        | ✓        | enum   | `crop`, `tree`, `flower`                                              |
+| `family`                          | ✓        | enum   | One of 12 families                                                    |
+| `plantedAt`                       | ✓        | date   | ISO date string or Date                                               |
+| `soil.type`                       | ✓        | enum   | One of 6 soil types                                                   |
+| `soil.moisture`                   |          | number | 0–100, nullable                                                       |
+| `growthStage`                     |          | enum   | Optional, auto-derived via LLM if missing                             |
+| `commonName`                      |          | string | 2–100 chars                                                           |
+| `hasDisease`                      |          | bool   | Extracted from image — auto-computed if `stress` provided             |
+| `stress.diseaseType`              |          | enum   | `bacterial`, `fungal`, `viral`, `none`                                |
+| `stress.severity`                 |          | enum   | `healthy`, `medium`, `critical`                                       |
+| `watering.hoursSinceLastWatering` |          | number | ≥ 0                                                                   |
+| `coverImage`                      |          | string | S3 key from a prior `/user/image/upload` — set as plant's cover photo |
 
 **Flow:**
+
 1. Resolve user `internalId` via `userRepo.findByUUID(uuid)`
 2. Compute `ageDays` from `plantedAt` (or provided `ageDays`)
 3. If `growthStage` is missing, derive via LLM (`deriveGrowthStage`): sends prompt with plant name, family, category, ageDays; falls back to `"vegetative"`
@@ -264,6 +289,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 7. Log `plant_created` via `plantCareActionLogger`
 
 **Success Response (201):**
+
 ```json
 {
   "success": true,
@@ -275,7 +301,8 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
     "family": "fruiting_nightshade",
     "growthStage": "vegetative",
     "ageDays": 0,
-    "expectedHarvestDate": "2026-06-13T00:00:00.000Z"
+    "expectedHarvestDate": "2026-06-13T00:00:00.000Z",
+    "coverImage": "users/{userUuid}/images/1740000000-tomato.jpg"
   },
   "status": 201
 }
@@ -297,6 +324,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Access Control:** Owner or admin — enforced by `plantService.verifyPlantAccess(uuid, user.uuid, user.role)`. Throws 404 (not found) if user is not the owner (hides existence).
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -312,31 +340,19 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
     "watering": { "hoursSinceLastWatering": 5 },
     "disease": { "name": "healthy", "confidence": 1 },
     "diseaseHistory": [],
-    "stress": { "diseaseType": "none", "severity": "none" },
+    "stress": { "diseaseType": "none", "severity": "healthy" },
     "cdn": { "basePath": "", "images": [] },
     "ageDays": 93,
     "hasDisease": false,
+    "coverImage": "users/{userUuid}/images/1740000000-tomato.jpg",
+    "coverImageUrl": "https://gateway.storjshare.io/plant/users/{userUuid}/images/1740000000-tomato.jpg?...signed...",
     "createdAt": "...",
     "updatedAt": "..."
   }
 }
 ```
 
-**Response now includes `coverImage` and `coverImageUrl`:**
-```json
-{
-  "success": true,
-  "data": {
-    "uuid": "660e8400-e29b-41d4-a716-446655440001",
-    "name": "Tomato Plant 1",
-    "coverImage": "users/{uuid}/images/1740000000-tomato.jpg",
-    "coverImageUrl": "https://gateway.storjshare.io/plant/users/{uuid}/images/1740000000-tomato.jpg?...signed...",
-    ...rest of plant fields...
-  }
-}
-```
-
-- `coverImage` — raw S3 key (always present if set on create/update)
+- `coverImage` — raw S3 key (present if set on create/update)
 - `coverImageUrl` — pre-signed GET URL auto-generated on every `GET /:id` call (expires per `s3Config.signedUrlExpiresIn`)
 
 **Use Case:** `getPlant(plantUUID, user)` → `plantService.verifyPlantAccess()` → `s3CloudService.generateGetUrl(coverImage)`
@@ -348,6 +364,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Update plant fields. Supports partial updates via `PlantDTO.partial()` Zod schema.
 
 **Request Body (partial):**
+
 ```json
 {
   "name": "Updated Tomato",
@@ -357,12 +374,14 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 ```
 
 **Flow:**
+
 1. `plantService.verifyPlantAccess()` — owner or admin gate
 2. Compute `ageDays` from provided `plantedAt` or existing plant's `plantedAt`
 3. `plantRepo.updateByUUID(uuid, { ...updateData, ageDays })`
 4. Log `plant_updated`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -385,6 +404,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Permanently delete a plant and all associated data.
 
 **Flow:**
+
 1. `plantService.verifyPlantAccess()` — owner or admin gate
 2. Delete all S3 images in parallel: `Promise.all(images.map(fileName => s3CloudService.deleteFile(basePath + fileName)))`
 3. Log `plant_deleted`
@@ -393,6 +413,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 6. Delete plant record: `plantRepo.deleteByUUID(plantUUID)`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -411,6 +432,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 **Purpose:** Generate a pre-signed S3 PUT URL for uploading an image scoped to a specific plant. The key is stored in the plant's `cdn.images` array.
 
 **Request:**
+
 ```json
 {
   "fileName": "tomato_leaf.jpg",
@@ -419,6 +441,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 ```
 
 **Flow:**
+
 1. `plantService.verifyPlantAccess()` — owner or admin
 2. `s3CloudService.generateUploadUrl()` → builds key `plants/{userId}/{plantId}/images/{timestamp}-{fileName}`
 3. `plant.addImage(imageName)` → delta adds image name to `cdn.images`
@@ -427,6 +450,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 6. Log `image_uploaded`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -445,11 +469,12 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 
 ---
 
-### POST `/:id/detect`
+### PUT `/:id/detect`
 
 **Purpose:** Detect disease on a stored plant image via the ML microservice. Updates the plant's `disease` field and records the result in `diseaseHistory`. Fallback on ML failure: returns "healthy" with 1.0 confidence.
 
 **Request:**
+
 ```json
 {
   "key": "plants/{userId}/{plantId}/images/{timestamp}-{fileName}"
@@ -459,6 +484,7 @@ All Plant routes require `Authorization: Bearer <accessToken>`. Authentication i
 The key can be the full S3 key or just a filename (if relative, `cdn.basePath` is prepended).
 
 **Flow:**
+
 1. `plantService.verifyPlantAccess()` — owner or admin
 2. Resolve full S3 key (prepend `cdn.basePath` if key doesn't contain `/`)
 3. `detectAndSaveDisease()` → POST to ML service `/predict` with `{ key, user_id, plant_uuid, expected_plant }`
@@ -467,6 +493,7 @@ The key can be the full S3 key or just a filename (if relative, `cdn.basePath` i
 6. Log `disease_detected`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -478,7 +505,11 @@ The key can be the full S3 key or just a filename (if relative, `cdn.basePath` i
       "detectedAt": "2026-03-15T12:00:00.000Z"
     },
     "diseaseHistory": [
-      { "name": "early blight", "confidence": 0.94, "detectedAt": "2026-03-15T12:00:00.000Z" }
+      {
+        "name": "early blight",
+        "confidence": 0.94,
+        "detectedAt": "2026-03-15T12:00:00.000Z"
+      }
     ],
     "model": { "name": "cnn_ensemble", "version": "1.0" }
   }
@@ -496,6 +527,7 @@ The key can be the full S3 key or just a filename (if relative, `cdn.basePath` i
 **Purpose:** Remove a specific image from a plant's S3 storage and `cdn.images` array.
 
 **Request:**
+
 ```json
 {
   "key": "plants/{userId}/{plantId}/images/{timestamp}-{fileName}"
@@ -503,6 +535,7 @@ The key can be the full S3 key or just a filename (if relative, `cdn.basePath` i
 ```
 
 **Flow:**
+
 1. `plantService.verifyPlantAccess()` — owner or admin
 2. Resolve full S3 key
 3. `s3CloudService.deleteFile(fullKey)` — delete from S3
@@ -513,6 +546,7 @@ The key can be the full S3 key or just a filename (if relative, `cdn.basePath` i
 8. Log `image_removed`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -535,25 +569,25 @@ Base URL: `/api/v1/plants`
 
 All Plant Care routes require `Authorization: Bearer <accessToken>`. Authentication is applied at the router level — all endpoints require a valid JWT.
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/:id/analyze` | ✓ | Full plant analysis via 131-rule engine |
-| GET | `/:id/care-state` | ✓ | Get current care state |
-| GET | `/:id/logs` | ✓ | Get action logs (filtered/paginated) |
-| POST | `/:id/logs` | ✓ | Manually add action log |
-| DELETE | `/:id/logs` | ✓ | Clear old logs |
-| PATCH | `/:id/water` | ✓ | Record watering action |
-| POST | `/:id/fertilize` | ✓ | Record fertilizing action |
-| POST | `/:id/harvest` | ✓ | Record harvest action |
-| PATCH | `/:id/light` | ✓ | Update light condition |
-| POST | `/:id/treat-disease` | ✓ | Treat disease (reset to healthy) |
-| POST | `/:id/prune` | ✓ | Record pruning action |
-| GET | `/:id/tasks` | ✓ | List tasks (paginated) |
-| GET | `/:id/tasks/overdue` | ✓ | List overdue tasks |
-| GET | `/:id/tasks/pending` | ✓ | List pending tasks |
-| GET | `/:id/tasks/prioritized` | ✓ | List tasks sorted by priority |
-| POST | `/:id/ai-insights` | ✓ | Generate AI care insights via Gemini |
-| POST | `/:id/ai-insights/ask` | ✓ | Ask a question about the plant to Gemini |
+| Method | Path                     | Auth | Description                              |
+| ------ | ------------------------ | ---- | ---------------------------------------- |
+| POST   | `/:id/analyze`           | ✓    | Full plant analysis via 131-rule engine  |
+| GET    | `/:id/care-state`        | ✓    | Get current care state                   |
+| GET    | `/:id/logs`              | ✓    | Get action logs (filtered/paginated)     |
+| POST   | `/:id/logs`              | ✓    | Manually add action log                  |
+| DELETE | `/:id/logs`              | ✓    | Clear old logs                           |
+| PATCH  | `/:id/water`             | ✓    | Record watering action                   |
+| PATCH  | `/:id/fertilize`         | ✓    | Record fertilizing action                |
+| PATCH  | `/:id/harvest`           | ✓    | Record harvest action                    |
+| PATCH  | `/:id/light`             | ✓    | Update light condition                   |
+| PATCH  | `/:id/treat-disease`     | ✓    | Treat disease (reset to healthy)         |
+| PATCH  | `/:id/prune`             | ✓    | Record pruning action                    |
+| GET    | `/:id/tasks`             | ✓    | List tasks (paginated)                   |
+| GET    | `/:id/tasks/overdue`     | ✓    | List overdue tasks                       |
+| GET    | `/:id/tasks/pending`     | ✓    | List pending tasks                       |
+| GET    | `/:id/tasks/prioritized` | ✓    | List tasks sorted by priority            |
+| POST   | `/:id/ai-insights`       | ✓    | Generate AI care insights via Gemini     |
+| POST   | `/:id/ai-insights/ask`   | ✓    | Ask a question about the plant to Gemini |
 
 ---
 
@@ -562,6 +596,7 @@ All Plant Care routes require `Authorization: Bearer <accessToken>`. Authenticat
 **Purpose:** Run the full 7-layer rule engine against current plant data and upstream weather (if user has location set). Creates or updates the care state document.
 
 **Flow:**
+
 1. `plantService.verifyPlantAccess()` — owner or admin
 2. Build engine plant input via `plant.getEnginePlantInput()`
 3. Fetch weather data from user's location (optional — if `user.location` exists):
@@ -572,6 +607,7 @@ All Plant Care routes require `Authorization: Bearer <accessToken>`. Authenticat
 6. Log `plant_analysis`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -604,6 +640,7 @@ All Plant Care routes require `Authorization: Bearer <accessToken>`. Authenticat
 **Purpose:** Get the current care state document for a plant. Created only after the first `POST /:id/analyze`.
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -655,6 +692,7 @@ All Plant Care routes require `Authorization: Bearer <accessToken>`. Authenticat
 **Query precedence:** `type` filter → `page`/`limit` pagination → `last` N recent (default 5)
 
 **Examples:**
+
 ```
 GET /api/v1/plants/{id}/logs?last=5
 GET /api/v1/plants/{id}/logs?type=watered
@@ -672,6 +710,7 @@ GET /api/v1/plants/{id}/logs?page=1&limit=20
 **Purpose:** Manually add an action log entry.
 
 **Request:**
+
 ```json
 {
   "actionType": "watered",
@@ -681,10 +720,12 @@ GET /api/v1/plants/{id}/logs?page=1&limit=20
 ```
 
 **Flow:**
+
 1. Resolve `userInternalId` and `plantInternalId`
 2. Create action log via `plantCareActionLogger.addActionLog()`
 
 **Success Response (201):**
+
 ```json
 {
   "success": true,
@@ -712,11 +753,13 @@ GET /api/v1/plants/{id}/logs?page=1&limit=20
 | `before` | ISO date | `new Date()` | Delete logs before this date |
 
 **Example:**
+
 ```
 DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -736,6 +779,7 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 **Purpose:** Record a watering action. Resets `hoursSinceLastWatering` to 0.
 
 **Flow (via `performAction`):**
+
 1. `plantService.verifyPlantAccess()` → get Plant entity
 2. `plant.applyWatering(0)` → delta `{ "watering.hoursSinceLastWatering": 0 }`
 3. `plantRepo.updateByUUID(uuid, delta)`
@@ -747,13 +791,22 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 9. Save insights to care state
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
   "message": "Plant watered",
   "data": {
-    "status": { "water": "satisfied", "nutrients": "optimal", "health": "healthy", "light": "optimal" },
-    "aiInsights": { "summary": "Your plant is well-hydrated...", "recommendations": ["Maintain current schedule"] },
+    "status": {
+      "water": "satisfied",
+      "nutrients": "optimal",
+      "health": "healthy",
+      "light": "optimal"
+    },
+    "aiInsights": {
+      "summary": "Your plant is well-hydrated...",
+      "recommendations": ["Maintain current schedule"]
+    },
     "activeTasks": []
   }
 }
@@ -761,16 +814,18 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 
 ---
 
-### POST `/:id/fertilize`
+### PATCH `/:id/fertilize`
 
 **Purpose:** Record a fertilizing action. Updates `soil.lastFertilized` to current timestamp.
 
 **Flow:** Standard `performAction` pipeline with:
+
 - Entity method: `plant.applyFertilizing()` → delta `{ "soil.lastFertilized": new Date() }`
 - Task type: `fertilizing`
 - Log: `{ actionType: "fertilized", description: "Plant fertilized" }`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -781,16 +836,18 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 
 ---
 
-### POST `/:id/harvest`
+### PATCH `/:id/harvest`
 
 **Purpose:** Record a harvest action. Sets `growthStage` to `"mature"`.
 
 **Flow:** Standard `performAction` pipeline with:
+
 - Entity method: `plant.applyHarvest()` → delta `{ growthStage: "mature" }`
 - Task type: `harvest`
 - Log: `{ actionType: "harvested", description: "Plant harvested" }`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -806,6 +863,7 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 **Purpose:** Record a light condition change. Note: no entity delta is applied — light score is weather-driven. The action creates a log entry and triggers re-analysis.
 
 **Request:**
+
 ```json
 {
   "lightCondition": "partial_shade"
@@ -813,11 +871,13 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 ```
 
 **Flow:** Standard `performAction` pipeline with:
+
 - Entity method: `async () => ({})` (no-op delta)
 - Task type: `move_light`
 - Log: `{ actionType: "light_changed", description: "Light conditions changed", metadata: { lightCondition } }`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -828,16 +888,18 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 
 ---
 
-### POST `/:id/treat-disease`
+### PATCH `/:id/treat-disease`
 
 **Purpose:** Treat disease on the plant. Resets disease state to healthy.
 
 **Flow:** Standard `performAction` pipeline with:
-- Entity method: `plant.applyDiseaseTreatment()` → resets `disease.name` to `"healthy"`, `stress.diseaseType` to `"none"`
+
+- Entity method: `plant.applyDiseaseTreatment()` → resets `disease.name` to `"healthy"`, `stress.diseaseType` to `"none"`, `stress.severity` to `"healthy"`
 - Task type: `disease_treatment`
 - Log: `{ actionType: "disease_scan", description: "Disease scan performed" }`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -848,16 +910,18 @@ DELETE /api/v1/plants/{id}/logs?before=2026-01-01T00:00:00Z
 
 ---
 
-### POST `/:id/prune`
+### PATCH `/:id/prune`
 
 **Purpose:** Record a pruning action. Updates `soil.lastPruned` to current timestamp.
 
 **Flow:** Standard `performAction` pipeline with:
+
 - Entity method: `plant.applyPruning()` → delta `{ "soil.lastPruned": new Date() }`
 - Task type: `pruning`
 - Log: `{ actionType: "pruned", description: "Plant pruned" }`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -893,6 +957,7 @@ verifyPlantAccess → entity delta → repo.updateByUUID → complete matching t
 | `limit` | number | 20 |
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -941,12 +1006,14 @@ verifyPlantAccess → entity delta → repo.updateByUUID → complete matching t
 **Purpose:** Generate AI-powered care insights for the plant using Google Gemini. Uses the current care state and recent action logs as context.
 
 **Flow:**
+
 1. Fetch care state via `plantCareStateService.getByPlantUUID()`
 2. Fetch recent 100 action logs
 3. `plantCareAiInsights.generateInsights(plantUUID, status, logs)` → Gemini LLM
 4. Log `insight_generated`
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -976,6 +1043,7 @@ verifyPlantAccess → entity delta → repo.updateByUUID → complete matching t
 **Purpose:** Ask a specific question about the plant. Gemini answers using the plant's care state and log history as context.
 
 **Request:**
+
 ```json
 {
   "question": "Should I move my tomato plant to more sunlight?"
@@ -983,12 +1051,14 @@ verifyPlantAccess → entity delta → repo.updateByUUID → complete matching t
 ```
 
 **Flow:**
+
 1. Validate `question` is provided
 2. Fetch care state
 3. Fetch recent 100 action logs
 4. `plantCareAiInsights.answerQuestion(plantUUID, question, logs)` → Gemini LLM
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -1013,26 +1083,26 @@ verifyPlantAccess → entity delta → repo.updateByUUID → complete matching t
 
 Several endpoints return only a subset of the full resource:
 
-| Endpoint | Returns |
-|----------|---------|
-| `POST /:id/analyze` | `{ status }` — water, nutrients, health, light |
-| `POST /:id/detect` | `{ disease, diseaseHistory }` |
-| `PATCH /:id/water` | `{ status, aiInsights, activeTasks }` |
-| `POST /:id/fertilize` | `{ status, aiInsights, activeTasks }` |
-| `POST /:id/harvest` | `{ status, aiInsights, activeTasks }` |
-| `PATCH /:id/light` | `{ status, aiInsights, activeTasks }` |
-| `POST /:id/treat-disease` | `{ status, aiInsights, activeTasks }` |
-| `POST /:id/prune` | `{ status, aiInsights, activeTasks }` |
+| Endpoint                   | Returns                                        |
+| -------------------------- | ---------------------------------------------- |
+| `POST /:id/analyze`        | `{ status }` — water, nutrients, health, light |
+| `POST /:id/detect`         | `{ disease, diseaseHistory }`                  |
+| `PATCH /:id/water`         | `{ status, aiInsights, activeTasks }`          |
+| `PATCH /:id/fertilize`     | `{ status, aiInsights, activeTasks }`          |
+| `PATCH /:id/harvest`       | `{ status, aiInsights, activeTasks }`          |
+| `PATCH /:id/light`         | `{ status, aiInsights, activeTasks }`          |
+| `PATCH /:id/treat-disease` | `{ status, aiInsights, activeTasks }`          |
+| `PATCH /:id/prune`         | `{ status, aiInsights, activeTasks }`          |
 
 ---
 
 ## S3 Key Patterns
 
-| Pattern | Endpoint | Example |
-|---------|----------|---------|
-| `users/{userId}/images/{timestamp}-{fileName}` | `POST /user/image/upload` | `users/abc123/images/1712345679-my_plant.jpg` |
-| `users/{userId}/images/{timestamp}-{fileName}` | `POST /` (as `coverImage`) | `users/abc123/images/1712345679-my_plant.jpg` |
-| `plants/{userId}/{plantId}/images/{timestamp}-{fileName}` | `POST /:id/image/upload` | `plants/abc123/plant456/images/1712345678-tomato_leaf.jpg` |
+| Pattern                                                   | Endpoint                   | Example                                                    |
+| --------------------------------------------------------- | -------------------------- | ---------------------------------------------------------- |
+| `users/{userId}/images/{timestamp}-{fileName}`            | `POST /user/image/upload`  | `users/abc123/images/1712345679-my_plant.jpg`              |
+| `users/{userId}/images/{timestamp}-{fileName}`            | `POST /` (as `coverImage`) | `users/abc123/images/1712345679-my_plant.jpg`              |
+| `plants/{userId}/{plantId}/images/{timestamp}-{fileName}` | `POST /:id/image/upload`   | `plants/abc123/plant456/images/1712345678-tomato_leaf.jpg` |
 
 ---
 
@@ -1052,7 +1122,7 @@ Step 2: Upload image binary directly to S3
 
 Step 3: Extract plant data from the uploaded image via LLM Vision
   POST /api/v1/plants/image/extract       { key }
-  → { category, family, growthStage, health, summary }
+  → { name, category, family, growthStage, hasDisease, stress }
 
 Step 4: Create the plant using extracted data + set the uploaded image as cover
   POST /api/v1/plants                     { name, category, family, coverImage: key, ... }
@@ -1060,6 +1130,7 @@ Step 4: Create the plant using extracted data + set the uploaded image as cover
 ```
 
 **Diagram:**
+
 ```
 User Device                    API Server                    Storj S3
     │                              │                            │
@@ -1124,11 +1195,11 @@ Step 2: View current care state
 
 Step 3: Perform care actions (each auto-completes matching tasks, re-runs analysis, generates tasks if needed, produces AI insights)
   PATCH /api/v1/plants/:id/water         # water the plant
-  POST  /api/v1/plants/:id/fertilize     # fertilize the plant
-  POST  /api/v1/plants/:id/harvest       # harvest the plant
+  PATCH /api/v1/plants/:id/fertilize     # fertilize the plant
+  PATCH /api/v1/plants/:id/harvest       # harvest the plant
   PATCH /api/v1/plants/:id/light         # adjust light condition
-  POST  /api/v1/plants/:id/treat-disease # treat disease
-  POST  /api/v1/plants/:id/prune         # prune the plant
+  PATCH /api/v1/plants/:id/treat-disease # treat disease
+  PATCH /api/v1/plants/:id/prune         # prune the plant
   → { status, aiInsights, activeTasks }
 
 Step 4: View active tasks (auto-generated from care status)

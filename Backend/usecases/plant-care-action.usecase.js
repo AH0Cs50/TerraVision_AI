@@ -1,5 +1,13 @@
-import { userRepo, plantRepo, plantCareStateService, plantTaskCareManager, plantCareAiInsights, plantCareActionLogger, plantService } from "../shared/container.js";
-import { analyzeAndSavePlant } from "./plant-analyser.usecase.js";
+import {
+  plantCareActionLogger,
+  plantCareAiInsights,
+  plantCareStateService,
+  plantRepo,
+  plantService,
+  plantTaskCareManager,
+  userRepo,
+} from "../shared/container.js";
+import { evaluatePlantEngine } from "./plant-analyser.usecase.js";
 
 /**
  * Resolves a user's internalId from their auth object or database
@@ -21,16 +29,21 @@ async function resolveUserInternalId(user) {
  * @param {object|null} [actionLog] - Optional action log data { actionType, description, metadata? }
  * @returns {Promise<{ status: object, aiInsights: object, activeTasks: Array }>} Updated care status, AI insights, and active tasks
  */
-async function performAction(plantUUID, taskType, user, updateFn, actionLog = null) {
+async function performAction(
+  plantUUID,
+  taskType,
+  user,
+  updateFn,
+  actionLog = null,
+) {
   const errors = [];
 
   // 1. Verify plant access
-  let plant;
-  try {
-    plant = await plantService.verifyPlantAccess(plantUUID, user.uuid, user.role);
-  } catch (e) {
-    throw e;
-  }
+  let plant = await plantService.verifyPlantAccess(
+    plantUUID,
+    user.uuid,
+    user.role,
+  );
 
   // 2. Apply entity delta and persist
   try {
@@ -42,12 +55,16 @@ async function performAction(plantUUID, taskType, user, updateFn, actionLog = nu
     errors.push(`Action failed: ${e.message}`);
   }
 
-  // 3. Auto-complete matching active task
+  // 3. Auto-complete all matching active tasks
   try {
     const careState = await plantCareStateService.getByPlantUUID(plantUUID);
-    const task = (careState?.activeTasks || []).find((t) => t.type === taskType);
-    if (task) {
-      await plantTaskCareManager.completeTask(plantUUID, task.taskId, user, { archive: true });
+    const tasks = (careState?.activeTasks || []).filter(
+      (t) => t.type === taskType,
+    );
+    for (const task of tasks) {
+      await plantTaskCareManager.completeTask(plantUUID, task.taskId, user, {
+        archive: true,
+      });
     }
   } catch (e) {
     errors.push(`Auto-complete task failed: ${e.message}`);
@@ -56,7 +73,13 @@ async function performAction(plantUUID, taskType, user, updateFn, actionLog = nu
   // 4. Log action to action log
   if (actionLog) {
     try {
-      await plantCareActionLogger.addActionLog(plantUUID, user.uuid, await resolveUserInternalId(user), plant.internalId, actionLog);
+      await plantCareActionLogger.addActionLog(
+        plantUUID,
+        user.uuid,
+        await resolveUserInternalId(user),
+        plant.internalId,
+        actionLog,
+      );
     } catch (e) {
       errors.push(`Action log failed: ${e.message}`);
     }
@@ -68,7 +91,7 @@ async function performAction(plantUUID, taskType, user, updateFn, actionLog = nu
 
   // 5. Run full analysis pipeline (engine + task generation + AI insights)
   try {
-    const result = await analyzeAndSavePlant(plantUUID, user);
+    const result = await evaluatePlantEngine(plant, user);
     status = result.status || {};
     activeTasks = result.activeTasks || [];
 
@@ -79,16 +102,28 @@ async function performAction(plantUUID, taskType, user, updateFn, actionLog = nu
       status.light === "optimal";
 
     if (!allOptimal) {
-      const taskResult = await plantTaskCareManager.generateTasksFromStatus(plantUUID, user);
+      const taskResult = await plantTaskCareManager.generateTasksFromStatus(
+        plantUUID,
+        user,
+      );
       if (taskResult?.tasks) {
         activeTasks = [...activeTasks, ...taskResult.tasks];
       }
     }
 
-    const logs = await plantCareActionLogger.paginateActionLogs(plantUUID, { page: 1, limit: 100 });
-    const insights = await plantCareAiInsights.generateInsights(plantUUID, status, logs.logs || []);
+    const logs = await plantCareActionLogger.paginateActionLogs(plantUUID, {
+      page: 1,
+      limit: 100,
+    });
+    const insights = await plantCareAiInsights.generateInsights(
+      plantUUID,
+      status,
+      logs.logs || [],
+    );
     if (insights.summary) {
-      await plantCareStateService.updateByPlantUUID(plantUUID, { aiInsights: insights });
+      await plantCareStateService.updateByPlantUUID(plantUUID, {
+        aiInsights: insights,
+      });
       aiInsights = insights;
     }
   } catch (e) {
@@ -107,7 +142,9 @@ async function performAction(plantUUID, taskType, user, updateFn, actionLog = nu
  */
 export async function waterPlant(plantUUID, user) {
   return await performAction(
-    plantUUID, "watering", user,
+    plantUUID,
+    "watering",
+    user,
     (plant) => plant.applyWatering(0),
     { actionType: "watered", description: "Plant watered" },
   );
@@ -121,7 +158,9 @@ export async function waterPlant(plantUUID, user) {
  */
 export async function fertilizePlant(plantUUID, user) {
   return await performAction(
-    plantUUID, "fertilizing", user,
+    plantUUID,
+    "fertilizing",
+    user,
     (plant) => plant.applyFertilizing(),
     { actionType: "fertilized", description: "Plant fertilized" },
   );
@@ -135,7 +174,9 @@ export async function fertilizePlant(plantUUID, user) {
  */
 export async function harvestPlant(plantUUID, user) {
   return await performAction(
-    plantUUID, "harvest", user,
+    plantUUID,
+    "harvest",
+    user,
     (plant) => plant.applyHarvest(),
     { actionType: "harvested", description: "Plant harvested" },
   );
@@ -149,11 +190,11 @@ export async function harvestPlant(plantUUID, user) {
  * @returns {Promise<{ status: object, aiInsights: object, activeTasks: Array }>} Updated care state
  */
 export async function updateLight(plantUUID, user, lightCondition) {
-  return await performAction(
-    plantUUID, "move_light", user,
-    async () => ({}),
-    { actionType: "light_changed", description: "Light conditions changed", metadata: { lightCondition } },
-  );
+  return await performAction(plantUUID, "move_light", user, async () => ({}), {
+    actionType: "light_changed",
+    description: "Light conditions changed",
+    metadata: { lightCondition },
+  });
 }
 
 /**
@@ -164,7 +205,9 @@ export async function updateLight(plantUUID, user, lightCondition) {
  */
 export async function treatDisease(plantUUID, user) {
   return await performAction(
-    plantUUID, "disease_treatment", user,
+    plantUUID,
+    "disease_treatment",
+    user,
     (plant) => plant.applyDiseaseTreatment(),
     { actionType: "disease_scan", description: "Disease scan performed" },
   );
@@ -178,7 +221,9 @@ export async function treatDisease(plantUUID, user) {
  */
 export async function prunePlant(plantUUID, user) {
   return await performAction(
-    plantUUID, "pruning", user,
+    plantUUID,
+    "pruning",
+    user,
     (plant) => plant.applyPruning(),
     { actionType: "pruned", description: "Plant pruned" },
   );

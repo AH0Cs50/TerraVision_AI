@@ -1,17 +1,17 @@
 import { Router } from "express";
 import {
-  uploadUserImage,
+  createPlant,
+  deletePlant,
+  detectPlantDisease,
   detectUserImageDisease,
   extractPlantDataFromImage,
-  getUserPlants,
   getPlant,
-  createPlant,
-  uploadPlantPhoto,
-  detectPlantDisease,
   getPlantImage,
-  updatePlant,
+  getUserPlants,
   removePlantImage,
-  deletePlant,
+  updatePlant,
+  uploadPlantPhoto,
+  uploadUserImage,
 } from "../controller/plant.controller.js";
 
 import { authenticate } from "../middlewares/auth.middleware.js";
@@ -33,7 +33,7 @@ router.post("", authenticate, createPlant);
 
 // ── Plant-scoped image + detection ──────────────────────────────────
 router.post("/:id/image/upload", authenticate, uploadPlantPhoto);
-router.post("/:id/detect", authenticate, detectPlantDisease);
+router.put("/:id/detect", authenticate, detectPlantDisease);
 
 // ── Update ──────────────────────────────────────────────────────────
 router.put("/:id", authenticate, updatePlant);

@@ -167,7 +167,7 @@ class Plant {
       },
       stress: {
         diseaseType: this.#data.stress?.diseaseType ?? "none",
-        severity: this.#data.stress?.severity ?? "none",
+        severity: this.#data.stress?.severity ?? "healthy",
       },
     };
   }
@@ -213,9 +213,9 @@ class Plant {
 
     const dt = prediction.diseaseType || "none";
     const diseaseType = dt === "healthy" ? "none"
-      : ["bacterial", "fungal"].includes(dt) ? dt
+      : ["bacterial", "fungal", "viral"].includes(dt) ? dt
       : "fungal";
-    const severity = record.name === "healthy" ? "none" : "medium";
+    const severity = record.name === "healthy" ? "healthy" : "medium";
 
     return {
       disease: record,
@@ -258,7 +258,7 @@ class Plant {
     return {
       disease: { name: "healthy", confidence: 1 },
       "stress.diseaseType": "none",
-      "stress.severity": "none",
+      "stress.severity": "healthy",
       hasDisease: false,
     };
   }

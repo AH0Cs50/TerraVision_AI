@@ -274,6 +274,12 @@ class PlantCareRepository {
     const careState = await this.#getCareStateOrNull(plantUUID);
     if (!careState) return null;
 
+    // Defensive dedupe: avoid adding duplicate tasks with same type
+    const exists = (careState.activeTasks || []).some((t) =>
+      t.type === taskData.type,
+    );
+    if (exists) return careState;
+
     return await this.updateByPlantUUID(plantUUID, {
       activeTasks: [...(careState.activeTasks || []), taskData],
     });

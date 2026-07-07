@@ -34,8 +34,8 @@ export const SOIL_TYPES = [
   "vertisols",
 ];
 
-const DISEASE_TYPES = ["bacterial", "fungal", "none"];
-const SEVERITIES = ["high", "medium", "none"];
+const DISEASE_TYPES = ["bacterial", "fungal", "viral", "none"];
+const SEVERITIES = ["healthy", "medium", "critical"];
 
 const diseaseSubSchema = new mongoose.Schema(
   {

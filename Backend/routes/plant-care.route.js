@@ -34,11 +34,11 @@ router.delete("/:id/logs", clearOldLogs);
 
 // ── Quick Actions ───────────────────────────────
 router.patch("/:id/water", waterPlant);
-router.post("/:id/fertilize", fertilizePlant);
-router.post("/:id/harvest", harvestPlant);
+router.patch("/:id/fertilize", fertilizePlant);
+router.patch("/:id/harvest", harvestPlant);
 router.patch("/:id/light", updateLight);
-router.post("/:id/treat-disease", treatDisease);
-router.post("/:id/prune", prunePlant);
+router.patch("/:id/treat-disease", treatDisease);
+router.patch("/:id/prune", prunePlant);
 
 // ── Tasks (read-only views) ─────────────────────
 router.get("/:id/tasks", getTasks);

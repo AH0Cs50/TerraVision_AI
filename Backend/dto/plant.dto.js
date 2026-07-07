@@ -34,6 +34,15 @@ export const PlantDTO = z.object({
     moisture: z.number().min(0).max(100).nullable().optional(),
   }),
 
+  hasDisease: z.boolean().optional(),
+
+  stress: z
+    .object({
+      diseaseType: z.enum(["bacterial", "fungal", "viral", "none"]),
+      severity: z.enum(["healthy", "medium", "critical"]),
+    })
+    .optional(),
+
   coverImage: z.string().optional(),
 
   watering: z
