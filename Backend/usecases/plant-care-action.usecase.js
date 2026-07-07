@@ -1,3 +1,5 @@
+import RouteError from "../shared/util/RouteError.js";
+import HttpStatusCodes from "../shared/util/HttpStatusCodes.js";
 import {
   plantCareActionLogger,
   plantCareAiInsights,
@@ -173,6 +175,18 @@ export async function fertilizePlant(plantUUID, user) {
  * @returns {Promise<{ status: object, aiInsights: object, activeTasks: Array }>} Updated care state
  */
 export async function harvestPlant(plantUUID, user) {
+  const plant = await plantService.verifyPlantAccess(
+    plantUUID,
+    user.uuid,
+    user.role,
+  );
+  const validStages = ["flowering", "fruiting"];
+  if (!validStages.includes(plant.growthStage)) {
+    throw new RouteError(
+      HttpStatusCodes.BAD_REQUEST,
+      `Cannot harvest: plant is in "${plant.growthStage}" stage. Must be flowering or fruiting.`,
+    );
+  }
   return await performAction(
     plantUUID,
     "harvest",
@@ -204,6 +218,17 @@ export async function updateLight(plantUUID, user, lightCondition) {
  * @returns {Promise<{ status: object, aiInsights: object, activeTasks: Array }>} Updated care state
  */
 export async function treatDisease(plantUUID, user) {
+  const plant = await plantService.verifyPlantAccess(
+    plantUUID,
+    user.uuid,
+    user.role,
+  );
+  if (!plant.stress || plant.stress.severity === "healthy") {
+    throw new RouteError(
+      HttpStatusCodes.BAD_REQUEST,
+      "Plant has no active disease to treat",
+    );
+  }
   return await performAction(
     plantUUID,
     "disease_treatment",

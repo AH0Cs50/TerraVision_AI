@@ -16,7 +16,7 @@ class PlantRepository {
   async create(data) {
     const doc = await new PlantModel({
       ...data,
-      hasDisease: data.disease ? data.disease.name !== "healthy" : false,
+      hasDisease: data.disease !== undefined ? data.disease.name !== "healthy" : data.hasDisease,
     }).save();
 
     return new Plant(doc.toObject());

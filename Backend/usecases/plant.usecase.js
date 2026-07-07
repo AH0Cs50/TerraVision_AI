@@ -86,7 +86,14 @@ async function deriveExpectedHarvestDate(data) {
  */
 export async function getUserPlants(user) {
   const userDoc = await userRepo.findByUUID(user.uuid);
-  return await plantRepo.findByUserInternalId(userDoc.internalId);
+  const plants = await plantRepo.findByUserInternalId(userDoc.internalId);
+  return Promise.all(plants.map(async (plant) => {
+    const data = plant.toJSON();
+    if (data.coverImage) {
+      data.coverImageUrl = await s3CloudService.generateGetUrl(data.coverImage);
+    }
+    return data;
+  }));
 }
 
 /**
@@ -120,10 +127,13 @@ export async function createPlant(data, user) {
   // 3. Derive growth stage and harvest date via LLM
   const growthStage = data.growthStage || (await deriveGrowthStage(dataWithAge));
   const expectedHarvestDate = data.expectedHarvestDate || (await deriveExpectedHarvestDate({ ...dataWithAge, growthStage }));
-  // 4. Auto-set hasDisease based on stress severity
+  // 4. Auto-set hasDisease and disease subdoc based on stress severity
   const hasDisease = data.stress?.severity && data.stress.severity !== "healthy" ? true : (data.hasDisease ?? false);
+  const disease = data.disease || (hasDisease
+    ? { name: "suspected infection", confidence: 0.5, detectedAt: new Date() }
+    : { name: "healthy", confidence: 1 });
   // 5. Persist plant to database
-  const plant = await plantRepo.create({ ...dataWithAge, coverImage: data.coverImage, growthStage, expectedHarvestDate, hasDisease, userInternalId: userDoc.internalId });
+  const plant = await plantRepo.create({ ...dataWithAge, coverImage: data.coverImage, growthStage, expectedHarvestDate, hasDisease, disease, userInternalId: userDoc.internalId });
   // 5. Log creation action
   await plantCareActionLogger.logPlantCreated(plant.uuid, userDoc.uuid, userDoc.internalId, plant.internalId, "Plant created", { plantName: plant.name });
   return plant;
