@@ -9,7 +9,7 @@
         "weather.temperature": { "gte": 35 }
       },
       "effects": {
-        "waterScore": 0.5
+        "waterScore": 0.3
       },
       "weight": 0.7,
       "explanation": "Extreme heat above 35°C sharply increases evapotranspiration"
@@ -96,7 +96,7 @@
         "weather.humidity": { "lt": 40 }
       },
       "effects": {
-        "waterScore": 0.3
+        "waterScore": 0.15
       },
       "weight": 0.5,
       "explanation": "Low humidity below 40% increases vapor pressure deficit, accelerating transpiration"
@@ -109,7 +109,7 @@
         "weather.humidity": { "lt": 30 }
       },
       "effects": {
-        "waterScore": 0.4
+        "waterScore": 0.2
       },
       "weight": 0.6,
       "explanation": "Dry heat combination intensifies evapotranspiration beyond individual effects"
@@ -146,7 +146,7 @@
         "weather.condition": { "eq": "sunny" }
       },
       "effects": {
-        "waterScore": 0.3
+        "waterScore": 0.15
       },
       "weight": 0.3,
       "explanation": "Full sun increases radiative load and evaporation from soil surface"
@@ -195,7 +195,7 @@
         "weather.windSpeed": { "gte": 5.5 }
       },
       "effects": {
-        "waterScore": 0.2
+        "waterScore": 0.1
       },
       "weight": 0.3,
       "explanation": "Wind above 5.5 m/s (~20 km/h) significantly increases evapotranspiration from soil and leaf surfaces"

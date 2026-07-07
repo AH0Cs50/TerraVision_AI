@@ -231,7 +231,16 @@ class Plant {
    * @returns {{ "watering.hoursSinceLastWatering": number }} The delta to merge into DB
    */
   applyWatering(hoursSinceLastWatering) {
-    return { "watering.hoursSinceLastWatering": hoursSinceLastWatering };
+    if (this.#data.watering) {
+      this.#data.watering.hoursSinceLastWatering = hoursSinceLastWatering;
+    }
+    if (this.#data.soil) {
+      this.#data.soil.moisture = null;
+    }
+    return {
+      "watering.hoursSinceLastWatering": hoursSinceLastWatering,
+      "soil.moisture": null,
+    };
   }
 
   /**
@@ -239,7 +248,11 @@ class Plant {
    * @returns {{ "soil.lastFertilized": Date }} The delta to merge into DB
    */
   applyFertilizing() {
-    return { "soil.lastFertilized": new Date() };
+    const now = new Date();
+    if (this.#data.soil) {
+      this.#data.soil.lastFertilized = now;
+    }
+    return { "soil.lastFertilized": now };
   }
 
   /**
@@ -247,7 +260,11 @@ class Plant {
    * @returns {{ "soil.lastPruned": Date }} The delta to merge into DB
    */
   applyPruning() {
-    return { "soil.lastPruned": new Date() };
+    const now = new Date();
+    if (this.#data.soil) {
+      this.#data.soil.lastPruned = now;
+    }
+    return { "soil.lastPruned": now };
   }
 
   /**
@@ -255,6 +272,12 @@ class Plant {
    * @returns {{ disease: { name: string, confidence: number }, "stress.diseaseType": string, "stress.severity": string, hasDisease: boolean }} The delta to merge into DB
    */
   applyDiseaseTreatment() {
+    this.#data.disease = { name: "healthy", confidence: 1 };
+    if (this.#data.stress) {
+      this.#data.stress.diseaseType = "none";
+      this.#data.stress.severity = "healthy";
+    }
+    this.#data.hasDisease = false;
     return {
       disease: { name: "healthy", confidence: 1 },
       "stress.diseaseType": "none",
@@ -268,6 +291,7 @@ class Plant {
    * @returns {{ growthStage: string }} The delta to merge into DB
    */
   applyHarvest() {
+    this.#data.growthStage = "mature";
     return { growthStage: "mature" };
   }
 

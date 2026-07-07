@@ -104,6 +104,19 @@
       },
       "weight": 0.5,
       "explanation": "Recently watered with already high soil moisture indicates over-saturation, reducing irrigation need but raising root rot risk"
+    },
+    {
+      "id": "watering_heat_recently_watered_discount",
+      "factor": "weather",
+      "condition": {
+        "watering.hoursSinceLastWatering": { "lt": 6 },
+        "weather.temperature": { "gte": 30 }
+      },
+      "effects": {
+        "waterMultiplier": 0.7
+      },
+      "weight": 0.8,
+      "explanation": "Recently watered in high heat — soil is at field capacity, reducing immediate water demand"
     }
   ]
 }
