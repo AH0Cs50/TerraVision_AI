@@ -218,17 +218,6 @@ export async function updateLight(plantUUID, user, lightCondition) {
  * @returns {Promise<{ status: object, aiInsights: object, activeTasks: Array }>} Updated care state
  */
 export async function treatDisease(plantUUID, user) {
-  const plant = await plantService.verifyPlantAccess(
-    plantUUID,
-    user.uuid,
-    user.role,
-  );
-  if (!plant.stress || plant.stress.severity === "healthy") {
-    throw new RouteError(
-      HttpStatusCodes.BAD_REQUEST,
-      "Plant has no active disease to treat",
-    );
-  }
   return await performAction(
     plantUUID,
     "disease_treatment",

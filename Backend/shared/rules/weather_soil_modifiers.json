@@ -259,7 +259,7 @@
         "soil.hoursSinceLastFertilized": { "lte": 168 }
       },
       "effects": {
-        "fertilizerScore": -0.3
+        "fertilizerScore": -0.5
       },
       "weight": 0.4,
       "explanation": "Recently fertilized (within 7 days) — reduced immediate nutrient demand"

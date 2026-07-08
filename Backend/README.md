@@ -479,7 +479,10 @@ node test/auth.test.js
 ## API Documentation
 
 For complete API reference including all endpoints, request/response examples, enums,
-and user experience flows, see [docs/api/](./docs/api/).
+user experience workflows, and route sequences, see [docs/api/](./docs/api/).
+
+New to the API? Start with the [Workflows & Route Sequences](docs/api/05-workflows.md) guide
+to understand how endpoints connect in real-world user journeys.
 
 ## Authentication & Authorization
 

@@ -17,6 +17,7 @@ TerraVision AI is an AI-powered farming assistant composed of a Node.js/Express 
 | 5c | [API — Plant & Plant Care Module](api/05-plants.md) | `/api/v1/plants` — CRUD, care actions, tasks, insights |
 | 5d | [API — Disease Detection & ML Service](api/05-disease-and-ml.md) | Disease detection endpoints, ML `/predict` |
 | 5e | [API — Dashboard Module](api/05-dashboard.md) | `/api/v1/dashboard` — stats, care, tasks, harvests, AI report, activity |
+| 5f | [API — Workflows & Route Sequences](api/05-workflows.md) | Complete user journey workflows — how routes connect across modules |
 | 6 | [Data Architecture](06-data-architecture.md) | MongoDB schemas, relationships, enums, DTOs |
 | 7 | [Security Architecture](07-security-architecture.md) | Auth flow, JWT, RBAC, encryption, vulnerabilities |
 

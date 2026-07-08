@@ -89,10 +89,10 @@ function mapWaterStatus(score) {
 }
 
 function mapNutrientStatus(score) {
-  if (score >= 1.7) return "excess";
-  if (score >= 1.3) return "optimal";
-  if (score >= 0.8) return "low";
-  return "needs_feed";
+  if (score >= 1.5) return "needs_feed";
+  if (score >= 1.0) return "low";
+  if (score >= 0.7) return "optimal";
+  return "excess";
 }
 
 function mapHealthStatus(score) {

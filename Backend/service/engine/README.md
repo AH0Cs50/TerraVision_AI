@@ -18,7 +18,7 @@ flowchart LR
         L1[Global\n17 rules] --> L2[Soil\n20 rules]
         L2 --> L3[Plant Family\n38 rules]
         L3 --> L4[Growth Stage\n18 rules]
-        L4 --> L5[Watering\n7 rules]
+        L4 --> L5[Watering\n9 rules]
         L5 --> L6[Pest - Disease\n9 rules]
         L6 --> L7[Light\n22 rules]
     end
@@ -79,7 +79,7 @@ Backend/service/engine/
 | --------------------- | ------------------------------------------------ |
 | `evaluate(input)`     | `{ waterScore, fertilizerScore, pestRiskScore, lightScore, _appliedRules }` |
 | `evaluateByLayer(input)` | `{ layers: { global, soil, ... }, final: { ... } }` |
-| `getRuleCount()`      | `{ global: 17, soil: 20, plantFamily: 38, growthStage: 18, watering: 7, pest: 9, light: 22, total: 131 }` |
+| `getRuleCount()`      | `{ global: 17, soil: 20, plantFamily: 38, growthStage: 18, watering: 9, pest: 9, light: 22, total: 133 }` |
 
 ### `engine.js` — Core Engine
 
@@ -338,7 +338,7 @@ Each sub-field independently unlocks its own set of rules. Providing partial dat
 ### `getRuleCount()`
 
 ```js
-{ global: 17, soil: 20, plantFamily: 38, growthStage: 18, watering: 7, pest: 9, light: 22, total: 131 }
+{ global: 17, soil: 20, plantFamily: 38, growthStage: 18, watering: 9, pest: 9, light: 22, total: 133 }
 ```
 
 ---
@@ -473,7 +473,7 @@ console.log(layered.layers.global);
 console.log(layered.final);
 
 console.log(getRuleCount());
-// { global: 17, soil: 20, plantFamily: 38, growthStage: 18, watering: 7, pest: 9, light: 22, total: 131 }
+// { global: 17, soil: 20, plantFamily: 38, growthStage: 18, watering: 9, pest: 9, light: 22, total: 133 }
 ```
 
 ---
@@ -482,9 +482,11 @@ console.log(getRuleCount());
 
 ### Overview
 
+> **Note:** The per-layer additive values shown in the breakdowns below (e.g. `+0.5 water`) reflect the original rule weights. Several global rule values were reduced in commit `9360819` to prevent score capping in extreme weather. See `weather_global_rules.json` for current values. The final scores, rule counts, and test scenarios remain valid.
+
 The deterministic scoring engine was tested with **16 test cases** covering all 7 layers (global, soil, plantFamily, growthStage, watering, pest, light) across diverse environmental, soil, plant, and stress conditions including wind ET rules, overwatering detection, succulent CAM-idling dormancy, and tropical climate adaptation.
 
-**Rule counts:** global=17, soil=20, plantFamily=38, growthStage=18, watering=7, pest=9, light=22 — **131 total rules**.
+**Rule counts:** global=17, soil=20, plantFamily=38, growthStage=18, watering=9, pest=9, light=22 — **133 total rules**.
 
 Following an agronomic audit, 3 family-level rules were added and 2 growth-stage multipliers were reduced to prevent false water caps in optimal conditions and correctly model plant-adapted pest responses.
 

@@ -217,10 +217,12 @@
 
 | Score Range | Water         | Nutrients    | Health     | Light       |
 | ----------- | ------------- | ------------ | ---------- | ----------- |
-| ≥ 1.7       | `thirsty`     | `excess`     | `critical` | `burn_risk` |
-| 1.3 – 1.69  | `low`         | `optimal`    | `diseased` | `high`      |
-| 0.8 – 1.29  | `satisfied`   | `low`        | `warning`  | `optimal`   |
-| < 0.8       | `overwatered` | `needs_feed` | `healthy`  | `low`       |
+| ≥ 1.7       | `thirsty`     | `needs_feed` | `critical` | `burn_risk` |
+| 1.3 – 1.69  | `low`         | `low`        | `diseased` | `high`      |
+| 0.8 – 1.29  | `satisfied`   | `optimal`    | `warning`  | `optimal`   |
+| < 0.8       | `overwatered` | `excess`     | `healthy`  | `low`       |
+
+*Nutrients uses distinct thresholds: ≥ 1.5 → `needs_feed`, ≥ 1.0 → `low`, ≥ 0.7 → `optimal`, < 0.7 → `excess`.*
 
 ---
 
