@@ -1,246 +1,310 @@
-import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { signupRequest } from '../../api/authApi';
-import { useAuthStore } from '../../store/authStore';
+import React, { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { signupRequest } from "../../api/authApi";
+import { useAuthStore } from "../../store/authStore";
 import farmImg from "../../assets/farm.png";
 import Navbar from "../../components/layout/Navbar";
-import { validateSignup } from '../../validation/authValidator';
+import { validateSignup } from "../../validation/authValidator";
 
-import {
-  UserIcon,
-  EmailIcon,
-  PasswordIcon,
-  ShowPasswordIcon,
-  HidePasswordIcon,
-} from "./../../ui/Icons";
+// Toast Notifications
+import { toast, Toaster } from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
+import { UserRound, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  // use "agreed" state to checkbox
-  const [agreed, setAgreed] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
- 
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreed, setAgreed] = useState(true);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [formErrors, setFormErrors] = useState({});
+  const [location, setLocation] = useState({ lat: 31.5194, lng: 34.4584 });
 
   const loginToStore = useAuthStore((state) => state.login);
+  const navigate = useNavigate();
 
-  // Caching in React Query
   const signupMutation = useMutation({
     mutationFn: signupRequest,
+
     onSuccess: (data) => {
       loginToStore(data.user, data.token);
-      alert('The account has been successfully created!');
+
+      toast.success("Account created successfully!");
+      console.log(data);
     },
+
     onError: (error) => {
-      // save server erorr in formErrors by setFormErrors
-      setFormErrors({ server: error.message });
-    }
+      console.log(error);
+
+      if (error.response?.status === 409) {
+        setFormErrors({
+          email: error.response.data.message,
+        });
+        return;
+      }
+
+      setFormErrors({
+        server:
+          error.response?.data?.message ||
+          error.message ||
+          "Something went wrong",
+      });
+    },
   });
 
-const handleSubmit = (e) => {
-  e.preventDefault();
-  setFormErrors({}); // cleaning and deleting errors
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setFormErrors({});
 
-  
-  const { isValid, errors } = validateSignup({ name, email, password, confirmPassword, agreed });
+    const locationStringForValidation = location
+      ? `${location.lat}, ${location.lng}`
+      : "";
 
-// If any error is found in the entered data, transmission will stop.  
-if (!isValid) {
-    setFormErrors(errors);
-    return;
-  }
+    const { isValid, errors } = validateSignup({
+      name,
+      email,
+      password,
+      agreed,
+      location: locationStringForValidation,
+    });
 
-// Send only the data needed by the backend
-  signupMutation.mutate({ name, email, password, location: "Gaza" });
-};
+    if (!isValid) {
+      setFormErrors(errors);
+      return;
+    }
 
+    // The actual, clean transmission in the specified backend format
+    signupMutation.mutate({
+      name,
+      email,
+      password,
+      location: {
+        coordinates: {
+          lat: Number(location.lat),
+          lon: Number(location.lng),
+        },
+      },
+    });
+  };
   return (
-    <>
+    <div className="bg-[#f9fafb] min-h-screen flex flex-col pt-16">
       <Navbar />
+      <Toaster />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row min-h-[calc(100vh-3.5rem)] w-full font-sans mt-14 pb-10 md:pb-0">
-          
-          {/* Left Side - Hero */}
-          <div
-            className="relative hidden md:flex flex-1 items-center justify-center p-10"
-            style={{
-              backgroundImage: `url(${farmImg})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            {/* Dark overlay on Image */}
-            <div className="absolute inset-0 bg-black/45" />
+      <div className="flex-1 w-full flex items-center justify-center py-8 sm:py-2">
+        <div className="w-full max-w-[1420px] mx-auto py-8">
+          <div className="w-full bg-white rounded-md shadow-sm border border-gray-200 flex flex-col md:flex-row overflow-hidden items-stretch min-h-[620px]">
+            {/* Left section: Image */}{" "}
+            <div className="relative hidden md:flex md:w-1/2 bg-gray-900 p-10 lg:p-12 flex-col justify-center items-start">
+              <img
+                src={farmImg}
+                alt="Farm Background"
+                className="absolute inset-0 w-full h-full object-cover object-center select-none"
+              />
+              <div className="absolute inset-0 bg-black/25 z-0" />
+              <div className="relative flex flex-col items-start z-10 w-full text-left mt-auto mb-auto pl-4">
+                <h2 className="text-2xl lg:text-[32px] font-semibold tracking-tight text-white max-w-md leading-snug mb-5 select-none">
+                  TerraVision AI - Advanced Plant Management &amp; Health
+                  Monitoring
+                </h2>
+                <div className="w-12 h-[3.5px] bg-[#2e9d4f] rounded-full" />
+              </div>
+            </div>
+            {/* Right section: The form */}{" "}
+            <div className="flex md:w-1/2 justify-center px-8 sm:px-12 lg:px-16 py-12 items-center bg-white">
+              <form onSubmit={handleSubmit} className="w-full">
+                <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
+                  Create Your Account
+                </h2>
+                <p className="text-gray-400 text-sm mb-6 font-normal">
+                  Join the future of intelligent agronomy today.
+                </p>
+                {/* The error message is displayed here in red */}{" "}
+                {formErrors.server && (
+                  <div className="p-3 mb-4 text-xs text-red-700 bg-red-50 border border-red-200 rounded-md text-center font-semibold">
+                    {formErrors.server}
+                  </div>
+                )}
+                {/* 1. Full Name */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Full Name
+                  </label>
+                  <div
+                    className={`flex items-center bg-[#f8fafc] border border-gray-300 rounded-md px-3 py-2.5 focus-within:bg-white focus-within:border-[#2e9d4f] focus-within:ring-1 focus-within:ring-[#2e9d4f] transition-all ${formErrors.name ? "border-red-400 ring-1 ring-red-400" : ""}`}
+                  >
+                    <UserRound className="h-4 w-6 m-1 text-slate-500" />
 
-            {/* Text Image */}
-            <div className="absolute inset-0 flex flex-col justify-center items-start text-left p-10 lg:p-20 z-10">
-              <h2 className="text-xl md:text-2xl lg:text-3xl font-medium tracking-tight text-white max-w-sm leading-snug mb-5 select-none">
-                TerraVision AI - Advanced <br />
-                Plant Management &amp; Health
-                <br />
-                Monitoring
-              </h2>
-              <div className="w-10 h-[3px] bg-[#2e9d4f] rounded" />
+                    <input
+                      type="text"
+                      placeholder="user name"
+                      className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  {formErrors.name && (
+                    <p className="text-red-500 text-[11px] mt-1 font-medium">
+                      {formErrors.name}
+                    </p>
+                  )}
+                </div>
+                {/* Email Address */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Email Address
+                  </label>
+                  <div
+                    className={`flex items-center bg-[#f8fafc] border border-gray-300 rounded-md px-3 py-2.5 focus-within:bg-white focus-within:border-[#2e9d4f] focus-within:ring-1 focus-within:ring-[#2e9d4f] transition-all ${formErrors.email ? "border-red-400 ring-1 ring-red-400" : ""}`}
+                  >
+                    <Mail className="h-4 w-6 m-1 text-slate-500" />
+
+                    <input
+                      type="email"
+                      placeholder="example@email.com"
+                      className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  {formErrors.email && (
+                    <p className="text-red-500 text-[11px] mt-1 font-medium">
+                      {formErrors.email}
+                    </p>
+                  )}
+                </div>
+                {/* Farm / Garden Location */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">
+                      Farm / Garden Location
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                              setLocation({
+                                lat: Number(
+                                  position.coords.latitude.toFixed(4),
+                                ),
+                                lng: Number(
+                                  position.coords.longitude.toFixed(4),
+                                ),
+                              });
+                            },
+                          );
+                        }
+                      }}
+                      className="text-[11px] font-semibold text-[#2e9d4f] hover:text-[#143d22] flex items-center gap-1 transition-colors"
+                    >
+                      Locate My Position
+                    </button>
+                  </div>
+
+                  <div className="relative w-full h-[120px] bg-[#f3f4f6] border border-gray-200 rounded-md overflow-hidden flex flex-col items-center justify-center p-2">
+                    <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#d1d5db_1px,transparent_1px)] [background-size:14px_14px]"></div>
+                    <div className="relative z-10 flex flex-col items-center gap-1.5">
+                      <span className="text-[11px] text-gray-500 font-medium tracking-tight text-center bg-white/80 px-2 py-0.5 rounded shadow-sm">
+                        Selected Address:{" "}
+                        {location
+                          ? `${location.lat}° N, ${location.lng}° E`
+                          : "No area specified yet."}
+                      </span>
+                    </div>
+                  </div>
+                  {formErrors.location && (
+                    <p className="text-red-500 text-[11px] mt-1 font-medium">
+                      {formErrors.location}
+                    </p>
+                  )}
+                </div>
+                {/* Password */}
+                <div className="mb-5">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Password
+                  </label>
+                  <div
+                    className={`flex items-center bg-[#f8fafc] border border-gray-300 rounded-md px-3 py-2.5 focus-within:bg-white focus-within:border-[#2e9d4f] focus-within:ring-1 focus-within:ring-[#2e9d4f] transition-all ${formErrors.password ? "border-red-400 ring-1 ring-red-400" : ""}`}
+                  >
+                    <Lock className="h-4 w-6 m-2 text-slate-500" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="At least 8 characters (Include A, a, 1)"
+                      className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent  appearance-none "
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? (
+                        <Eye className="w-4 h-4" />
+                      ) : (
+                        <EyeOff className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  {formErrors.password && (
+                    <p className="text-red-500 text-[11px] mt-1 font-medium">
+                      {formErrors.password}
+                    </p>
+                  )}
+                </div>
+                {/* Terms & Conditions */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="terms"
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={() => setAgreed(!agreed)}
+                      className="w-3.5 h-3.5 accent-[#2e9d4f] rounded cursor-pointer border-gray-300"
+                    />
+                    <label
+                      htmlFor="terms"
+                      className="text-xs text-gray-600 cursor-pointer select-none font-medium"
+                    >
+                      I agree to the{" "}
+                      <span className="text-[#2e9d4f] hover:underline font-semibold">
+                        Terms of Service
+                      </span>{" "}
+                      and{" "}
+                      <span className="text-[#2e9d4f] hover:underline font-semibold">
+                        Privacy Policy
+                      </span>
+                    </label>
+                  </div>
+                  {formErrors.agreed && (
+                    <p className="text-red-500 text-[11px] mt-1 font-medium">
+                      {formErrors.agreed}
+                    </p>
+                  )}
+                </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={signupMutation.isPending}
+                  className="w-full bg-[#2e9d4f] hover:bg-[#206e37] text-white font-semibold px-8 py-2.5 rounded-md text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                >
+                  {signupMutation.isPending ? "Signing up..." : "Sign Up"}
+                </button>
+                <p className="text-center text-xs text-gray-500 mt-5 font-normal">
+                  Already have an account?
+                  <Link to="/login">
+                    <span className="text-[#2e9d4f] font-semibold hover:underline cursor-pointer">
+                      Log In
+                    </span>
+                  </Link>
+                </p>
+              </form>
             </div>
           </div>
-
-          {/* Right Side - Form */}
-          <div className="flex flex-1 justify-center bg-white px-4 sm:px-8 pt-12 md:pt-24 pb-12 items-start">
-            <form onSubmit={handleSubmit} className="w-full max-w-md">
-              <h2 className="text-3xl font-bold text-gray-900 mb-1">
-                Create Your Account
-              </h2>
-              <p className="text-gray-500 text-sm mb-6">
-                Join the future of intelligent agronomy today.
-              </p>
-
-              {/* General error message from the server, if any */}
-              {formErrors.server && (
-                <div className="p-3 mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg text-center font-medium">
-                  {formErrors.server}
-                </div>
-              )}
-
-              {/* Full Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <div className={`flex items-center border rounded-lg px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500 transition-colors ${formErrors.name ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'}`}>
-                  <UserIcon />
-                  <input
-                    type="text"
-                    placeholder="Your Name"
-                    className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                {formErrors.name && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.name}</p>}
-              </div>
-
-              {/* Email */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <div className={`flex items-center border rounded-lg px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500 transition-colors ${formErrors.email ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'}`}>
-                  <EmailIcon />
-                  <input
-                    type="text"
-                    placeholder="jane.doe@email.com"
-                    className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                {formErrors.email && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.email}</p>}
-              </div>
-
-              {/* Password */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <div className={`flex items-center border rounded-lg px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500 transition-colors ${formErrors.password ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'}`}>
-                  <PasswordIcon />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="At least 6 characters"
-                    className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600 ml-2"
-                  >
-                    {showPassword ? <ShowPasswordIcon /> : <HidePasswordIcon />}
-                  </button>
-                </div>
-                {formErrors.password && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.password}</p>}
-              </div>
-
-              {/* Confirm Password */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
-                </label>
-                <div className={`flex items-center border rounded-lg px-3 py-2 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-500 transition-colors ${formErrors.confirmPassword ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'}`}>
-                  <PasswordIcon />
-                  <input
-                    type={showConfirm ? "text" : "password"}
-                    placeholder="Re-enter password"
-                    className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="text-gray-400 hover:text-gray-600 ml-2"
-                  >
-                    {showConfirm ? <ShowPasswordIcon /> : <HidePasswordIcon />}
-                  </button>
-                </div>
-                {formErrors.confirmPassword && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.confirmPassword}</p>}
-              </div>
-
-              {/* Terms */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="terms"
-                    type="checkbox"
-                    checked={agreed}
-                    onChange={() => setAgreed(!agreed)}
-                    className="w-4 h-4 accent-green-600 cursor-pointer"
-                  />
-                  <label
-                    htmlFor="terms"
-                    className="text-sm text-gray-600 cursor-pointer select-none"
-                  >
-                    I agree to the{" "}
-                    <span className="text-green-600 hover:underline cursor-pointer">
-                      Terms of Service
-                    </span>{" "}
-                    and{" "}
-                    <span className="text-green-600 hover:underline cursor-pointer">
-                      Privacy Policy
-                    </span>
-                  </label>
-                </div>
-                {formErrors.agreed && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.agreed}</p>}
-              </div>
-
-              {/* Sign Up Button */}
-              <button 
-                type="submit"
-                disabled={signupMutation.isPending}
-                className="w-full bg-gradient-to-r from-[#2e9d4f] to-[#143d22] text-white font-semibold px-8 py-3.5 rounded-lg text-sm transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_15px_30px_-10px_rgba(20,61,34,0.4)] flex items-center justify-center gap-2"
-              >
-                {signupMutation.isPending ? 'Registering...' : 'Sign Up'}
-              </button>
-
-              {/* Log In Link */}
-              <p className="text-center text-sm text-gray-500 mt-5">
-                Already have an account?{" "}
-                <span className="text-green-600 font-medium hover:underline cursor-pointer">
-                  Log In
-                </span>
-              </p>
-            </form>
-          </div>
-
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -1,51 +1,52 @@
+// authApi.js
+import api from './axios';
+
 
 // Signup Request
 export const signupRequest = async (userData) => {
-  const response = await fetch("/api/v1/auth/signup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData),
-  });
+  const { data } = await api.post('/auth/signup', userData);
+  return data; 
+};
 
-  if (!response.ok) {
+// login Request
+export const loginRequest = async (credentials) => {
+  try {
+    const response = await api.post(
+      "/auth/login",
+      credentials
+    );
+
+    return response.data.data;
+  } catch (error) {
     throw new Error(
-      "Sorry, this email address is already in use or the data is incomplete",
+      error.response?.data?.message ||
+      "Login failed"
     );
   }
-  return response.json();
 };
+  
 
-
-// Login Request
-export const loginRequest = async (credentials) => {
-  const response = await fetch("/api/v1/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
+export const refreshTokenRequest = async (refreshToken) => {
+  const { data } = await api.post("/auth/refresh", {
+    refreshToken,
   });
 
-  if (!response.ok) {
-    throw new Error("The email or password is incorrect");
-  }
-  return response.json();
+  return data.data;
 };
 
 
 
-// Refresh Token Request
-export const refreshRequest = async () => {
-  const token = localStorage.getItem("token");
+export const logoutRequest = async () => {
+    const { data } = await api.post("/auth/logout");
+    return data;
+};
 
-  const response = await fetch("/api/v1/auth/refresh", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-  });
 
-  if (!response.ok) {
-    throw new Error("The current session has expired");
-  }
-  return response.json();
+
+
+// Change Password Request
+export const changePasswordRequest = async (passwords) => {
+  // يتوقع الباك إند الحقول مثل currentPassword و newPassword
+  const { data } = await api.post("/auth/change-password", passwords);
+  return data;
 };

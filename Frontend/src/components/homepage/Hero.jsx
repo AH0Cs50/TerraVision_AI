@@ -1,13 +1,16 @@
-import { ArrowRightIcon } from "../../ui/Icons";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+
 import plantImg from "../../assets/plant.png";
 
 const Hero = () => {
-  return (
-    <section className="pt-16 min-h-screen flex items-center bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 py-16 lg:py-24">
-          {/*  Hero Text */}
+  const navigate = useNavigate();
 
+  return (
+    <section className="pt-16 min-h-screen flex items-center bg-[#f8f9fa]">
+      <div className="w-full max-w-[1420px] mx-auto min-[1421px]:px-0 px-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 py-16 lg:py-24">
+          {/* Hero Text */}
           <div className="flex-1 max-w-xl text-center lg:text-left">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] text-gray-900 mb-6">
               Cultivate
@@ -24,20 +27,22 @@ const Hero = () => {
             </p>
 
             <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-              <button className="bg-gradient-to-r from-[#2e9d4f] to-[#143d22] text-white font-semibold px-8 py-3.5 rounded-lg text-sm transition-all duration-300 hover:opacity-90 shadow-[0_15px_30px_-10px_rgba(20,61,34,0.4)] flex items-center gap-2">
-                {" "}
-                Start Your Smart Garden
-                <ArrowRightIcon size={15} />
-              </button>
-              <button className="border border-gray-300 hover:border-green-600 text-gray-700 hover:text-green-700 font-semibold px-6 py-3.5 rounded-lg text-sm transition-all duration-200">
-                Login
-              </button>
+              <Link to="/dashboard/my_garden">
+                <button className="bg-gradient-to-r from-[#2e9d4f] to-[#143d22] text-white font-semibold px-8 py-3.5 rounded-lg text-sm transition-all duration-300 hover:opacity-90 shadow-[0_15px_30px_-10px_rgba(20,61,34,0.4)] flex items-center gap-2">
+                  Start Your Smart Garden
+                </button>
+              </Link>
+              <Link to="/login">
+                <button className="border border-gray-300 hover:border-green-600 text-gray-700 hover:text-green-700 font-semibold px-6 py-3.5 rounded-lg text-sm transition-all duration-200">
+                  Login
+                </button>
+              </Link>
             </div>
           </div>
 
-          {/* Hero - Plant Image  */}
+          {/* Hero - Plant Image */}
           <div className="flex-1 flex justify-center lg:justify-end">
-            <div className="relative   bg-white p-4 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+            <div className="relative bg-white p-4 rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
               <img
                 className="rounded-[1.5rem]"
                 src={plantImg}
@@ -56,4 +61,5 @@ const Hero = () => {
     </section>
   );
 };
+
 export default Hero;

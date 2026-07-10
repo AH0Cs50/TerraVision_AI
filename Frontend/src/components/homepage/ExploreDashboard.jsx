@@ -1,22 +1,20 @@
-import { TelemetryIcon, PredictIcon, ArrowRightIcon } from "../../ui/Icons";
+import { useNavigate } from "react-router-dom";
 import DashboardMockup from "./dashboard_mockup";
+import { Radio, ChartNoAxesCombined, ArrowRight } from "lucide-react";
 
 const ExploreDashboard = () => {
+  const navigate = useNavigate();
   return (
-    <section id="dashboard" className="py-20 lg:py-28 bg-[#f9fbf9] max-w-6xl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-20 ">
-          <div className="flex-1 w-full">
-            {/* Import DashboardMockup image */}
+    <section id="dashboard" className="py-16 lg:py-20 bg-[#f9fbf9]">
+      <div className="w-full max-w-[1420px] mx-auto min-[1421px]:px-0 px-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
+          <div className="w-full lg:w-[52%] flex justify-start">
             <DashboardMockup />
           </div>
 
-          {/* Dashboard title Text */}
-          <div className="flex-1 max-w-lg text-center lg:text-left">
+          <div className="w-full lg:w-[44%] text-center lg:text-left">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-5 leading-tight">
-              Your Smart
-              <br />
-              Garden
+              Your Smart Garden
               <br />
               <span className="text-green-700">at a Glance</span>
             </h2>
@@ -26,16 +24,16 @@ const ExploreDashboard = () => {
               high-fidelity interface that rewards your curiosity.
             </p>
 
-            {/* Text feature points  */}
-            <div className="flex flex-col gap-5 mb-10 ">
+            {/* Key Features*/}
+            <div className="space-y-6 mb-10">
               {[
                 {
-                  Icon: TelemetryIcon,
-                  title: "Real-time health telemetry",
-                  desc: "Instant monitoring across multiple rooms and micro-climates with sub-second latency.",
+                  Icon: Radio,
+                  title: "Real-time environmental telemetry",
+                  desc: "Monitor soil microbiome, ambient humidity, and multi-spectrum light levels across micro-climates with sub-second latency.",
                 },
                 {
-                  Icon: PredictIcon,
+                  Icon: ChartNoAxesCombined,
                   title: "Predictive growth modeling",
                   desc: "AI forecasts leaf size and health trajectories based on historic care data and global botanical trends.",
                 },
@@ -56,10 +54,18 @@ const ExploreDashboard = () => {
               ))}
             </div>
 
-            <button className="bg-gradient-to-r from-[#2e9d4f] to-[#143d22] text-white font-semibold px-8 py-3.5 rounded-lg text-sm transition-all duration-300 hover:opacity-90 shadow-[0_15px_30px_-10px_rgba(20,61,34,0.4)] flex items-center gap-2">
-              Explore the Dashboard
-              <ArrowRightIcon size={15} />
-            </button>
+            <div className="flex justify-start w-full">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="w-full bg-gradient-to-r from-[#2e9d4f] to-[#143d22] text-white font-semibold px-6 py-3.5 rounded-lg text-sm transition-all duration-300 hover:opacity-90 shadow-[0_15px_30px_-10px_rgba(20,61,34,0.4)] flex items-center justify-start gap-2"
+              >
+                Explore the Dashboard
+                <ArrowRight
+                  size={18}
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                />
+              </button>
+            </div>
           </div>
         </div>
       </div>

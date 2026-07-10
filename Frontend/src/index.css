@@ -41,3 +41,16 @@
     animation: pulse 3s ease-in-out infinite;
   }
 }
+
+/* لإخفاء أيقونة Edge/IE القديم الافتراضية */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* لبعض حالات Chromium الحديثة */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+  visibility: hidden;
+  display: none !important;
+}

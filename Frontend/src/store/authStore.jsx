@@ -1,22 +1,37 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export const useAuthStore = create((set) => ({
-    
- // get user if it exists in localStorage
-  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
-  token: localStorage.getItem('token') || null,
+
+user: localStorage.getItem("user")
+  ? JSON.parse(localStorage.getItem("user"))
+  : null,
+
+token: localStorage.getItem("token") || null,
+refreshToken: localStorage.getItem("refreshToken") || null,
+
 
   // Save User and token
-  login: (userData, token) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', token);
-    set({ user: userData, token: token });
-  },
+login: (userData, accessToken, refreshToken) => {
+  localStorage.setItem("user", JSON.stringify(userData));
+  localStorage.setItem("token", accessToken);
+  localStorage.setItem("refreshToken", refreshToken);
 
-  // Clean everything when you log out
-  logout: () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    set({ user: null, token: null });
-  }
-}));
+  set({
+    user: userData,
+    token: accessToken,
+    refreshToken,
+  });
+},
+
+logout: () => {
+  localStorage.removeItem("user");
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+
+  set({
+    user: null,
+    token: null,
+    refreshToken: null,
+  });
+},}));
+   

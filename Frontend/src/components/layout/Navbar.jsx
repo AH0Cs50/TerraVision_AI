@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { LeafIcon, MenuIcon, CloseIcon } from "../../ui/Icons";
 import { Link } from "react-router-dom";
+
+// Icons
+import { PlantPotIcon } from "../../icons/CustomIcons";
+import { TextAlignJustify, X } from "lucide-react";
 
 const nav_link = [
   { label: "Services", href: "#services" },
@@ -24,12 +27,12 @@ const Navbar = () => {
         scrolled ? "bg-white shadow-md" : "bg-white/95 backdrop-blur-md"
       } border-b border-gray-100`}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1420px] mx-auto min-[1421px]:px-0 px-10">
         <div className="flex items-center justify-between h-16 ">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-green-900 rounded-lg flex items-center justify-center text-white transition-transform group-hover:scale-105">
-              <LeafIcon size={16} />
+              <PlantPotIcon size={16} />
             </div>
             <span className="font-bold text-green-900 lg:text-lg text-md tracking-tight">
               TerraVision AI
@@ -70,7 +73,7 @@ const Navbar = () => {
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
-            {menuOpen ? <CloseIcon size={22} /> : <MenuIcon size={22} />}
+            {menuOpen ? <X /> : <TextAlignJustify />}
           </button>
         </div>
       </div>
